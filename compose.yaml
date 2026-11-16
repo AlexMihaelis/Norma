@@ -1,0 +1,24 @@
+name: norma
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: norma
+      POSTGRES_USER: norma
+      POSTGRES_PASSWORD: norma_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      # Монтируем родительский каталог данных, а не конкретный PGDATA: образы
+      # Postgres время от времени меняют путь по умолчанию, и так том не сломается.
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U norma -d norma"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:
