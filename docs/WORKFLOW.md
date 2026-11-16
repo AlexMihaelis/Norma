@@ -43,18 +43,29 @@
 
 ## Когда задача готова
 
-1. Сборка и тесты зелёные. Тесты в песочнице агента не запускаются — их
+Готовая задача не остаётся только локально: и ветка, и `main` сразу уходят в
+GitHub, чтобы история была видна не только на этой машине.
+
+1. Сборка и тесты зелёные. Тесты в песочнице агента не запускаются - их
    прогоняет пользователь в Rider (`Run All Tests`).
-2. Мерж в `main` **с merge-коммитом**, чтобы граница задачи была видна в
-   истории:
+2. Пуш ветки, чтобы история задачи появилась на GitHub:
+
+   ```powershell
+   git push -u origin feat/calorie-targets
+   ```
+
+3. Мерж в `main` с merge-коммитом, чтобы граница задачи была видна в истории:
 
    ```powershell
    git switch main
-   git merge --no-ff feat/calorie-targets -m "Merge branch 'feat/calorie-targets'"
+   git merge --no-ff feat/calorie-targets -m "слияние ветки 'feat/calorie-targets' в 'main'"
+   git push origin main
    ```
 
-3. Удалить слитую ветку: `git branch -d feat/calorie-targets`.
-4. Если тесты упали — ветка живёт, правки продолжаются в ней. В `main` не
+4. Удалить слитую ветку локально и на GitHub:
+   `git branch -d feat/calorie-targets` и
+   `git push origin --delete feat/calorie-targets`.
+5. Если тесты упали - ветка живёт, правки продолжаются в ней. В `main` не
    мержим, пока не зелено.
 
 Альтернатива `--no-ff` — squash-мерж (`git merge --squash`). Он даёт линейную
@@ -65,8 +76,9 @@
 
 Репозиторий: `https://github.com/AlexMihaelis/Norma`, remote `origin` — SSH.
 
-- Ветка пушится сразу после коммитов: `git push -u origin feat/...`.
-- На GitHub открывается PR, мерж — кнопкой «Create a merge commit» (тот же
+- Ветка пушится, как только задача готова (шаг 2 выше), - на GitHub видна вся
+  работа, а не только итоговый merge.
+- На GitHub можно открыть PR, мерж - кнопкой «Create a merge commit» (тот же
   `--no-ff`, граница задачи видна и в GitHub, и локально).
 - После мержа локально: `git switch main && git pull --ff-only`.
 
