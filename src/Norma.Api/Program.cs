@@ -1,4 +1,5 @@
 using Norma.Api.Features.Health;
+using Norma.Api.Features.Plan;
 
 var app = ApiHost.Build(args);
 
@@ -27,6 +28,7 @@ public static class ApiHost
         // позже и не должен ломать веб-версию при изменении контрактов.
         var api = app.MapGroup("/api/v1");
         api.MapHealth();
+        api.MapPlan();
 
         return app;
     }

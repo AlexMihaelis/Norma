@@ -1,7 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 
 namespace Norma.Api.Tests;
 
@@ -15,36 +13,17 @@ public sealed class HealthEndpointTests
     [Fact]
     public async Task Health_returns_ok_and_version()
     {
-        var app = ApiHost.Build(["--urls", "http://127.0.0.1:0"]);
+        await using var app = await ApiApp.StartAsync();
 
-        await app.StartAsync();
+        using var response = await app.Client.GetAsync("/api/v1/health");
 
-        try
-        {
-            // Порт назначает ОС, поэтому адрес читаем у самого сервера, а не из
-            // конфигурации.
-            var address = app.Services
-                .GetRequiredService<IServer>()
-                .Features.Get<IServerAddressesFeature>()!
-                .Addresses
-                .Single();
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-            using var client = new HttpClient { BaseAddress = new Uri(address) };
-            using var response = await client.GetAsync("/api/v1/health");
+        var payload = await response.Content.ReadFromJsonAsync<HealthPayload>();
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-            var payload = await response.Content.ReadFromJsonAsync<HealthPayload>();
-
-            Assert.NotNull(payload);
-            Assert.Equal("ok", payload.Status);
-            Assert.False(string.IsNullOrWhiteSpace(payload.Version));
-        }
-        finally
-        {
-            await app.StopAsync();
-            await app.DisposeAsync();
-        }
+        Assert.NotNull(payload);
+        Assert.Equal("ok", payload.Status);
+        Assert.False(string.IsNullOrWhiteSpace(payload.Version));
     }
 
     private sealed record HealthPayload(string Status, string Version);
