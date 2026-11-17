@@ -59,14 +59,17 @@ public static class BmiMath
             ObeseFromKg(heightCm));
     }
 
+    /// <summary>Вес при заданном ИМТ и росте, кг.</summary>
+    public static double WeightKgFor(double bmi, double heightCm) => bmi * HeightSquaredM(heightCm);
+
     /// <summary>Нижняя граница нормы веса: ИМТ 18.5.</summary>
-    public static double HealthyWeightMinKg(double heightCm) => LowBelow * HeightSquaredM(heightCm);
+    public static double HealthyWeightMinKg(double heightCm) => WeightKgFor(LowBelow, heightCm);
 
     /// <summary>Верхняя граница нормы веса: ИМТ 25 (граница не включается).</summary>
-    public static double HealthyWeightMaxKg(double heightCm) => HighFrom * HeightSquaredM(heightCm);
+    public static double HealthyWeightMaxKg(double heightCm) => WeightKgFor(HighFrom, heightCm);
 
     /// <summary>Вес, с которого начинается «очень высокий»: ИМТ 30.</summary>
-    public static double ObeseFromKg(double heightCm) => VeryHighFrom * HeightSquaredM(heightCm);
+    public static double ObeseFromKg(double heightCm) => WeightKgFor(VeryHighFrom, heightCm);
 
     private static double HeightSquaredM(double heightCm)
     {
