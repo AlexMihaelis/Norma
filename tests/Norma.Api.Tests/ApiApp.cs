@@ -28,7 +28,14 @@ public sealed class ApiApp : IAsyncDisposable
     /// </param>
     public static async Task<ApiApp> StartAsync(Action<WebApplicationBuilder>? configure = null)
     {
-        var app = ApiHost.Build(["--urls", "http://127.0.0.1:0"], configure);
+        var app = ApiHost.Build(["--urls", "http://127.0.0.1:0"], builder =>
+        {
+            // Тесты не зависят от окружения машины: иначе при Development
+            // приложение на старте полезло бы применять миграции к локальной
+            // базе разработчика. Свою схему каждый тест готовит сам.
+            builder.Environment.EnvironmentName = "Testing";
+            configure?.Invoke(builder);
+        });
 
         await app.StartAsync();
 
