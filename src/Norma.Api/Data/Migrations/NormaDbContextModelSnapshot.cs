@@ -22,6 +22,39 @@ namespace Norma.Api.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.ActivityRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kcal")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("Minutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date");
+
+                    b.ToTable("activity_records", (string)null);
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.Food", b =>
                 {
                     b.Property<Guid>("Id")
@@ -227,6 +260,17 @@ namespace Norma.Api.Data.Migrations
                     b.HasIndex("UserId", "Date");
 
                     b.ToTable("weight_measurements", (string)null);
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.ActivityRecord", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.FoodAlias", b =>

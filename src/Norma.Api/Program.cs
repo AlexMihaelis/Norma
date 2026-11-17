@@ -8,6 +8,8 @@ using Microsoft.OpenApi.Models;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
 using Norma.Api.Features.Auth;
+using Norma.Api.Features.Activity.AddActivity;
+using Norma.Api.Features.Activity.GetActivityDay;
 using Norma.Api.Features.Auth.Login;
 using Norma.Api.Features.Auth.Me;
 using Norma.Api.Features.Auth.Register;
@@ -155,6 +157,8 @@ public static class ApiHost
         api.MapUpdateProfile();
         api.MapAddWater();
         api.MapGetWaterDay();
+        api.MapAddActivity();
+        api.MapGetActivityDay();
 
         return app;
     }
