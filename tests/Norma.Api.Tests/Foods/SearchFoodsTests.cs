@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
@@ -19,6 +21,13 @@ public sealed class SearchFoodsTests : IAsyncLifetime
         .WithImage("postgres:18-alpine")
         .Build();
 
+    // API отдаёт enum строкой ("Cooked"). У HttpClient по умолчанию enum читается
+    // числом, поэтому клиентской стороне нужен тот же конвертер, что и серверу.
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
+
     public Task InitializeAsync() => database.StartAsync();
 
     public Task DisposeAsync() => database.DisposeAsync().AsTask();
@@ -35,7 +44,7 @@ public sealed class SearchFoodsTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var payload = await response.Content.ReadFromJsonAsync<FoodSearchPayload>();
+        var payload = await response.Content.ReadFromJsonAsync<FoodSearchPayload>(JsonOptions);
 
         Assert.NotNull(payload);
 
@@ -60,7 +69,7 @@ public sealed class SearchFoodsTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var payload = await response.Content.ReadFromJsonAsync<FoodSearchPayload>();
+        var payload = await response.Content.ReadFromJsonAsync<FoodSearchPayload>(JsonOptions);
 
         Assert.NotNull(payload);
         Assert.Empty(payload.Items);
