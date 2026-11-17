@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
 using Norma.Api.Features.Auth;
+using Norma.Core.Age;
 
 namespace Norma.Api.Features.Profiles.UpdateProfile;
 
@@ -56,7 +57,7 @@ public static class UpdateProfileEndpoint
 
         if (request.BirthDate is DateOnly birthDate)
         {
-            var age = Age(birthDate, today);
+            var age = AgeMath.Years(birthDate, today);
 
             if (birthDate > today || age is < MinAge or > MaxAge)
             {
@@ -106,17 +107,5 @@ public static class UpdateProfileEndpoint
             profile.Goal,
             profile.KgPerWeek,
             profile.UpdatedAt));
-    }
-
-    private static int Age(DateOnly birthDate, DateOnly today)
-    {
-        var age = today.Year - birthDate.Year;
-
-        if (birthDate > today.AddYears(-age))
-        {
-            age--;
-        }
-
-        return age;
     }
 }

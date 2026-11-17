@@ -1,11 +1,17 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Norma.Api.Data;
+using Norma.Api.Features.Auth;
+using Norma.Core.Age;
 using Norma.Core.Energy;
 
 namespace Norma.Api.Features.Plan;
 
 /// <summary>
-/// Срез «целевая норма по профилю». Первый срез, который отдаёт расчёт ядра по
-/// HTTP: профиль приходит параметрами запроса, ответ — BMR, TDEE, цель и БЖУ.
+/// Срез «целевая норма по профилю»: BMR, TDEE, цель и БЖУ по сохраненному
+/// профилю и последнему весу. Не хватает данных - ответ перечисляет, что
+/// заполнить, вместо выдуманных чисел.
 /// </summary>
 /// <remarks>
 /// Папка среза: контракт ответа и регистрация маршрута рядом. Валидация — здесь
@@ -19,45 +25,92 @@ public static class PlanEndpoint
     {
         endpoints
             .MapGet("/plan", Handle)
-            .WithName("Plan");
+            .WithName("Plan")
+            .RequireAuthorization();
 
         return endpoints;
     }
 
-    private static Results<Ok<PlanResponse>, ValidationProblem> Handle(
-        string? sex,
-        int? age,
-        double? heightCm,
-        double? weightKg,
-        string? activity,
-        string? goal,
-        double? kgPerWeek)
+    private static async Task<Results<Ok<PlanResponse>, ValidationProblem, UnauthorizedHttpResult>> Handle(
+        ClaimsPrincipal principal,
+        NormaDbContext db,
+        TimeProvider clock,
+        CancellationToken cancellationToken)
     {
+        var userId = principal.GetUserId();
+
+        if (userId is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var profile = await db.UserProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.UserId == userId, cancellationToken);
+
+        // Норма считается от последнего замера: дата важнее, чем порядок ввода.
+        var weightKg = await db.WeightMeasurements
+            .Where(measurement => measurement.UserId == userId)
+            .OrderByDescending(measurement => measurement.Date)
+            .ThenByDescending(measurement => measurement.CreatedAt)
+            .Select(measurement => (double?)measurement.Kg)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var sex = profile?.Sex;
+        var birthDate = profile?.BirthDate;
+        var heightCm = profile?.HeightCm;
+        var activity = profile?.Activity;
+        var goal = profile?.Goal;
+
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
 
-        var parsedSex = ParseEnum<Sex>(sex, "sex", "female или male", errors);
-        var parsedActivity = ParseEnum<ActivityLevel>(
-            activity, "activity", "sedentary, light, moderate, active или veryActive", errors);
-        var parsedGoal = ParseEnum<Goal>(goal, "goal", "lose, maintain или gain", errors);
+        if (sex is null)
+        {
+            errors["sex"] = ["Укажите пол в профиле."];
+        }
 
-        ValidateRange(age, "age", 14, 120, "Возраст должен быть в диапазоне 14–120 лет.", errors);
-        ValidateRange(heightCm, "heightCm", 100, 250, "Рост должен быть в диапазоне 100–250 см.", errors);
-        ValidateRange(weightKg, "weightKg", 30, 400, "Вес должен быть в диапазоне 30–400 кг.", errors);
-        ValidateOptionalRange(kgPerWeek, "kgPerWeek", 0, 1.5, "Темп должен быть в диапазоне 0–1.5 кг/нед.", errors);
+        if (birthDate is null)
+        {
+            errors["birthDate"] = ["Укажите дату рождения в профиле."];
+        }
+
+        if (heightCm is null)
+        {
+            errors["heightCm"] = ["Укажите рост в профиле."];
+        }
+
+        if (activity is null)
+        {
+            errors["activity"] = ["Укажите уровень активности в профиле."];
+        }
+
+        if (goal is null)
+        {
+            errors["goal"] = ["Укажите цель по весу в профиле."];
+        }
+
+        if (weightKg is null)
+        {
+            errors["weight"] = ["Запишите вес - план считается от последнего замера."];
+        }
 
         if (errors.Count > 0)
         {
-            return TypedResults.ValidationProblem(errors);
+            return TypedResults.ValidationProblem(errors, title: "Профиль не заполнен");
         }
 
-        var profile = new Profile(
-            parsedSex!.Value,
-            age!.Value,
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+
+        var coreProfile = new Profile(
+            sex!.Value,
+            AgeMath.Years(birthDate!.Value, today),
             heightCm!.Value,
             weightKg!.Value,
-            parsedActivity!.Value);
+            activity!.Value);
 
-        var plan = EnergyMath.Plan(profile, parsedGoal!.Value, kgPerWeek ?? DefaultKgPerWeek);
+        // Темп необязателен: без него берем тот же по умолчанию, что раньше
+        // принимал срез в query-параметрах.
+        var plan = EnergyMath.Plan(coreProfile, goal!.Value, profile!.KgPerWeek ?? DefaultKgPerWeek);
 
         return TypedResults.Ok(new PlanResponse(
             Bmr: plan.Bmr,
@@ -69,60 +122,6 @@ public static class PlanEndpoint
                 plan.Macros.ProteinG,
                 plan.Macros.FatG,
                 plan.Macros.CarbsG)));
-    }
-
-    private static T? ParseEnum<T>(string? raw, string field, string expected, Dictionary<string, string[]> errors)
-        where T : struct, Enum
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            errors[field] = [$"Укажи {field}: {expected}."];
-            return null;
-        }
-
-        if (!Enum.TryParse<T>(raw, ignoreCase: true, out var value) || !Enum.IsDefined(value))
-        {
-            errors[field] = [$"Недопустимое значение: ожидается {expected}."];
-            return null;
-        }
-
-        return value;
-    }
-
-    private static void ValidateRange(
-        double? value,
-        string field,
-        double min,
-        double max,
-        string message,
-        Dictionary<string, string[]> errors)
-    {
-        if (value is null)
-        {
-            errors[field] = ["Параметр обязателен."];
-        }
-        else if (value < min || value > max)
-        {
-            errors[field] = [message];
-        }
-    }
-
-    /// <summary>
-    /// Проверка необязательного параметра: отсутствие значения — норма, тогда
-    /// дальше применяется значение по умолчанию.
-    /// </summary>
-    private static void ValidateOptionalRange(
-        double? value,
-        string field,
-        double min,
-        double max,
-        string message,
-        Dictionary<string, string[]> errors)
-    {
-        if (value is not null && (value < min || value > max))
-        {
-            errors[field] = [message];
-        }
     }
 }
 
