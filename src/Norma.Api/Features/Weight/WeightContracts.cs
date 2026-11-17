@@ -12,12 +12,9 @@ public sealed record WeightListResponse(IReadOnlyList<WeightResponse> Items);
 public sealed record TrendPointResponse(DateOnly Date, double EmaKg);
 
 /// <summary>
-/// Тренд веса: сглаженная кривая, скорость и прогноз даты цели. Все числа
-/// nullable, потому что замеров может ещё не быть. <c>TargetKg</c> — цель из
-/// профиля, от неё считается дата достижения. ИМТ и границы весовых зон
-/// считаются по последнему замеру и росту из профиля: без роста или веса они
-/// null, а <c>HealthyWeightMinKg</c>, <c>HealthyWeightMaxKg</c> и
-/// <c>ObeseFromKg</c> — это те же 18.5 / 25 / 30 ИМТ, переведенные в килограммы.
+/// Тренд веса: кривая, скорость, прогноз даты цели, ИМТ и границы весовых зон.
+/// ИМТ считается по последнему замеру и росту; границы зон - те же 18.5 / 25 / 30,
+/// переведенные в килограммы.
 /// </summary>
 public sealed record WeightTrendResponse(
     double? CurrentEmaKg,
