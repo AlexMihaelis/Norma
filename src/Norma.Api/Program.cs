@@ -52,15 +52,10 @@ public static class ApiHost
         builder.Services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-        // OpenAPI-документ собирается из зарегистрированных маршрутов и XML-комментариев
-        // (GenerateDocumentationFile в csproj). Отдельные Swagger-атрибуты не нужны:
-        // документация не может разойтись с кодом, потому что строится из него же.
+        // Документ строится из маршрутов; XML-описания включаются через csproj.
         builder.Services.AddOpenApi(options =>
         {
-            // Схема авторизации нужна, чтобы в Scalar появилось поле для токена:
-            // вставил JWT - и защищённые запросы можно проверять прямо из UI.
-            // Требование по эндпоинтам не проставляем: у нас один защищённый
-            // маршрут, а лишняя логика в трансформере только усложнит чтение.
+            // Схема Bearer: в Scalar появится поле для токена.
             options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info.Title = "Norma API";
@@ -133,9 +128,7 @@ public static class ApiHost
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // Документ: /openapi/v1.json, интерактивный UI: /scalar/v1.
-        // Оба маршрута анонимные: доку читают разработчик и демо-стенд, а не
-        // конечный пользователь, и данных там нет.
+        // Документ: /openapi/v1.json, UI: /scalar/v1; маршруты анонимные, данных в них нет.
         app.MapOpenApi();
         app.MapScalarApiReference();
 
