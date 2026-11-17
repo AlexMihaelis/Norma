@@ -46,7 +46,7 @@ public static class GetWeightTrendEndpoint
 
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
-        // Цель, рост, пол и дата рождения - из профиля: у среза один источник правды.
+        // Цель, рост, пол и дата рождения - из профиля.
         var profile = await db.UserProfiles
             .AsNoTracking()
             .Where(candidate => candidate.UserId == userId)
