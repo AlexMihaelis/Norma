@@ -14,6 +14,9 @@ using Norma.Api.Features.Auth.Register;
 using Norma.Api.Features.Foods.SearchFoods;
 using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
+using Norma.Api.Features.Weight.AddWeight;
+using Norma.Api.Features.Weight.GetWeightTrend;
+using Norma.Api.Features.Weight.ListWeight;
 using Scalar.AspNetCore;
 
 var app = ApiHost.Build(args);
@@ -141,6 +144,9 @@ public static class ApiHost
         api.MapRegister();
         api.MapLogin();
         api.MapMe();
+        api.MapAddWeight();
+        api.MapListWeight();
+        api.MapGetWeightTrend();
 
         return app;
     }

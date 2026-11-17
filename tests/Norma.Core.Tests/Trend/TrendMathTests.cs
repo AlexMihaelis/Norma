@@ -95,22 +95,20 @@ public sealed class TrendMathTests
     [Fact]
     public void Rate_is_zero_for_single_point()
     {
-        var points = TrendMath.Smooth([new WeightEntry(Start, 80)]);
-
-        Assert.Equal(0, TrendMath.RatePerWeek(points), precision: 6);
+        Assert.Equal(0, TrendMath.RatePerWeek([new WeightEntry(Start, 80)]), precision: 6);
     }
 
     [Fact]
-    public void Rate_for_two_points_uses_ema_difference()
+    public void Rate_for_two_points_is_difference_per_week()
     {
-        var points = TrendMath.Smooth(
-        [
+        // Скорость считается по сырым замерам: 1 кг за 7 дней = -1 кг/нед.
+        var entries = new[]
+        {
             new WeightEntry(Start, 80),
             new WeightEntry(Start.AddDays(7), 79),
-        ]);
+        };
 
-        // (79.496585 - 80) за 7 дней = -0.503415 кг/нед.
-        Assert.Equal(-0.503415, TrendMath.RatePerWeek(points), precision: 4);
+        Assert.Equal(-1.0, TrendMath.RatePerWeek(entries), precision: 4);
     }
 
     [Fact]
@@ -119,9 +117,9 @@ public sealed class TrendMathTests
         var trend = TrendMath.Analyze(CleanSeries(), goalKg: 77);
 
         Assert.Equal(78.502496, trend.CurrentEmaKg, precision: 4);
-        Assert.Equal(-0.449629, trend.RateKgPerWeek, precision: 4);
+        Assert.Equal(-0.5, trend.RateKgPerWeek, precision: 4);
         Assert.NotNull(trend.GoalDate);
-        Assert.Equal(new DateOnly(2026, 12, 24), trend.GoalDate.Value);
+        Assert.Equal(new DateOnly(2026, 12, 13), trend.GoalDate.Value);
     }
 
     [Fact]
@@ -130,9 +128,61 @@ public sealed class TrendMathTests
         var trend = TrendMath.Analyze(NoisySeries(), goalKg: 77);
 
         Assert.Equal(78.570576, trend.CurrentEmaKg, precision: 4);
-        Assert.Equal(-0.498951, trend.RateKgPerWeek, precision: 4);
+        Assert.Equal(-0.5, trend.RateKgPerWeek, precision: 4);
         Assert.NotNull(trend.GoalDate);
-        Assert.Equal(new DateOnly(2026, 12, 23), trend.GoalDate.Value);
+        Assert.Equal(new DateOnly(2026, 12, 13), trend.GoalDate.Value);
+    }
+
+    [Fact]
+    public void Celebration_spike_does_not_move_forecast()
+    {
+        // Праздник: один день +2 кг. Медианный наклон выброс игнорирует,
+        // средний уровень сдвигается на 2/31 кг - прогноз почти не меняется.
+        var withSpike = CleanSeries();
+        withSpike[^1] = withSpike[^1] with { Kg = withSpike[^1].Kg + 2 };
+
+        var clean = TrendMath.Analyze(CleanSeries(), goalKg: 77);
+        var spike = TrendMath.Analyze(withSpike, goalKg: 77);
+
+        Assert.Equal(-0.5, spike.RateKgPerWeek, precision: 2);
+        Assert.NotNull(clean.GoalDate);
+        Assert.NotNull(spike.GoalDate);
+
+        var shiftDays = Math.Abs(spike.GoalDate.Value.DayNumber - clean.GoalDate.Value.DayNumber);
+
+        Assert.True(shiftDays <= 3, $"Праздник сдвинул прогноз на {shiftDays} дней.");
+    }
+
+    [Fact]
+    public void Cycle_wave_does_not_flip_rate_sign()
+    {
+        // Цикл: волна воды ±1 кг с периодом 28 дней поверх похудения.
+        // Обычная регрессия на такой волне переворачивала знак скорости.
+        var cycle = Enumerable.Range(0, 42)
+            .Select(i => new WeightEntry(
+                Start.AddDays(i),
+                80 - (0.5 * i / 7) + Math.Sin(2 * Math.PI * i / 28)))
+            .ToList();
+
+        var trend = TrendMath.Analyze(cycle, goalKg: 77);
+
+        Assert.True(trend.RateKgPerWeek < 0, $"Скорость должна быть отрицательной, а получилась {trend.RateKgPerWeek}.");
+        Assert.NotNull(trend.GoalDate);
+    }
+
+    [Fact]
+    public void Weight_gain_has_positive_rate_and_forecast()
+    {
+        // Набор массы: цель выше текущего веса, темп положительный.
+        var gain = Enumerable.Range(0, 31)
+            .Select(i => new WeightEntry(Start.AddDays(i), 70 + (0.5 * i / 7)))
+            .ToList();
+
+        var trend = TrendMath.Analyze(gain, goalKg: 74);
+
+        Assert.Equal(0.5, trend.RateKgPerWeek, precision: 4);
+        Assert.NotNull(trend.GoalDate);
+        Assert.Equal(new DateOnly(2026, 12, 27), trend.GoalDate.Value);
     }
 
     [Fact]
@@ -150,6 +200,16 @@ public sealed class TrendMathTests
         Assert.True(
             shiftDays <= 3,
             $"Прогноз сдвинулся на {shiftDays} дней: чистый {clean.GoalDate}, шумный {noisy.GoalDate}.");
+    }
+
+    [Fact]
+    public void Analyze_without_goal_has_no_forecast()
+    {
+        // API запрашивает тренд и без цели: скорость и кривая есть, даты нет.
+        var trend = TrendMath.Analyze(CleanSeries());
+
+        Assert.Equal(78.502496, trend.CurrentEmaKg, precision: 4);
+        Assert.Null(trend.GoalDate);
     }
 
     [Fact]
