@@ -6,7 +6,7 @@ using Norma.Api.Data.Entities;
 
 namespace Norma.Api.Features.Auth.Login;
 
-/// <summary>Срез «вход»: проверяет пароль и выдаёт тот же JWT, что и регистрация.</summary>
+/// <summary>Вход по email и паролю; выдаёт тот же JWT, что и регистрация.</summary>
 public static class LoginEndpoint
 {
     public static IEndpointRouteBuilder MapLogin(this IEndpointRouteBuilder endpoints)
@@ -46,8 +46,8 @@ public static class LoginEndpoint
         var email = request!.Email!.Trim().ToLowerInvariant();
         var user = await db.Users.FirstOrDefaultAsync(candidate => candidate.Email == email, cancellationToken);
 
-        // Одна и та же ошибка для «нет пользователя» и «неверный пароль»: не даём
-        // подбирать существующие адреса.
+        // Одинаковый 401 для «нет пользователя» и «неверный пароль»: не даём
+        // перебором выяснять, какие адреса зарегистрированы.
         if (user is null)
         {
             return TypedResults.Unauthorized();
@@ -62,8 +62,6 @@ public static class LoginEndpoint
 
         if (verification == PasswordVerificationResult.SuccessRehashNeeded)
         {
-            // Параметры хэширования обновились (например, выросло число итераций) -
-            // пересчитываем и сохраняем, не меняя пароль пользователя.
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password!);
             await db.SaveChangesAsync(cancellationToken);
         }

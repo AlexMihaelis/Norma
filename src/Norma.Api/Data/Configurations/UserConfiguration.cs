@@ -4,7 +4,7 @@ using Norma.Api.Data.Entities;
 
 namespace Norma.Api.Data.Configurations;
 
-/// <summary>Пользователи: email уникален, пароль хранится хэшем.</summary>
+/// <summary>Таблица пользователей: email уникален.</summary>
 internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)

@@ -8,10 +8,7 @@ using Norma.Api.Data.Entities;
 
 namespace Norma.Api.Features.Auth.Register;
 
-/// <summary>
-/// Срез «регистрация»: создаёт пользователя по email и паролю и сразу выдаёт JWT,
-/// чтобы клиенту не нужен был отдельный вход после регистрации.
-/// </summary>
+/// <summary>Регистрация по email и паролю; сразу выдаёт JWT.</summary>
 public static class RegisterEndpoint
 {
     private const int MinPasswordLength = 8;
@@ -36,8 +33,6 @@ public static class RegisterEndpoint
     {
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
 
-        // Email приводим к нижнему регистру один раз при записи: уникальность и
-        // вход тогда не зависят от того, как пользователь набрал адрес.
         var email = request?.Email?.Trim().ToLowerInvariant();
         var password = request?.Password;
 
@@ -72,8 +67,6 @@ public static class RegisterEndpoint
             CreatedAt = clock.GetUtcNow(),
         };
 
-        // Хэширование - через PasswordHasher из фреймворка (PBKDF2 + соль).
-        // Свой пароль мы не храним и никуда не пишем.
         entity.PasswordHash = passwordHasher.HashPassword(entity, password!);
 
         db.Users.Add(entity);

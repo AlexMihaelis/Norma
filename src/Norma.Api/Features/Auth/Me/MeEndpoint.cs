@@ -4,8 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 namespace Norma.Api.Features.Auth.Me;
 
 /// <summary>
-/// Защищённый срез «кто я»: отдаёт пользователя из токена. Служит проверкой, что
-/// авторизация работает, и образцом того, как срезы получают <c>userId</c>.
+/// Защищённый срез «кто я» и образец того, как срезы получают <c>userId</c> из токена.
 /// </summary>
 public static class MeEndpoint
 {

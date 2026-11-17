@@ -5,17 +5,13 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Norma.Api.Features.Auth;
 
-/// <summary>
-/// Выпуск JWT-токенов. Отдельный сервис в DI: регистрация и вход используют один
-/// и тот же код подписи, а тесты могут подменить время через <see cref="TimeProvider"/>.
-/// </summary>
+/// <summary>Выпуск JWT для регистрации и входа.</summary>
 public sealed class JwtTokenIssuer(JwtOptions options, TimeProvider timeProvider)
 {
     public string Issue(Guid userId, string email)
     {
         var claims = new[]
         {
-            // "sub" - стандартный claim идентификатора пользователя.
             new Claim("sub", userId.ToString()),
             new Claim("email", email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
