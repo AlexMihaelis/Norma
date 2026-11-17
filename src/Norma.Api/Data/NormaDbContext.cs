@@ -19,6 +19,8 @@ public sealed class NormaDbContext(DbContextOptions<NormaDbContext> options) : D
 
     public DbSet<WeightMeasurement> WeightMeasurements => Set<WeightMeasurement>();
 
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Все IEntityTypeConfiguration из этой сборки: конфигурации лежат рядом с

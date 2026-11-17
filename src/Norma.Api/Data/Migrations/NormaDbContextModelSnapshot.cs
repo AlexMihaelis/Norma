@@ -142,6 +142,40 @@ namespace Norma.Api.Data.Migrations
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.UserProfile", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Activity")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Goal")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<double?>("HeightCm")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("KgPerWeek")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Sex")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("user_profiles", (string)null);
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.WeightMeasurement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -187,6 +221,17 @@ namespace Norma.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Food");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.UserProfile", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("Norma.Api.Data.Entities.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.WeightMeasurement", b =>
