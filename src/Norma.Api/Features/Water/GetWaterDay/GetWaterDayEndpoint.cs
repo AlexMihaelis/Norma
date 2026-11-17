@@ -9,9 +9,8 @@ using Norma.Core.Water;
 namespace Norma.Api.Features.Water.GetWaterDay;
 
 /// <summary>
-/// Срез «вода за день»: сумма приемов и ориентир по профилю. Норма считается от
-/// пола в профиле и последнего замера веса; не хватает данных - норма не
-/// выдумывается, а ответ подсказывает, что заполнить.
+/// Срез «вода за день»: сумма приемов и ориентир по профилю. Не хватает пола
+/// или веса - норма не выдумывается, ответ подсказывает, что заполнить.
 /// </summary>
 public static class GetWaterDayEndpoint
 {
@@ -50,8 +49,7 @@ public static class GetWaterDayEndpoint
             .AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.UserId == userId, cancellationToken);
 
-        // Норма считается от последнего замера: дата важнее, чем порядок ввода,
-        // поэтому при равенстве дат берем более позднюю запись.
+        // Последний замер: свежая дата важнее порядка ввода.
         var weightKg = await db.WeightMeasurements
             .Where(measurement => measurement.UserId == userId)
             .OrderByDescending(measurement => measurement.Date)
@@ -76,8 +74,7 @@ public static class GetWaterDayEndpoint
                 WaterText.Disclaimer));
         }
 
-        // Активность необязательна: без неё поправка не применяется, и ответ
-        // честно об этом говорит, но норму не скрывает.
+        // Без активности поправка 0, но норму не скрываем.
         var activity = profile!.Activity ?? ActivityLevel.Sedentary;
 
         var target = WaterMath.ForProfile(sex.Value, weightKg.Value, activity);

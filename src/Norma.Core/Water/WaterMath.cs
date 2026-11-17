@@ -4,8 +4,8 @@ namespace Norma.Core.Water;
 
 /// <summary>
 /// Дневной ориентир по воде: базовый объем из веса плюс поправка на активность.
-/// <see cref="ClampedToMin"/> и <see cref="ClampedToMax"/> говорят, что границы
-/// безопасности сработали и итог не равен сумме базы и поправки.
+/// Флаги <see cref="ClampedToMin"/> и <see cref="ClampedToMax"/> означают, что
+/// сработали границы безопасности.
 /// </summary>
 public sealed record WaterTarget(
     int BaseMl,
