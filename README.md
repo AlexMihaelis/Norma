@@ -20,17 +20,22 @@
 # база данных
 docker compose up -d db
 
-# схема базы: применяем миграции (один раз после каждой новой миграции в репозитории)
-dotnet ef database update --project src/Norma.Api
-
-# API
+# API (в Development сам применяет недостающие миграции при старте)
 dotnet run --project src/Norma.Api
 ```
 
-`dotnet ef` ставится один раз: `dotnet tool install --global dotnet-ef`. Приложение
-схему само не обновляет - после `git pull`, в котором появилась миграция, нужен
-`database update`. Проверить, что база догнала: `dotnet ef migrations list --project
-src/Norma.Api` (у примененных миграций нет пометки `(Pending)`).
+В Development схема догоняет миграции прямо на старте: флаг `Database:MigrateOnStartup`
+в `appsettings.Development.json`. Если база не поднята, API все равно запускается, а в
+лог пишется, что именно сделать. В других окружениях автоматики нет - миграции это
+шаг деплоя:
+
+```powershell
+dotnet ef database update --project src/Norma.Api
+```
+
+`dotnet ef` ставится один раз: `dotnet tool install --global dotnet-ef`. Проверить,
+что база догнала: `dotnet ef migrations list --project src/Norma.Api` (у примененных
+миграций нет пометки `(Pending)`).
 
 Проверка:
 
