@@ -133,6 +133,31 @@ public static class ApiHost
 
         var app = builder.Build();
 
+        // Удобство разработки: при запуске схема догоняет миграции, чтобы после
+        // git pull не вспоминать про отдельную команду. Включено только в
+        // Development и только флагом из appsettings.Development.json: в тестах
+        // схему готовят Testcontainers, в продакшене миграции - шаг деплоя, а не
+        // побочный эффект старта приложения (там инстансов несколько).
+        if (app.Environment.IsDevelopment()
+            && app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+        {
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                scope.ServiceProvider.GetRequiredService<NormaDbContext>().Database.Migrate();
+                app.Logger.LogInformation("Схема базы синхронизирована с миграциями.");
+            }
+            catch (Exception exception)
+            {
+                // База может быть не поднята. Падать на старте из-за этого хуже,
+                // чем подсказать, что именно сделать: API поднимается, а в логе
+                // видно причину.
+                app.Logger.LogError(
+                    exception,
+                    "Схема базы не обновлена. Подними базу (docker compose up -d db) и перезапусти API.");
+            }
+        }
+
         app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
