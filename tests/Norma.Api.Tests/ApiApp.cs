@@ -22,9 +22,13 @@ public sealed class ApiApp : IAsyncDisposable
 
     public HttpClient Client { get; }
 
-    public static async Task<ApiApp> StartAsync()
+    /// <param name="configure">
+    /// Подмена конфигурации до регистрации сервисов: так тесты с Testcontainers
+    /// подставляют строку подключения к своему контейнеру Postgres.
+    /// </param>
+    public static async Task<ApiApp> StartAsync(Action<WebApplicationBuilder>? configure = null)
     {
-        var app = ApiHost.Build(["--urls", "http://127.0.0.1:0"]);
+        var app = ApiHost.Build(["--urls", "http://127.0.0.1:0"], configure);
 
         await app.StartAsync();
 
