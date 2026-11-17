@@ -17,12 +17,20 @@
 ## Как запустить
 
 ```powershell
-# база данных (нужна позже, для текущего среза не обязательна)
+# база данных
 docker compose up -d db
+
+# схема базы: применяем миграции (один раз после каждой новой миграции в репозитории)
+dotnet ef database update --project src/Norma.Api
 
 # API
 dotnet run --project src/Norma.Api
 ```
+
+`dotnet ef` ставится один раз: `dotnet tool install --global dotnet-ef`. Приложение
+схему само не обновляет - после `git pull`, в котором появилась миграция, нужен
+`database update`. Проверить, что база догнала: `dotnet ef migrations list --project
+src/Norma.Api` (у примененных миграций нет пометки `(Pending)`).
 
 Проверка:
 
