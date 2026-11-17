@@ -8,8 +8,8 @@ using Norma.Core.Trend;
 namespace Norma.Api.Features.Weight.GetWeightTrend;
 
 /// <summary>
-/// Срез «тренд веса»: сглаживание EMA, скорость и прогноз даты цели.
-/// Арифметика живёт в <see cref="TrendMath"/>, срез только достаёт замеры.
+/// Срез «тренд веса»: сглаживание EMA, скорость и прогноз даты цели. Цель
+/// берется из профиля (желаемый вес), арифметика живёт в <see cref="TrendMath"/>.
 /// </summary>
 public static class GetWeightTrendEndpoint
 {
@@ -27,8 +27,7 @@ public static class GetWeightTrendEndpoint
         return endpoints;
     }
 
-    private static async Task<Results<Ok<WeightTrendResponse>, ValidationProblem, UnauthorizedHttpResult>> Handle(
-        double? goalKg,
+    private static async Task<Results<Ok<WeightTrendResponse>, UnauthorizedHttpResult>> Handle(
         ClaimsPrincipal principal,
         NormaDbContext db,
         CancellationToken cancellationToken)
@@ -40,17 +39,12 @@ public static class GetWeightTrendEndpoint
             return TypedResults.Unauthorized();
         }
 
-        var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
-
-        if (goalKg is <= 0 or > 500)
-        {
-            errors["goalKg"] = ["Цель по весу должна быть в диапазоне 0-500 кг."];
-        }
-
-        if (errors.Count > 0)
-        {
-            return TypedResults.ValidationProblem(errors);
-        }
+        // Цель по весу - из профиля: у среза один источник правды, как у плана.
+        var targetKg = await db.UserProfiles
+            .AsNoTracking()
+            .Where(profile => profile.UserId == userId)
+            .Select(profile => profile.TargetWeightKg)
+            .FirstOrDefaultAsync(cancellationToken);
 
         // Выбираем только свои замеры: userId берётся из токена, а не из запроса.
         var rows = await db.WeightMeasurements
@@ -61,11 +55,11 @@ public static class GetWeightTrendEndpoint
 
         if (rows.Count == 0)
         {
-            return TypedResults.Ok(new WeightTrendResponse(null, null, null, []));
+            return TypedResults.Ok(new WeightTrendResponse(null, null, targetKg, null, []));
         }
 
         var entries = rows.Select(row => new WeightEntry(row.Date, row.Kg)).ToList();
-        var trend = TrendMath.Analyze(entries, goalKg);
+        var trend = TrendMath.Analyze(entries, targetKg);
 
         var historyDays = entries[^1].Date.DayNumber - entries[0].Date.DayNumber + 1;
         var hasEnoughHistory = historyDays >= MinHistoryDays;
@@ -77,6 +71,7 @@ public static class GetWeightTrendEndpoint
         return TypedResults.Ok(new WeightTrendResponse(
             trend.CurrentEmaKg,
             hasEnoughHistory ? trend.RateKgPerWeek : null,
+            targetKg,
             hasEnoughHistory ? trend.GoalDate : null,
             points));
     }

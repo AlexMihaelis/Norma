@@ -20,6 +20,8 @@ public sealed class UserProfile
 
     public Goal? Goal { get; set; }
 
+    public double? TargetWeightKg { get; set; }
+
     public double? KgPerWeek { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

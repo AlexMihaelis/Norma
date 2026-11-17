@@ -34,6 +34,7 @@ public sealed class ProfileTests : IAsyncLifetime
             heightCm = 175.0,
             activity = "Sedentary",
             goal = "Lose",
+            targetWeightKg = 62.5,
             kgPerWeek = 0.25,
         });
 
@@ -51,6 +52,7 @@ public sealed class ProfileTests : IAsyncLifetime
         Assert.Equal(175.0, profile.HeightCm);
         Assert.Equal("Sedentary", profile.Activity);
         Assert.Equal("Lose", profile.Goal);
+        Assert.Equal(62.5, profile.TargetWeightKg);
         Assert.Equal(0.25, profile.KgPerWeek);
     }
 
@@ -104,6 +106,20 @@ public sealed class ProfileTests : IAsyncLifetime
         var user = await RegisterAsync(app, "invalid-profile@example.com");
 
         using var response = await SendAsync(app, HttpMethod.Put, "/api/v1/me/profile", user.Token, new { heightCm = 50.0 });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_rejects_invalid_target_weight()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "invalid-target@example.com");
+
+        using var response = await SendAsync(
+            app, HttpMethod.Put, "/api/v1/me/profile", user.Token, new { targetWeightKg = 10.0 });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -190,5 +206,6 @@ public sealed class ProfileTests : IAsyncLifetime
         double? HeightCm,
         string? Activity,
         string? Goal,
+        double? TargetWeightKg,
         double? KgPerWeek);
 }

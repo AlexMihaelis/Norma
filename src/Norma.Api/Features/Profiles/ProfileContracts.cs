@@ -9,6 +9,7 @@ public sealed record ProfileResponse(
     double? HeightCm,
     ActivityLevel? Activity,
     Goal? Goal,
+    double? TargetWeightKg,
     double? KgPerWeek,
     DateTimeOffset UpdatedAt);
 
@@ -19,4 +20,5 @@ public sealed record UpdateProfileRequest(
     double? HeightCm,
     ActivityLevel? Activity,
     Goal? Goal,
+    double? TargetWeightKg,
     double? KgPerWeek);
