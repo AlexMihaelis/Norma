@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
 using Norma.Api.Features.Auth;
@@ -13,6 +14,7 @@ using Norma.Api.Features.Auth.Register;
 using Norma.Api.Features.Foods.SearchFoods;
 using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
+using Scalar.AspNetCore;
 
 var app = ApiHost.Build(args);
 
@@ -49,6 +51,30 @@ public static class ApiHost
         // Enum в JSON строками: фронтенду проще читать "Cooked", чем 2.
         builder.Services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+        // Документ строится из маршрутов; XML-описания включаются через csproj.
+        builder.Services.AddOpenApi(options =>
+        {
+            // Схема Bearer: в Scalar появится поле для токена.
+            options.AddDocumentTransformer((document, _, _) =>
+            {
+                document.Info.Title = "Norma API";
+                document.Info.Version = "v1";
+                document.Info.Description = "Дневник питания, веса и активности.";
+
+                document.Components ??= new OpenApiComponents();
+                document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
+                {
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "JWT из /api/v1/auth/login или /api/v1/auth/register.",
+                };
+
+                return Task.CompletedTask;
+            });
+        });
 
         var connectionString = builder.Configuration.GetConnectionString("Norma")
             ?? DevelopmentConnectionString;
@@ -101,6 +127,10 @@ public static class ApiHost
         app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // Документ: /openapi/v1.json, UI: /scalar/v1; маршруты анонимные, данных в них нет.
+        app.MapOpenApi();
+        app.MapScalarApiReference();
 
         // Версия API фиксируется в пути с первого дня: мобильный клиент появится
         // позже и не должен ломать веб-версию при изменении контрактов.
