@@ -68,8 +68,8 @@ public sealed class WeightTests : IAsyncLifetime
 
         var user = await RegisterAsync(app, "trend@example.com");
 
-        // Желаемый вес хранится в профиле: дата цели считается от него.
-        await SetProfileAsync(app, user.Token, new { targetWeightKg = 77.0 });
+        // Желаемый вес и рост хранятся в профиле: от них дата цели и ИМТ.
+        await SetProfileAsync(app, user.Token, new { targetWeightKg = 77.0, heightCm = 175.0 });
 
         // Четыре недели истории - минимум, чтобы скорость считалась робастно.
         for (var day = 0; day < 28; day++)
@@ -98,6 +98,17 @@ public sealed class WeightTests : IAsyncLifetime
         Assert.True(trend.RateKgPerWeek < 0);
         Assert.Equal(77.0, trend.TargetKg);
         Assert.NotNull(trend.GoalDate);
+        Assert.Equal(175.0, trend.HeightCm);
+
+        // 77.3 кг при 175 см - ИМТ 25.24, чуть выше верхней границы нормы.
+        Assert.NotNull(trend.Bmi);
+        Assert.Equal(25.24, trend.Bmi.Value, precision: 2);
+        Assert.Equal("High", trend.BmiCategory);
+
+        // Те же 18.5 / 25 / 30 ИМТ, переведенные в килограммы для 175 см.
+        Assert.Equal(56.65625, trend.HealthyWeightMinKg!.Value, precision: 3);
+        Assert.Equal(76.5625, trend.HealthyWeightMaxKg!.Value, precision: 3);
+        Assert.Equal(91.875, trend.ObeseFromKg!.Value, precision: 3);
         Assert.Equal(28, trend.Points.Count);
     }
 
@@ -128,6 +139,9 @@ public sealed class WeightTests : IAsyncLifetime
         Assert.NotNull(trend);
         Assert.NotNull(trend.CurrentEmaKg);
         Assert.Equal(77.0, trend.TargetKg);
+        Assert.Null(trend.HeightCm);
+        Assert.Null(trend.Bmi);
+        Assert.Null(trend.HealthyWeightMinKg);
         Assert.Null(trend.RateKgPerWeek);
         Assert.Null(trend.GoalDate);
         Assert.Equal(5, trend.Points.Count);
@@ -141,6 +155,9 @@ public sealed class WeightTests : IAsyncLifetime
 
         var user = await RegisterAsync(app, "empty@example.com");
 
+        // Без замеров ИМТ не посчитать, но границы зон от роста уже известны.
+        await SetProfileAsync(app, user.Token, new { heightCm = 175.0 });
+
         using var response = await SendAsync(app, HttpMethod.Get, "/api/v1/weight/trend", user.Token);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -151,6 +168,12 @@ public sealed class WeightTests : IAsyncLifetime
         Assert.Null(trend.CurrentEmaKg);
         Assert.Null(trend.TargetKg);
         Assert.Null(trend.GoalDate);
+        Assert.Null(trend.Bmi);
+        Assert.Null(trend.BmiCategory);
+        Assert.Equal(175.0, trend.HeightCm);
+        Assert.Equal(56.65625, trend.HealthyWeightMinKg!.Value, precision: 3);
+        Assert.Equal(76.5625, trend.HealthyWeightMaxKg!.Value, precision: 3);
+        Assert.Equal(91.875, trend.ObeseFromKg!.Value, precision: 3);
         Assert.Empty(trend.Points);
     }
 
@@ -182,6 +205,8 @@ public sealed class WeightTests : IAsyncLifetime
         Assert.True(trend.RateKgPerWeek < 0);
         Assert.Null(trend.TargetKg);
         Assert.Null(trend.GoalDate);
+        Assert.Null(trend.HeightCm);
+        Assert.Null(trend.Bmi);
     }
 
     [Fact]
@@ -262,6 +287,12 @@ public sealed class WeightTests : IAsyncLifetime
         double? RateKgPerWeek,
         double? TargetKg,
         DateOnly? GoalDate,
+        double? HeightCm,
+        double? Bmi,
+        string? BmiCategory,
+        double? HealthyWeightMinKg,
+        double? HealthyWeightMaxKg,
+        double? ObeseFromKg,
         IReadOnlyList<TrendPointItem> Points);
 
     private sealed record TrendPointItem(DateOnly Date, double EmaKg);
