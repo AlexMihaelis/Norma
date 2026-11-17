@@ -176,6 +176,31 @@ namespace Norma.Api.Data.Migrations
                     b.ToTable("user_profiles", (string)null);
                 });
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.WaterIntake", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Ml")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date");
+
+                    b.ToTable("water_intakes", (string)null);
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.WeightMeasurement", b =>
                 {
                     b.Property<Guid>("Id")
@@ -228,6 +253,17 @@ namespace Norma.Api.Data.Migrations
                     b.HasOne("Norma.Api.Data.Entities.User", "User")
                         .WithOne()
                         .HasForeignKey("Norma.Api.Data.Entities.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.WaterIntake", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

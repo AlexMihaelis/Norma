@@ -21,6 +21,8 @@ public sealed class NormaDbContext(DbContextOptions<NormaDbContext> options) : D
 
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
+    public DbSet<WaterIntake> WaterIntakes => Set<WaterIntake>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Все IEntityTypeConfiguration из этой сборки: конфигурации лежат рядом с
