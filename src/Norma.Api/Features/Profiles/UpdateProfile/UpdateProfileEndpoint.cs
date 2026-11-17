@@ -16,6 +16,8 @@ public static class UpdateProfileEndpoint
 {
     private const double MinHeightCm = 100;
     private const double MaxHeightCm = 250;
+    private const double MinTargetKg = 20;
+    private const double MaxTargetKg = 500;
     private const double MaxKgPerWeek = 1.5;
     private const int MinAge = 14;
     private const int MaxAge = 120;
@@ -70,6 +72,12 @@ public static class UpdateProfileEndpoint
             errors["heightCm"] = [$"Рост должен быть в диапазоне {MinHeightCm}-{MaxHeightCm} см."];
         }
 
+        if (request.TargetWeightKg is double targetWeightKg
+            && (targetWeightKg < MinTargetKg || targetWeightKg > MaxTargetKg))
+        {
+            errors["targetWeightKg"] = [$"Желаемый вес должен быть в диапазоне {MinTargetKg}-{MaxTargetKg} кг."];
+        }
+
         if (request.KgPerWeek is double kgPerWeek && (kgPerWeek < 0 || kgPerWeek > MaxKgPerWeek))
         {
             errors["kgPerWeek"] = [$"Темп должен быть в диапазоне 0-{MaxKgPerWeek} кг/нед."];
@@ -94,6 +102,7 @@ public static class UpdateProfileEndpoint
         profile.HeightCm = request.HeightCm;
         profile.Activity = request.Activity;
         profile.Goal = request.Goal;
+        profile.TargetWeightKg = request.TargetWeightKg;
         profile.KgPerWeek = request.KgPerWeek;
         profile.UpdatedAt = clock.GetUtcNow();
 
@@ -105,6 +114,7 @@ public static class UpdateProfileEndpoint
             profile.HeightCm,
             profile.Activity,
             profile.Goal,
+            profile.TargetWeightKg,
             profile.KgPerWeek,
             profile.UpdatedAt));
     }

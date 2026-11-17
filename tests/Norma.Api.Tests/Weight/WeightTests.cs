@@ -68,6 +68,9 @@ public sealed class WeightTests : IAsyncLifetime
 
         var user = await RegisterAsync(app, "trend@example.com");
 
+        // Желаемый вес хранится в профиле: дата цели считается от него.
+        await SetProfileAsync(app, user.Token, new { targetWeightKg = 77.0 });
+
         // Четыре недели истории - минимум, чтобы скорость считалась робастно.
         for (var day = 0; day < 28; day++)
         {
@@ -80,7 +83,7 @@ public sealed class WeightTests : IAsyncLifetime
         }
 
         using var response = await SendAsync(
-            app, HttpMethod.Get, "/api/v1/weight/trend?goalKg=77", user.Token);
+            app, HttpMethod.Get, "/api/v1/weight/trend", user.Token);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -93,6 +96,7 @@ public sealed class WeightTests : IAsyncLifetime
         Assert.InRange(trend.CurrentEmaKg.Value, 78, 79);
         Assert.NotNull(trend.RateKgPerWeek);
         Assert.True(trend.RateKgPerWeek < 0);
+        Assert.Equal(77.0, trend.TargetKg);
         Assert.NotNull(trend.GoalDate);
         Assert.Equal(28, trend.Points.Count);
     }
@@ -105,6 +109,8 @@ public sealed class WeightTests : IAsyncLifetime
 
         var user = await RegisterAsync(app, "short@example.com");
 
+        await SetProfileAsync(app, user.Token, new { targetWeightKg = 77.0 });
+
         for (var day = 0; day < 5; day++)
         {
             var date = new DateOnly(2026, 10, 1).AddDays(day);
@@ -115,12 +121,13 @@ public sealed class WeightTests : IAsyncLifetime
         }
 
         using var response = await SendAsync(
-            app, HttpMethod.Get, "/api/v1/weight/trend?goalKg=77", user.Token);
+            app, HttpMethod.Get, "/api/v1/weight/trend", user.Token);
 
         var trend = await response.Content.ReadFromJsonAsync<TrendPayload>();
 
         Assert.NotNull(trend);
         Assert.NotNull(trend.CurrentEmaKg);
+        Assert.Equal(77.0, trend.TargetKg);
         Assert.Null(trend.RateKgPerWeek);
         Assert.Null(trend.GoalDate);
         Assert.Equal(5, trend.Points.Count);
@@ -142,8 +149,39 @@ public sealed class WeightTests : IAsyncLifetime
 
         Assert.NotNull(trend);
         Assert.Null(trend.CurrentEmaKg);
+        Assert.Null(trend.TargetKg);
         Assert.Null(trend.GoalDate);
         Assert.Empty(trend.Points);
+    }
+
+    [Fact]
+    public async Task Trend_without_target_hides_goal_date()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "no-target@example.com");
+
+        for (var day = 0; day < 28; day++)
+        {
+            var date = new DateOnly(2026, 10, 1).AddDays(day);
+            var kg = 80 - (0.1 * day);
+
+            using var add = await SendAsync(
+                app, HttpMethod.Post, "/api/v1/weight", user.Token, new { date, kg });
+            Assert.Equal(HttpStatusCode.Created, add.StatusCode);
+        }
+
+        using var response = await SendAsync(
+            app, HttpMethod.Get, "/api/v1/weight/trend", user.Token);
+
+        var trend = await response.Content.ReadFromJsonAsync<TrendPayload>();
+
+        Assert.NotNull(trend);
+        Assert.NotNull(trend.RateKgPerWeek);
+        Assert.True(trend.RateKgPerWeek < 0);
+        Assert.Null(trend.TargetKg);
+        Assert.Null(trend.GoalDate);
     }
 
     [Fact]
@@ -172,6 +210,12 @@ public sealed class WeightTests : IAsyncLifetime
         }
 
         return await app.Client.SendAsync(request);
+    }
+
+    private static async Task SetProfileAsync(ApiApp app, string token, object profile)
+    {
+        using var response = await SendAsync(app, HttpMethod.Put, "/api/v1/me/profile", token, profile);
+        response.EnsureSuccessStatusCode();
     }
 
     private static async Task<AuthPayload> RegisterAsync(ApiApp app, string email)
@@ -216,6 +260,7 @@ public sealed class WeightTests : IAsyncLifetime
     private sealed record TrendPayload(
         double? CurrentEmaKg,
         double? RateKgPerWeek,
+        double? TargetKg,
         DateOnly? GoalDate,
         IReadOnlyList<TrendPointItem> Points);
 

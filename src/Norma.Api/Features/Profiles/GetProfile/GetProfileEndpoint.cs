@@ -46,6 +46,7 @@ public static class GetProfileEndpoint
             profile.HeightCm,
             profile.Activity,
             profile.Goal,
+            profile.TargetWeightKg,
             profile.KgPerWeek,
             profile.UpdatedAt));
     }

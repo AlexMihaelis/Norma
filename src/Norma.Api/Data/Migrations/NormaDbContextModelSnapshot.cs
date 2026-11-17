@@ -168,6 +168,9 @@ namespace Norma.Api.Data.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<double?>("TargetWeightKg")
+                        .HasColumnType("double precision");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
