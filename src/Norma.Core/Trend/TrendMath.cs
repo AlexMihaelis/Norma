@@ -22,8 +22,8 @@ public static class TrendMath
     /// <summary>Постоянная времени сглаживания, дни.</summary>
     public const double DefaultTimeConstantDays = 10;
 
-    /// <summary>Окно оценки скорости, дни.</summary>
-    public const int DefaultRateWindowDays = 14;
+    /// <summary>Окно оценки скорости, дни: полтора цикла - волна гасится при любой фазе.</summary>
+    public const int DefaultRateWindowDays = 42;
 
     /// <summary>Сглаживает замеры по EMA.</summary>
     /// <param name="entries">Замеры в произвольном порядке; сортируются по дате.</param>
@@ -73,12 +73,16 @@ public static class TrendMath
         return points;
     }
 
-    /// <summary>Скорость изменения EMA за окно, кг/нед.</summary>
+    /// <summary>Скорость изменения веса за окно, кг/нед.</summary>
+    /// <remarks>
+    /// Считается по сырым замерам робастно (Тейл-Сен): сглаженная кривая отстаёт
+    /// от тренда, а обычная регрессия ломается на выбросах и волнах.
+    /// </remarks>
     public static double RatePerWeek(
-        IReadOnlyList<TrendPoint> points,
+        IReadOnlyList<WeightEntry> entries,
         int windowDays = DefaultRateWindowDays)
     {
-        ArgumentNullException.ThrowIfNull(points);
+        ArgumentNullException.ThrowIfNull(entries);
 
         if (windowDays <= 0)
         {
@@ -86,34 +90,76 @@ public static class TrendMath
                 nameof(windowDays), windowDays, "Окно должно быть положительным.");
         }
 
-        if (points.Count < 2)
+        var trend = RobustTrend(entries, windowDays);
+
+        return trend is null ? 0 : trend.Value.SlopePerDay * 7;
+    }
+
+    /// <summary>
+    /// Робастная линия тренда: наклон - медиана парных наклонов (Тейл-Сен),
+    /// уровень на последнюю дату - среднее остатков.
+    /// </summary>
+    /// <remarks>
+    /// Медиана игнорирует одиночные выбросы (праздник, солёный ужин), а среднее
+    /// остатков гасит периодическую волну (цикл), если окно не короче периода.
+    /// Поэтому прогноз не уезжает от одного скачка и не переворачивает знак
+    /// скорости на цикле.
+    /// </remarks>
+    private static (double SlopePerDay, double LevelAtLast)? RobustTrend(
+        IReadOnlyList<WeightEntry> entries,
+        int windowDays)
+    {
+        var ordered = entries.OrderBy(entry => entry.Date).ToList();
+
+        if (ordered.Count < 2)
         {
-            return 0;
+            return null;
         }
 
-        var lastDay = points[^1].Date.DayNumber;
-        var window = points.Where(point => lastDay - point.Date.DayNumber <= windowDays).ToList();
+        var lastDay = ordered[^1].Date.DayNumber;
+        var window = ordered.Where(entry => lastDay - entry.Date.DayNumber <= windowDays).ToList();
 
         if (window.Count < 2)
         {
-            return 0;
+            return null;
         }
 
-        var firstDay = window[0].Date.DayNumber;
-        var meanX = window.Average(point => point.Date.DayNumber - firstDay);
-        var meanY = window.Average(point => point.EmaKg);
+        var slopes = new List<double>();
 
-        double covariance = 0;
-        double variance = 0;
-
-        foreach (var point in window)
+        for (var i = 0; i < window.Count; i++)
         {
-            var dx = point.Date.DayNumber - firstDay - meanX;
-            covariance += dx * (point.EmaKg - meanY);
-            variance += dx * dx;
+            for (var j = i + 1; j < window.Count; j++)
+            {
+                var days = window[j].Date.DayNumber - window[i].Date.DayNumber;
+
+                if (days > 0)
+                {
+                    slopes.Add((window[j].Kg - window[i].Kg) / days);
+                }
+            }
         }
 
-        return variance == 0 ? 0 : covariance / variance * 7;
+        if (slopes.Count == 0)
+        {
+            return null;
+        }
+
+        slopes.Sort();
+        var slope = Median(slopes);
+
+        var last = window[^1].Date.DayNumber;
+        var level = window.Average(entry => entry.Kg - (slope * (entry.Date.DayNumber - last)));
+
+        return (slope, level);
+    }
+
+    private static double Median(List<double> sorted)
+    {
+        var middle = sorted.Count / 2;
+
+        return sorted.Count % 2 == 1
+            ? sorted[middle]
+            : (sorted[middle - 1] + sorted[middle]) / 2;
     }
 
     /// <summary>Дата, когда тренд дойдёт до цели; <c>null</c> — недостижимо.</summary>
@@ -146,9 +192,10 @@ public static class TrendMath
     }
 
     /// <summary>Полный анализ: сглаживание, скорость и прогноз даты цели.</summary>
+    /// <param name="goalKg">Цель, кг; без цели прогноза даты нет.</param>
     public static WeightTrend Analyze(
         IReadOnlyList<WeightEntry> entries,
-        double goalKg,
+        double? goalKg = null,
         double timeConstantDays = DefaultTimeConstantDays,
         int windowDays = DefaultRateWindowDays)
     {
@@ -159,16 +206,26 @@ public static class TrendMath
             throw new ArgumentException("Нужен хотя бы один замер веса.", nameof(entries));
         }
 
-        if (goalKg <= 0 || goalKg > 500)
+        if (goalKg is <= 0 or > 500)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(goalKg), goalKg, "Цель по весу должна быть в диапазоне 0-500 кг.");
         }
 
-        var points = Smooth(entries, timeConstantDays);
+        var ordered = entries.OrderBy(entry => entry.Date).ToList();
+        var points = Smooth(ordered, timeConstantDays);
         var last = points[^1];
-        var rate = RatePerWeek(points, windowDays);
-        var goalDate = ForecastGoalDate(last.EmaKg, last.Date, rate, goalKg);
+
+        // Скорость и стартовый уровень прогноза - по робастной линии, а не по EMA:
+        // EMA отстаёт, а обычная регрессия ломается на выбросах и волнах.
+        var robust = RobustTrend(ordered, windowDays);
+        var rate = robust is null ? 0 : robust.Value.SlopePerDay * 7;
+        var forecastFrom = robust?.LevelAtLast ?? last.EmaKg;
+
+        // Без цели считаем тренд и скорость, но не обещаем дату.
+        var goalDate = goalKg is double goal
+            ? ForecastGoalDate(forecastFrom, last.Date, rate, goal)
+            : null;
 
         return new WeightTrend(points, last.EmaKg, rate, goalDate);
     }
