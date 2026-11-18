@@ -13,6 +13,9 @@ using Norma.Api.Features.Auth;
 using Norma.Api.Features.Auth.Login;
 using Norma.Api.Features.Auth.Me;
 using Norma.Api.Features.Auth.Register;
+using Norma.Api.Features.Diary.AddDiaryEntry;
+using Norma.Api.Features.Diary.DeleteDiaryEntry;
+using Norma.Api.Features.Diary.GetDiaryDay;
 using Norma.Api.Features.Foods.SearchFoods;
 using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
@@ -184,6 +187,9 @@ public static class ApiHost
         api.MapGetWaterDay();
         api.MapAddActivity();
         api.MapGetActivityDay();
+        api.MapAddDiaryEntry();
+        api.MapGetDiaryDay();
+        api.MapDeleteDiaryEntry();
 
         return app;
     }

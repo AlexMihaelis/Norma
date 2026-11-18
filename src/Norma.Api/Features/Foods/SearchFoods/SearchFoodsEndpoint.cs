@@ -7,7 +7,7 @@ namespace Norma.Api.Features.Foods.SearchFoods;
 
 /// <summary>
 /// Срез «поиск продукта». Ищет по русским названиям и синонимам, отдаёт КБЖУ на
-/// 100 г и состояние продукта.
+/// 100 г или 100 мл, базовую единицу и состояние продукта.
 /// </summary>
 /// <remarks>
 /// Поиск идёт по локальной базе: это быстро и не зависит от доступности Open Food
@@ -95,6 +95,7 @@ public static class SearchFoodsEndpoint
             Id: food.Id,
             Name: primary?.Name ?? "Без названия",
             State: food.State,
+            BaseUnit: food.BaseUnit,
             KcalPer100g: food.KcalPer100g,
             ProteinPer100g: food.ProteinPer100g,
             FatPer100g: food.FatPer100g,
@@ -120,6 +121,7 @@ public sealed record FoodSearchItem(
     Guid Id,
     string Name,
     FoodState State,
+    FoodUnit BaseUnit,
     double KcalPer100g,
     double ProteinPer100g,
     double FatPer100g,

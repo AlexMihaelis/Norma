@@ -25,6 +25,9 @@ public sealed class Food
 
     public FoodState State { get; set; } = FoodState.Unknown;
 
+    /// <summary>Единица, в которой заданы значения на 100 единиц: граммы или миллилитры.</summary>
+    public FoodUnit BaseUnit { get; set; } = FoodUnit.Gram;
+
     public double KcalPer100g { get; set; }
 
     public double ProteinPer100g { get; set; }

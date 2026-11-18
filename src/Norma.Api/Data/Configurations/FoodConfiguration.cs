@@ -18,6 +18,15 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
         builder.Property(food => food.Source).HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(food => food.State).HasConversion<string>().HasMaxLength(20).IsRequired();
 
+        // У существующих продуктов миграция проставит "Gram": подавляющее
+        // большинство записей USDA - на 100 г, миллилитры появятся позже.
+        builder
+            .Property(food => food.BaseUnit)
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(FoodUnit.Gram)
+            .IsRequired();
+
         builder.Property(food => food.SourceId).HasMaxLength(64);
 
         // Один и тот же продукт источника не должен импортироваться дважды.
