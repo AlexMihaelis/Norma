@@ -86,21 +86,16 @@ public static class SearchFoodsEndpoint
         return TypedResults.Ok(new FoodSearchResponse(items));
     }
 
-    private static FoodSearchItem ToItem(Food food)
-    {
-        var primary = food.Names.FirstOrDefault(name => name.IsPrimary)
-            ?? food.Names.FirstOrDefault();
-
-        return new FoodSearchItem(
+    private static FoodSearchItem ToItem(Food food) =>
+        new(
             Id: food.Id,
-            Name: primary?.Name ?? "Без названия",
+            Name: FoodDisplay.PrimaryName(food),
             State: food.State,
             BaseUnit: food.BaseUnit,
             KcalPer100g: food.KcalPer100g,
             ProteinPer100g: food.ProteinPer100g,
             FatPer100g: food.FatPer100g,
             CarbsPer100g: food.CarbsPer100g);
-    }
 
     /// <summary>
     /// Экранирует служебные символы LIKE, чтобы запрос «50%» искал именно «50%»,

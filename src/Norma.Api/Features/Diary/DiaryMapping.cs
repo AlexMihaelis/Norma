@@ -1,4 +1,5 @@
 using Norma.Api.Data.Entities;
+using Norma.Api.Features.Foods;
 using Norma.Core.Nutrition;
 
 namespace Norma.Api.Features.Diary;
@@ -31,7 +32,7 @@ internal static class DiaryMapping
         return new DiaryEntryResponse(
             id,
             food.Id,
-            PrimaryName(food),
+            FoodDisplay.PrimaryName(food),
             quantity,
             unit,
             (int)Math.Round(values.Kcal, MidpointRounding.AwayFromZero),
@@ -54,9 +55,4 @@ internal static class DiaryMapping
             Math.Round(items.Sum(item => item.Fat), 1, MidpointRounding.AwayFromZero),
             Math.Round(items.Sum(item => item.Carbs), 1, MidpointRounding.AwayFromZero));
     }
-
-    private static string PrimaryName(Food food) =>
-        (food.Names.FirstOrDefault(name => name.IsPrimary)
-            ?? food.Names.FirstOrDefault())?.Name
-        ?? "Без названия";
 }

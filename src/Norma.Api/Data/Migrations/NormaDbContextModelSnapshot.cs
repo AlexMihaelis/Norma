@@ -55,6 +55,31 @@ namespace Norma.Api.Data.Migrations
                     b.ToTable("activity_records", (string)null);
                 });
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.FavoriteFood", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FoodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FoodId");
+
+                    b.HasIndex("UserId", "FoodId")
+                        .IsUnique();
+
+                    b.ToTable("favorite_foods", (string)null);
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.Food", b =>
                 {
                     b.Property<Guid>("Id")
@@ -336,6 +361,25 @@ namespace Norma.Api.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.FavoriteFood", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.Food", "Food")
+                        .WithMany()
+                        .HasForeignKey("FoodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Food");
 
                     b.Navigation("User");
                 });
