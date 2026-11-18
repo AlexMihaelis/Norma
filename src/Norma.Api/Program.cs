@@ -16,6 +16,7 @@ using Norma.Api.Features.Auth.Register;
 using Norma.Api.Features.Diary.AddDiaryEntry;
 using Norma.Api.Features.Diary.DeleteDiaryEntry;
 using Norma.Api.Features.Diary.GetDiaryDay;
+using Norma.Api.Features.Diary.RepeatDiaryDay;
 using Norma.Api.Features.Foods.SearchFoods;
 using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
@@ -190,6 +191,7 @@ public static class ApiHost
         api.MapAddDiaryEntry();
         api.MapGetDiaryDay();
         api.MapDeleteDiaryEntry();
+        api.MapRepeatDiaryDay();
 
         return app;
     }
