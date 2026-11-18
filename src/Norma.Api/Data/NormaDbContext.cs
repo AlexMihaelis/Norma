@@ -25,6 +25,10 @@ public sealed class NormaDbContext(DbContextOptions<NormaDbContext> options) : D
 
     public DbSet<ActivityRecord> ActivityRecords => Set<ActivityRecord>();
 
+    public DbSet<Meal> Meals => Set<Meal>();
+
+    public DbSet<MealItem> MealItems => Set<MealItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Все IEntityTypeConfiguration из этой сборки: конфигурации лежат рядом с
