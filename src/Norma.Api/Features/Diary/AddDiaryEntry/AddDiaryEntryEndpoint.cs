@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
 using Norma.Api.Features.Auth;
@@ -48,8 +47,8 @@ public static class AddDiaryEntryEndpoint
 
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
 
-        var kind = ParseMealKind(request?.Meal, errors);
-        var requestedUnit = ParseUnit(request?.Unit, errors);
+        var kind = DiaryParsing.ParseRequiredMeal(request?.Meal, errors);
+        var requestedUnit = DiaryParsing.ParseUnit(request?.Unit, errors);
 
         if (request?.FoodId is null || request.FoodId == Guid.Empty)
         {
@@ -103,7 +102,8 @@ public static class AddDiaryEntryEndpoint
         }
 
         var now = clock.GetUtcNow();
-        var meal = await GetOrCreateMealAsync(db, userId.Value, date, kind!.Value, now, cancellationToken);
+        var meal = await DiaryMeals.GetOrCreateAsync(
+            db, userId.Value, date, kind!.Value, now, cancellationToken);
 
         var item = new MealItem
         {
@@ -121,91 +121,5 @@ public static class AddDiaryEntryEndpoint
         return TypedResults.Created(
             $"/api/v1/diary/{item.Id}",
             DiaryMapping.ToEntry(item.Id, food, item.Quantity, item.Unit));
-    }
-
-    /// <summary>
-    /// Прием пищи на дату: существующий либо только что созданный. Уникальный
-    /// индекс (UserId, Date, Kind) защищает от двух одновременных запросов; на
-    /// конфликте забираем чужую строку и пишем позицию в нее.
-    /// </summary>
-    private static async Task<Meal> GetOrCreateMealAsync(
-        NormaDbContext db,
-        Guid userId,
-        DateOnly date,
-        MealKind kind,
-        DateTimeOffset now,
-        CancellationToken cancellationToken)
-    {
-        var existing = await db.Meals
-            .FirstOrDefaultAsync(
-                meal => meal.UserId == userId && meal.Date == date && meal.Kind == kind,
-                cancellationToken);
-
-        if (existing is not null)
-        {
-            return existing;
-        }
-
-        var created = new Meal
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            Date = date,
-            Kind = kind,
-            CreatedAt = now,
-        };
-
-        db.Meals.Add(created);
-
-        try
-        {
-            await db.SaveChangesAsync(cancellationToken);
-            return created;
-        }
-        catch (DbUpdateException exception) when (IsUniqueViolation(exception))
-        {
-            db.Entry(created).State = EntityState.Detached;
-
-            return await db.Meals.FirstAsync(
-                meal => meal.UserId == userId && meal.Date == date && meal.Kind == kind,
-                cancellationToken);
-        }
-    }
-
-    private static bool IsUniqueViolation(DbUpdateException exception) =>
-        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
-
-    private static MealKind? ParseMealKind(string? raw, Dictionary<string, string[]> errors)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            errors["meal"] = [$"Укажите прием пищи: {string.Join(", ", Enum.GetNames<MealKind>())}."];
-            return null;
-        }
-
-        if (!Enum.TryParse<MealKind>(raw, ignoreCase: true, out var kind) || !Enum.IsDefined(kind))
-        {
-            errors["meal"] = [$"Недопустимый прием пищи: ожидается {string.Join(", ", Enum.GetNames<MealKind>())}."];
-            return null;
-        }
-
-        return kind;
-    }
-
-    private static FoodUnit? ParseUnit(string? raw, Dictionary<string, string[]> errors)
-    {
-        // Единица необязательна: по умолчанию берется базовая у продукта.
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return null;
-        }
-
-        if (!Enum.TryParse<FoodUnit>(raw, ignoreCase: true, out var unit) || !Enum.IsDefined(unit))
-        {
-            errors["unit"] = [$"Недопустимая единица: ожидается {string.Join(", ", Enum.GetNames<FoodUnit>())}."];
-            return null;
-        }
-
-        return unit;
     }
 }

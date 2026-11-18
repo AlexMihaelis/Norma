@@ -41,3 +41,20 @@ public sealed record AddDiaryEntryRequest(
     double? Quantity,
     string? Unit,
     DateOnly? Date);
+
+/// <summary>
+/// Тело повтора дня: откуда, куда и какой прием. Пустое тело означает «вчера в
+/// сегодня, все приемы» - самый частый сценарий.
+/// </summary>
+public sealed record RepeatDiaryRequest(DateOnly? FromDate, DateOnly? Date, string? Meal);
+
+/// <summary>
+/// Результат повтора: сколько позиций скопировано и как выглядит целевой день
+/// после копирования, чтобы клиент не делал второй запрос.
+/// </summary>
+public sealed record RepeatDiaryResponse(
+    DateOnly Date,
+    int CopiedCount,
+    string? Hint,
+    IReadOnlyList<DiaryMealResponse> Meals,
+    DiaryTotalsResponse Totals);
