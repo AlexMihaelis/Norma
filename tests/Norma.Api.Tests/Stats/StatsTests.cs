@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
+using Norma.Api.Data.Entities;
 using Norma.Core.Age;
 using Norma.Core.Energy;
 using Testcontainers.PostgreSql;
@@ -79,7 +80,6 @@ public sealed class StatsTests
         // Цель считается движком плана: на день с весом 80 кг она выше, чем с 70 кг.
         var expectedPrevious = ExpectedTarget(weightKg: 80, onDate: PreviousDay);
         var expectedDay = ExpectedTarget(weightKg: 70, onDate: Day);
-
         Assert.Equal(expectedPrevious, stats.Days[0].TargetKcal);
         Assert.Equal(expectedDay, stats.Days[1].TargetKcal);
         Assert.True(stats.Days[0].TargetKcal > stats.Days[1].TargetKcal);
@@ -92,7 +92,37 @@ public sealed class StatsTests
             (double)stats.Deviation!.TargetKcal,
             precision: 0);
         Assert.Null(stats.TargetHint);
-        Assert.Contains("по весу того дня", stats.TargetNote);
+        Assert.Contains("снимку профиля", stats.TargetNote);
+    }
+
+    [Fact]
+    public async Task Target_uses_profile_snapshot_effective_on_the_day()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "stats-snapshots@example.com");
+
+        // Два дня истории; на каждый день в базе свой снимок профиля.
+        var firstDay = new DateOnly(2026, 11, 10);
+        var secondDay = new DateOnly(2026, 11, 11);
+
+        await SetProfileAsync(app, user.Token);
+        await SeedSnapshotAsync(user.UserId, firstDay, Goal.Maintain, kgPerWeek: 0);
+        await SeedSnapshotAsync(user.UserId, secondDay, Goal.Lose, kgPerWeek: 0.5);
+
+        var foodId = await CreateFoodAsync(app, user.Token, "Суп овощной", 60, 3, 2, 6);
+        await AddWeightAsync(app, user.Token, 80, firstDay);
+        await AddDiaryAsync(app, user.Token, "Lunch", foodId, 500, firstDay);
+        await AddDiaryAsync(app, user.Token, "Lunch", foodId, 500, secondDay);
+
+        var stats = await GetStatsAsync(app, user.Token, firstDay, secondDay);
+
+        // Первый день считается по старому снимку (поддержание), второй - по новому
+        // (похудение с темпом 0.5): смена цели не переписывает прошлое.
+        Assert.Equal(ExpectedTarget(80, firstDay, Goal.Maintain, 0), stats.Days[0].TargetKcal);
+        Assert.Equal(ExpectedTarget(80, secondDay, Goal.Lose, 0.5), stats.Days[1].TargetKcal);
+        Assert.True(stats.Days[1].TargetKcal < stats.Days[0].TargetKcal);
     }
 
     [Fact]
@@ -189,20 +219,47 @@ public sealed class StatsTests
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    /// <summary>Цель, которую должен посчитать срез для указанного веса и даты.</summary>
-    private static int ExpectedTarget(double weightKg, DateOnly onDate)
+    /// <summary>Цель, которую должен посчитать срез для указанного веса, даты и профиля.</summary>
+    private static int ExpectedTarget(
+        double weightKg,
+        DateOnly onDate,
+        Goal goal = Goal.Maintain,
+        double kgPerWeek = 0)
     {
-        var birthDate = new DateOnly(1990, 1, 1);
-
         var profile = ProfileBuilder.From(
             Sex.Male,
-            birthDate,
+            new DateOnly(1990, 1, 1),
             onDate,
             heightCm: 180,
             weightKg,
             ActivityLevel.Sedentary);
 
-        return EnergyMath.Plan(profile, Goal.Maintain, kgPerWeek: 0).TargetKcal;
+        return EnergyMath.Plan(profile, goal, kgPerWeek).TargetKcal;
+    }
+
+    /// <summary>Снимок профиля на прошлую дату: API пишет снимки только на сегодня.</summary>
+    private async Task SeedSnapshotAsync(Guid userId, DateOnly effectiveFrom, Goal goal, double kgPerWeek)
+    {
+        await using var db = database.CreateContext();
+
+        db.UserProfileSnapshots.Add(new UserProfileSnapshot
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            EffectiveFrom = effectiveFrom,
+            // Npgsql для timestamptz принимает только смещение 0 (UTC), поэтому
+            // не локальную дату, а явный UTC.
+            CreatedAt = new DateTimeOffset(
+                effectiveFrom.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
+            Sex = Sex.Male,
+            BirthDate = new DateOnly(1990, 1, 1),
+            HeightCm = 180,
+            Activity = ActivityLevel.Sedentary,
+            Goal = goal,
+            KgPerWeek = kgPerWeek,
+        });
+
+        await db.SaveChangesAsync();
     }
 
     private static async Task<HttpResponseMessage> SendAsync(
