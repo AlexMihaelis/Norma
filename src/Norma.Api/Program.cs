@@ -33,6 +33,7 @@ using Norma.Api.Features.Weight.AddWeight;
 using Norma.Api.Features.Weight.GetWeightTrend;
 using Norma.Api.Features.Weight.ListWeight;
 using Scalar.AspNetCore;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var app = ApiHost.Build(args);
 
@@ -73,7 +74,8 @@ public static class ApiHost
         // Документ строится из маршрутов; XML-описания включаются через csproj.
         builder.Services.AddOpenApi(options =>
         {
-            // Схема Bearer: в Scalar появится поле для токена.
+            // Схема Bearer и требование ее для операций: кнопка Authorize в
+            // Swagger и поле токена в Scalar иначе не подставят заголовок.
             options.AddDocumentTransformer((document, _, _) =>
             {
                 document.Info.Title = "Norma API";
@@ -89,6 +91,20 @@ public static class ApiHost
                     In = ParameterLocation.Header,
                     Description = "JWT из /api/v1/auth/login или /api/v1/auth/register.",
                 };
+
+                // Анонимные ручки (health, вход, регистрация) лишний заголовок
+                // игнорируют, поэтому требование безопасно объявить глобально.
+                document.SecurityRequirements.Add(new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer",
+                        },
+                    }] = [],
+                });
 
                 return Task.CompletedTask;
             });
@@ -181,9 +197,17 @@ public static class ApiHost
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // Документ: /openapi/v1.json, UI: /scalar/v1; маршруты анонимные, данных в них нет.
+        // Документ: /openapi/v1.json; UI: /scalar/v1 и /swagger.
         app.MapOpenApi();
         app.MapScalarApiReference();
+
+        // Swagger UI привычнее части команды; смотрит в тот же документ, что и Scalar.
+        app.UseSwaggerUI(options =>
+        {
+            options.SwaggerEndpoint("/openapi/v1.json", "Norma API v1");
+            options.RoutePrefix = "swagger";
+            options.DocumentTitle = "Norma API";
+        });
 
         // Версия API фиксируется в пути с первого дня: мобильный клиент появится
         // позже и не должен ломать веб-версию при изменении контрактов.
