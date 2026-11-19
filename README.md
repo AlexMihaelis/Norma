@@ -46,6 +46,20 @@ curl http://localhost:5xxx/api/v1/health
 
 Точный порт печатает сам `dotnet run` (см. `src/Norma.Api/Properties/launchSettings.json`).
 
+## Фронтенд
+
+Angular 20 в папке `web/`. Дев-сервер на `http://localhost:4200` ходит в API на
+`http://localhost:5150` (профиль `http` в `launchSettings.json`); CORS разрешен для
+этого адреса через `Web:AllowedOrigins` в `appsettings.json`.
+
+```powershell
+cd web
+npm install   # один раз
+npm start     # http://localhost:4200
+```
+
+Сборка проверяется командой `npm run build` в `web/`.
+
 ## Тесты
 
 ```powershell
@@ -61,6 +75,7 @@ src/Norma.Api/Features/   вертикальные срезы: одна папк
 src/Norma.Api/Data/       DbContext, EF-конфигурации, миграции
 src/Norma.Api/Jobs/       фоновые задачи (импорт базы продуктов)
 src/Norma.Core/           чистые функции расчётов: без EF, без DI, без DateTime.Now
+web/                      Angular-клиент: вход, экран дня; ходит в API по HTTP
 tests/Norma.Core.Tests/   юнит-тесты ядра (миллисекунды)
 tests/Norma.Api.Tests/    интеграционные тесты через WebApplicationFactory
 ```
@@ -86,9 +101,11 @@ tests/Norma.Api.Tests/    интеграционные тесты через Web
 - свои продукты: создание продукта с авторством и строгой валидацией;
 - статистика за период: дни с записями, средние, отклонение от цели по весу дня;
 - история профиля: снимок при каждом сохранении, цель считается по профилю дня;
-- поиск продуктов и документация API (`/scalar/v1`).
+- поиск продуктов и документация API (`/scalar/v1`);
+- веб-клиент: вход/регистрация и экран дня с целью и записями (чтение).
 
-Ближайшие шаги: фронтенд, история профиля, рецепты (v2).
+Ближайшие шаги: экраны веса и статистики, добавление еды из интерфейса,
+порции, рецепты (v2), Docker Compose для всего стека.
 
 ## Источники данных
 
