@@ -4,23 +4,19 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Weight;
 
 /// <summary>
 /// Интеграционные тесты веса: изоляция данных между пользователями, тренд и
-/// валидация. Каждый тест - свой Postgres и чистые данные.
+/// валидация. Работают с общим контейнером и чистой базой перед каждым тестом.
 /// </summary>
-public sealed class WeightTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class WeightTests
 {
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public WeightTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Weight_entries_are_isolated_between_users()
@@ -397,15 +393,12 @@ public sealed class WeightTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     private sealed record AuthPayload(Guid UserId, string Email, string Token);

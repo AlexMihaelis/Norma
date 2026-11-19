@@ -6,20 +6,20 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Foods;
 
 /// <summary>
-/// Интеграционные тесты поиска продуктов. Каждый тестовый класс поднимает свой
-/// контейнер Postgres через Testcontainers: тесты не зависят от локальной базы и
-/// от порядка запуска.
+/// Интеграционные тесты поиска продуктов. Работают с общим контейнером Postgres
+/// и чистой базой перед каждым тестом: не зависят от локальной базы и порядка
+/// запуска.
 /// </summary>
-public sealed class SearchFoodsTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class SearchFoodsTests
 {
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
+
+    public SearchFoodsTests(PostgresFixture database) => this.database = database;
 
     // API отдаёт enum строкой ("Cooked"). У HttpClient по умолчанию enum читается
     // числом, поэтому клиентской стороне нужен тот же конвертер, что и серверу.
@@ -27,10 +27,6 @@ public sealed class SearchFoodsTests : IAsyncLifetime
     {
         Converters = { new JsonStringEnumConverter() },
     };
-
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
 
     [Fact]
     public async Task Search_finds_food_by_alias_and_returns_macros()
@@ -94,14 +90,15 @@ public sealed class SearchFoodsTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
-    /// <summary>Накатывает миграции и сеет минимальный набор продуктов.</summary>
+    /// <summary>Чистые таблицы и минимальный набор продуктов для поиска.</summary>
     private async Task<string> SeedAsync()
     {
-        var connectionString = database.GetConnectionString();
+        var connectionString = database.ConnectionString;
         var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
 
+        await database.ResetAsync();
+
         await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
 
         var buckwheat = new Food
         {

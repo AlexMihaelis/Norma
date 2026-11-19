@@ -5,7 +5,6 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Activity;
 
@@ -13,15 +12,12 @@ namespace Norma.Api.Tests.Activity;
 /// Интеграционные тесты активности: расход по последнему весу, снимок калорий,
 /// суммы за день, изоляция и валидация. Арифметика MET закреплена юнит-тестами ядра.
 /// </summary>
-public sealed class ActivityTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class ActivityTests
 {
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public ActivityTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Add_activity_uses_latest_weight_and_keeps_kcal_snapshot()
@@ -233,15 +229,12 @@ public sealed class ActivityTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     private sealed record AuthPayload(Guid UserId, string Email, string Token);

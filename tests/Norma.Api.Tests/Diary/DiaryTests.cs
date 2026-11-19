@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Diary;
 
@@ -15,7 +14,8 @@ namespace Norma.Api.Tests.Diary;
 /// Интеграционные тесты дневника питания: запись позиции в прием, КБЖУ из
 /// продукта (пересчет, а не снимок), единицы, итоги дня и изоляция пользователей.
 /// </summary>
-public sealed class DiaryTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class DiaryTests
 {
     private static readonly DateOnly Day = new(2026, 11, 18);
 
@@ -25,13 +25,9 @@ public sealed class DiaryTests : IAsyncLifetime
         Converters = { new JsonStringEnumConverter() },
     };
 
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public DiaryTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Entry_is_computed_from_food_and_day_lists_all_six_meals()
@@ -355,15 +351,12 @@ public sealed class DiaryTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     /// <summary>Кладет продукт в каталог и возвращает его идентификатор.</summary>

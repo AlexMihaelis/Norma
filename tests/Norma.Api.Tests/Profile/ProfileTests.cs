@@ -4,20 +4,16 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Profile;
 
 /// <summary>Профиль: сохранение, изоляция между пользователями, валидация.</summary>
-public sealed class ProfileTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class ProfileTests
 {
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public ProfileTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Profile_is_saved_and_returned()
@@ -187,15 +183,12 @@ public sealed class ProfileTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     private sealed record AuthPayload(Guid UserId, string Email, string Token);
