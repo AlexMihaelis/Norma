@@ -20,6 +20,7 @@ using Norma.Api.Features.Diary.RepeatDiaryDay;
 using Norma.Api.Features.Favorites.AddFavorite;
 using Norma.Api.Features.Favorites.DeleteFavorite;
 using Norma.Api.Features.Favorites.ListFavorites;
+using Norma.Api.Features.Foods.CreateFood;
 using Norma.Api.Features.Foods.SearchFoods;
 using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
@@ -179,6 +180,7 @@ public static class ApiHost
         api.MapHealth();
         api.MapPlan();
         api.MapSearchFoods();
+        api.MapCreateFood();
         api.MapRegister();
         api.MapLogin();
         api.MapMe();

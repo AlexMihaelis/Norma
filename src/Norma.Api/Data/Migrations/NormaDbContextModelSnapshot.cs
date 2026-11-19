@@ -96,6 +96,9 @@ namespace Norma.Api.Data.Migrations
                     b.Property<double>("CarbsPer100g")
                         .HasColumnType("double precision");
 
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<double>("FatPer100g")
                         .HasColumnType("double precision");
 
@@ -120,6 +123,8 @@ namespace Norma.Api.Data.Migrations
                         .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("Source", "SourceId")
                         .IsUnique()
@@ -382,6 +387,14 @@ namespace Norma.Api.Data.Migrations
                     b.Navigation("Food");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.Food", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.FoodAlias", b =>

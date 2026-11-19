@@ -5,7 +5,6 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests;
 
@@ -14,15 +13,12 @@ namespace Norma.Api.Tests;
 /// сохраненному профилю и последнему весу, а недостающие данные перечисляются
 /// в ошибке. Арифметика закреплена юнит-тестами ядра, здесь проверяется транспорт.
 /// </summary>
-public sealed class PlanEndpointTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class PlanEndpointTests
 {
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public PlanEndpointTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Plan_uses_saved_profile_and_latest_weight()
@@ -252,15 +248,12 @@ public sealed class PlanEndpointTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     private sealed record AuthPayload(Guid UserId, string Email, string Token);

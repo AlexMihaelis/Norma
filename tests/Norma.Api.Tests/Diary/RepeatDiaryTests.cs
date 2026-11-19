@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Diary;
 
@@ -15,7 +14,8 @@ namespace Norma.Api.Tests.Diary;
 /// Интеграционные тесты повтора дня: копирование вчерашних позиций в сегодня,
 /// добавление в уже существующий прием, копирование одного приема и изоляция.
 /// </summary>
-public sealed class RepeatDiaryTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class RepeatDiaryTests
 {
     private static readonly DateOnly Day = new(2026, 11, 18);
     private static readonly DateOnly PreviousDay = Day.AddDays(-1);
@@ -25,13 +25,9 @@ public sealed class RepeatDiaryTests : IAsyncLifetime
         Converters = { new JsonStringEnumConverter() },
     };
 
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public RepeatDiaryTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Repeat_copies_previous_day_and_leaves_it_intact()
@@ -295,15 +291,12 @@ public sealed class RepeatDiaryTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     private async Task<Guid> SeedFoodAsync(

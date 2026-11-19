@@ -4,25 +4,20 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
-using Testcontainers.PostgreSql;
 
 namespace Norma.Api.Tests.Water;
-
 /// <summary>
 /// Интеграционные тесты воды: норма от профиля и веса, сумма за день, изоляция
 /// между пользователями и подсказки, когда данных для нормы не хватает.
 /// </summary>
-public sealed class WaterTests : IAsyncLifetime
+[Collection(PostgresCollection.Name)]
+public sealed class WaterTests
 {
     private static readonly DateOnly Day = new(2026, 11, 17);
 
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder()
-        .WithImage("postgres:18-alpine")
-        .Build();
+    private readonly PostgresFixture database;
 
-    public Task InitializeAsync() => database.StartAsync();
-
-    public Task DisposeAsync() => database.DisposeAsync().AsTask();
+    public WaterTests(PostgresFixture database) => this.database = database;
 
     [Fact]
     public async Task Day_reports_norm_remaining_and_disclaimer()
@@ -247,15 +242,12 @@ public sealed class WaterTests : IAsyncLifetime
                 ["ConnectionStrings:Norma"] = connectionString,
             }));
 
+    /// <summary>Чистые таблицы и строка подключения: тест не зависит от предыдущего.</summary>
     private async Task<string> MigrateAsync()
     {
-        var connectionString = database.GetConnectionString();
-        var options = new DbContextOptionsBuilder<NormaDbContext>().UseNpgsql(connectionString).Options;
+        await database.ResetAsync();
 
-        await using var db = new NormaDbContext(options);
-        await db.Database.MigrateAsync();
-
-        return connectionString;
+        return database.ConnectionString;
     }
 
     private sealed record AuthPayload(Guid UserId, string Email, string Token);

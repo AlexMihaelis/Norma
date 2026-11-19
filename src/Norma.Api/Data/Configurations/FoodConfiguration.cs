@@ -29,6 +29,15 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
 
         builder.Property(food => food.SourceId).HasMaxLength(64);
 
+        // Авторство ручного продукта: ON DELETE SET NULL, а не каскад. Продукт -
+        // общее знание, удаление аккаунта не должно вычищать каталог; а вот факты
+        // питания пользователя (дневник) удаляются вместе с ним.
+        builder
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(food => food.CreatedByUserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // Один и тот же продукт источника не должен импортироваться дважды.
         builder
             .HasIndex(food => new { food.Source, food.SourceId })
