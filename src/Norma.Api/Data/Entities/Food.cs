@@ -28,6 +28,13 @@ public sealed class Food
     /// <summary>Единица, в которой заданы значения на 100 единиц: граммы или миллилитры.</summary>
     public FoodUnit BaseUnit { get; set; } = FoodUnit.Gram;
 
+    /// <summary>
+    /// Кто добавил продукт вручную. Продукт живет в общем каталоге, поэтому это
+    /// только авторство: при удалении пользователя поле обнуляется, а продукт
+    /// остается - знание о еде не принадлежит аккаунту.
+    /// </summary>
+    public Guid? CreatedByUserId { get; set; }
+
     public double KcalPer100g { get; set; }
 
     public double ProteinPer100g { get; set; }

@@ -78,24 +78,13 @@ public static class SearchFoodsEndpoint
             .ToListAsync(cancellationToken);
 
         var items = foods
-            .Select(ToItem)
+            .Select(FoodSummary.FromFood)
             .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
             .Take(take)
             .ToList();
 
         return TypedResults.Ok(new FoodSearchResponse(items));
     }
-
-    private static FoodSearchItem ToItem(Food food) =>
-        new(
-            Id: food.Id,
-            Name: FoodDisplay.PrimaryName(food),
-            State: food.State,
-            BaseUnit: food.BaseUnit,
-            KcalPer100g: food.KcalPer100g,
-            ProteinPer100g: food.ProteinPer100g,
-            FatPer100g: food.FatPer100g,
-            CarbsPer100g: food.CarbsPer100g);
 
     /// <summary>
     /// Экранирует служебные символы LIKE, чтобы запрос «50%» искал именно «50%»,
@@ -108,16 +97,5 @@ public static class SearchFoodsEndpoint
             .Replace("_", "\\_", StringComparison.Ordinal);
 }
 
-/// <summary>Ответ поиска: продукты с КБЖУ на 100 г.</summary>
-public sealed record FoodSearchResponse(IReadOnlyList<FoodSearchItem> Items);
-
-/// <summary>Найденный продукт.</summary>
-public sealed record FoodSearchItem(
-    Guid Id,
-    string Name,
-    FoodState State,
-    FoodUnit BaseUnit,
-    double KcalPer100g,
-    double ProteinPer100g,
-    double FatPer100g,
-    double CarbsPer100g);
+/// <summary>Ответ поиска: продукты с КБЖУ на 100 г или 100 мл.</summary>
+public sealed record FoodSearchResponse(IReadOnlyList<FoodSummary> Items);
