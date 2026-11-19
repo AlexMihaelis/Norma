@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Norma.Api.Data;
 using Norma.Api.Features.Auth;
-using Norma.Core.Age;
 using Norma.Core.Energy;
 
 namespace Norma.Api.Features.Plan;
@@ -101,9 +100,10 @@ public static class PlanEndpoint
 
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
-        var coreProfile = new Profile(
+        var coreProfile = ProfileBuilder.From(
             sex!.Value,
-            AgeMath.Years(birthDate!.Value, today),
+            birthDate!.Value,
+            today,
             heightCm!.Value,
             weightKg!.Value,
             activity!.Value);
