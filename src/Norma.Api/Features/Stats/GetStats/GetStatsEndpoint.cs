@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Norma.Api.Data;
+using Norma.Api.Data.Entities;
 using Norma.Api.Features.Auth;
 using Norma.Core.Energy;
 using Norma.Core.Stats;
@@ -13,8 +14,9 @@ namespace Norma.Api.Features.Stats.GetStats;
 /// расход активности и отклонение от цели.
 /// </summary>
 /// <remarks>
-/// Цель считается на каждую дату по весу того дня. Профиль хранится без истории,
-/// поэтому берется текущий - ограничение видно в <see cref="StatsText.TargetNote"/>.
+/// Цель считается на каждую дату по весу дня и снимку профиля, действовавшему на
+/// этот день: прошлый месяц не должен меняться из-за сегодняшнего замера или
+/// смены цели.
 /// </remarks>
 public static class GetStatsEndpoint
 {
@@ -94,8 +96,7 @@ public static class GetStatsEndpoint
             .Select(group => new { Date = group.Key, Kcal = group.Sum(record => record.Kcal) })
             .ToListAsync(cancellationToken);
 
-        // Вес на дату - последний замер не позже этой даты; берем всю историю до
-        // конца периода одним запросом.
+        // Вес на дату - последний замер не позже этой даты.
         var weights = await db.WeightMeasurements
             .Where(measurement => measurement.UserId == userId && measurement.Date <= end)
             .OrderBy(measurement => measurement.Date)
@@ -103,16 +104,21 @@ public static class GetStatsEndpoint
             .Select(measurement => new WeightPoint(measurement.Date, measurement.Kg))
             .ToListAsync(cancellationToken);
 
+        // Профиль на дату: последний снимок не позже дня. Снимки пишутся при
+        // сохранении профиля, поэтому цель прошлых дней не меняется задним числом.
+        var snapshots = await db.UserProfileSnapshots
+            .AsNoTracking()
+            .Where(snapshot => snapshot.UserId == userId)
+            .OrderBy(snapshot => snapshot.EffectiveFrom)
+            .ThenBy(snapshot => snapshot.CreatedAt)
+            .ToListAsync(cancellationToken);
+
         var profile = await db.UserProfiles
             .AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.UserId == userId, cancellationToken);
 
-        var profileReady = profile is not null
-            && profile.Sex is not null
-            && profile.BirthDate is not null
-            && profile.HeightCm is not null
-            && profile.Activity is not null
-            && profile.Goal is not null;
+        // Запасной вариант для дней до первого снимка: текущий профиль.
+        var currentProfile = profile is null ? null : ProfileState.From(profile);
 
         var activityKcalByDay = activityByDay.ToDictionary(day => day.Date, day => day.Kcal);
         var days = new List<StatsDayResponse>();
@@ -121,18 +127,19 @@ public static class GetStatsEndpoint
         foreach (var day in intakeByDay.OrderBy(day => day.Date))
         {
             var weightKg = WeightOnOrBefore(weights, day.Date);
+            var state = ProfileOn(day.Date, snapshots) ?? currentProfile;
 
-            var targetKcal = profileReady && weightKg is not null
+            var targetKcal = state is not null && state.Ready && weightKg is not null
                 ? EnergyMath.Plan(
                         ProfileBuilder.From(
-                            profile!.Sex!.Value,
-                            profile.BirthDate!.Value,
+                            state.Sex!.Value,
+                            state.BirthDate!.Value,
                             day.Date,
-                            profile.HeightCm!.Value,
+                            state.HeightCm!.Value,
                             weightKg.Value,
-                            profile.Activity!.Value),
-                        profile.Goal!.Value,
-                        profile.KgPerWeek ?? DefaultKgPerWeek)
+                            state.Activity!.Value),
+                        state.Goal!.Value,
+                        state.KgPerWeek ?? DefaultKgPerWeek)
                     .TargetKcal
                 : (int?)null;
 
@@ -164,6 +171,9 @@ public static class GetStatsEndpoint
             ? StatsMath.Deviation(averages.Kcal, targets.Average())
             : null;
 
+        var anyProfileReady = currentProfile?.Ready == true
+            || snapshots.Any(snapshot => ProfileState.From(snapshot).Ready);
+
         return TypedResults.Ok(new StatsResponse(
             start,
             end,
@@ -182,7 +192,7 @@ public static class GetStatsEndpoint
                 ? null
                 : new StatsDeviationResponse(
                     deviation.TargetKcal, deviation.DiffKcal, deviation.DiffPercent),
-            BuildHint(profileReady, days.Count, targets.Count),
+            BuildHint(anyProfileReady, days.Count, targets.Count),
             StatsText.TargetNote));
     }
 
@@ -206,10 +216,53 @@ public static class GetStatsEndpoint
         return result;
     }
 
+    /// <summary>Снимок профиля, действовавший на дату; <c>null</c> - снимков еще нет.</summary>
+    private static ProfileState? ProfileOn(DateOnly day, IReadOnlyList<UserProfileSnapshot> snapshots)
+    {
+        UserProfileSnapshot? found = null;
+
+        foreach (var snapshot in snapshots)
+        {
+            if (snapshot.EffectiveFrom <= day)
+            {
+                found = snapshot;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return found is null ? null : ProfileState.From(found);
+    }
+
     /// <summary>Замер веса, уже спроецированный из базы.</summary>
     private sealed record WeightPoint(DateOnly Date, double Kg);
 
-    private static string? BuildHint(bool profileReady, int daysWithEntries, int daysWithTarget)
+    /// <summary>Поля профиля, нужные для плана; одинаково читаются из профиля и снимка.</summary>
+    private sealed record ProfileState(
+        Sex? Sex,
+        DateOnly? BirthDate,
+        double? HeightCm,
+        ActivityLevel? Activity,
+        Goal? Goal,
+        double? KgPerWeek)
+    {
+        public bool Ready =>
+            Sex is not null
+            && BirthDate is not null
+            && HeightCm is not null
+            && Activity is not null
+            && Goal is not null;
+
+        public static ProfileState From(UserProfile profile) =>
+            new(profile.Sex, profile.BirthDate, profile.HeightCm, profile.Activity, profile.Goal, profile.KgPerWeek);
+
+        public static ProfileState From(UserProfileSnapshot snapshot) =>
+            new(snapshot.Sex, snapshot.BirthDate, snapshot.HeightCm, snapshot.Activity, snapshot.Goal, snapshot.KgPerWeek);
+    }
+
+    private static string? BuildHint(bool anyProfileReady, int daysWithEntries, int daysWithTarget)
     {
         // Пустой период не нуждается в подсказках: пользователю просто нечего смотреть.
         if (daysWithEntries == 0)
@@ -217,7 +270,7 @@ public static class GetStatsEndpoint
             return null;
         }
 
-        if (!profileReady)
+        if (!anyProfileReady)
         {
             return "Заполните профиль (пол, дата рождения, рост, активность, цель) - без него цель не рассчитана.";
         }
