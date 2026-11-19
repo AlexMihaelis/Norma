@@ -26,16 +26,18 @@ public sealed class OpenApiTests
     }
 
     [Fact]
-    public async Task OpenApi_document_describes_bearer_auth()
+    public async Task OpenApi_document_requires_bearer_auth()
     {
         await using var app = await ApiApp.StartAsync();
 
         using var response = await app.Client.GetAsync("/openapi/v1.json");
         var json = await response.Content.ReadAsStringAsync();
 
-        // Схема нужна, чтобы в Scalar появилось поле для токена.
+        // Требование, а не только схема: иначе Authorize в Swagger UI не
+        // подставляет токен, а Scalar не показывает поле авторизации.
         Assert.Contains("securitySchemes", json, StringComparison.Ordinal);
         Assert.Contains("Bearer", json, StringComparison.Ordinal);
+        Assert.Contains("\"security\"", json, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -46,5 +48,16 @@ public sealed class OpenApiTests
         using var response = await app.Client.GetAsync("/scalar/v1");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Swagger_ui_is_served()
+    {
+        await using var app = await ApiApp.StartAsync();
+
+        using var response = await app.Client.GetAsync("/swagger/index.html");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("swagger-ui", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
     }
 }
