@@ -1,0 +1,17 @@
+<header class="topbar">
+  <a class="brand" routerLink="/">Норма</a>
+
+  @if (auth.signedIn()) {
+    <nav>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Дневник</a>
+    </nav>
+
+    <span class="spacer"></span>
+    <span class="account">{{ auth.email() }}</span>
+    <button type="button" class="ghost" (click)="signOut()">Выйти</button>
+  }
+</header>
+
+<main class="page">
+  <router-outlet />
+</main>

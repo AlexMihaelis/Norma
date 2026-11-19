@@ -1,0 +1,32 @@
+<section class="card auth">
+  <h1>{{ mode() === 'login' ? 'Вход' : 'Регистрация' }}</h1>
+  <p class="muted">Норма - дневник питания, веса и активности.</p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <label>
+      Email
+      <input type="email" formControlName="email" autocomplete="email" placeholder="you@example.com" />
+    </label>
+    <label>
+      Пароль
+      <input
+        type="password"
+        formControlName="password"
+        [attr.autocomplete]="mode() === 'login' ? 'current-password' : 'new-password'"
+        placeholder="не короче 6 символов"
+      />
+    </label>
+
+    @if (error(); as message) {
+      <p class="error">{{ message }}</p>
+    }
+
+    <button type="submit" [disabled]="busy()">
+      {{ busy() ? 'Подождите…' : mode() === 'login' ? 'Войти' : 'Создать аккаунт' }}
+    </button>
+  </form>
+
+  <button type="button" class="link" (click)="toggleMode()">
+    {{ mode() === 'login' ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти' }}
+  </button>
+</section>
