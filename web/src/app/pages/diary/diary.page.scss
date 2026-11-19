@@ -1,0 +1,40 @@
+.eaten {
+  font-size: 1.1rem;
+}
+
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  overflow: hidden;
+  margin: 0.5rem 0 1.5rem;
+
+  span {
+    display: block;
+    height: 100%;
+    background: #2f855a;
+    transition: width 0.3s ease;
+  }
+}
+
+.items {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+}
+
+.empty {
+  color: #6b7280;
+}
+
+h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.05rem;
+}

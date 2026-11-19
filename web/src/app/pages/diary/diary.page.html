@@ -1,0 +1,49 @@
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+<section class="card">
+  <h1>Сегодня, {{ dateLabel }}</h1>
+
+  @if (plan(); as planValue) {
+    <p class="muted">
+      Цель: <strong>{{ planValue.targetKcal }}</strong> ккал · Б {{ planValue.macros.proteinG }} ·
+      Ж {{ planValue.macros.fatG }} · У {{ planValue.macros.carbsG }}
+    </p>
+  } @else {
+    <p class="muted">Цель не рассчитана: заполните профиль и запишите вес.</p>
+  }
+
+  @if (day(); as dayValue) {
+    <p class="eaten">
+      Съедено: <strong>{{ dayValue.totals.kcal }}</strong> ккал
+      @if (plan()) {
+        <span class="muted">({{ progressPercent() }}% цели)</span>
+      }
+    </p>
+
+    <div class="bar"><span [style.width.%]="progressPercent()"></span></div>
+
+    @for (meal of dayValue.meals; track meal.kind) {
+      @if (meal.items.length > 0) {
+        <h2>{{ titles[meal.kind] }}</h2>
+        <ul class="items">
+          @for (item of meal.items; track item.id) {
+            <li>
+              <span>{{ item.foodName }}</span>
+              <span class="muted">
+                {{ item.quantity }} {{ unitLabel(item.unit) }} · {{ item.kcal }} ккал ·
+                Б {{ item.protein }} · Ж {{ item.fat }} · У {{ item.carbs }}
+              </span>
+            </li>
+          }
+        </ul>
+        <p class="muted">Итого за {{ titles[meal.kind].toLowerCase() }}: {{ meal.totals.kcal }} ккал</p>
+      }
+    }
+
+    @if (dayValue.totals.kcal === 0) {
+      <p class="empty">Записей нет. Добавление еды - следующий шаг.</p>
+    }
+  }
+</section>

@@ -485,3 +485,9 @@ $RECYCLE.BIN/
 
 # Временные папки агента
 .tmp-*/
+
+# Angular / Node
+web/dist/
+web/.angular/
+npm-debug.log*
+
