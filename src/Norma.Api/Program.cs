@@ -26,6 +26,7 @@ using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
 using Norma.Api.Features.Profiles.GetProfile;
 using Norma.Api.Features.Profiles.UpdateProfile;
+using Norma.Api.Features.Stats.GetStats;
 using Norma.Api.Features.Water.AddWater;
 using Norma.Api.Features.Water.GetWaterDay;
 using Norma.Api.Features.Weight.AddWeight;
@@ -200,6 +201,7 @@ public static class ApiHost
         api.MapAddFavorite();
         api.MapListFavorites();
         api.MapDeleteFavorite();
+        api.MapGetStats();
 
         return app;
     }
