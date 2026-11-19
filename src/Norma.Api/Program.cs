@@ -117,6 +117,15 @@ public static class ApiHost
         builder.Services.AddSingleton<JwtTokenIssuer>();
         builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
+        // Браузер ходит в API с другого адреса (Angular dev server), поэтому нужен
+        // CORS. Список источников - из конфигурации: в проде там домен приложения.
+        var allowedOrigins = builder.Configuration.GetSection("Web:AllowedOrigins").Get<string[]>()
+            ?? ["http://localhost:4200"];
+
+        builder.Services.AddCors(options => options.AddPolicy(
+            WebCorsPolicy.Name,
+            policy => policy.WithOrigins(allowedOrigins).AllowAnyHeader().AllowAnyMethod()));
+
         builder.Services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -168,6 +177,7 @@ public static class ApiHost
         }
 
         app.UseExceptionHandler();
+        app.UseCors(WebCorsPolicy.Name);
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -205,6 +215,12 @@ public static class ApiHost
 
         return app;
     }
+}
+
+/// <summary>Имя политики CORS для браузерного клиента.</summary>
+public static class WebCorsPolicy
+{
+    public const string Name = "web";
 }
 
 /// <summary>
