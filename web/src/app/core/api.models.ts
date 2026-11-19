@@ -60,6 +60,30 @@ export interface DiaryDay {
   totals: DiaryTotals;
 }
 
+/** Продукт из поиска и избранного: КБЖУ на 100 г или 100 мл. */
+export interface FoodSummary {
+  id: string;
+  name: string;
+  state: string;
+  baseUnit: 'Gram' | 'Milliliter';
+  kcalPer100g: number;
+  proteinPer100g: number;
+  fatPer100g: number;
+  carbsPer100g: number;
+}
+
+export interface FoodSearchResponse {
+  items: FoodSummary[];
+}
+
+/** Тело записи позиции: единица не передается, API берет базовую у продукта. */
+export interface AddDiaryEntryRequest {
+  meal: MealKind;
+  foodId: string;
+  quantity: number;
+  date: string;
+}
+
 /** Названия приемов для экрана; порядок задает API, здесь только подписи. */
 export const mealTitles: Record<MealKind, string> = {
   Breakfast: 'Завтрак',

@@ -1,0 +1,69 @@
+<section class="card add">
+  <h2>Добавить еду</h2>
+
+  <div class="field product">
+    <label>
+      Продукт
+      <input
+        [value]="query()"
+        (input)="onQuery($any($event.target).value)"
+        placeholder="начните вводить название, например «гречка»"
+      />
+    </label>
+
+    @if (results().length > 0) {
+      <ul class="suggestions">
+        @for (food of results(); track food.id) {
+          <li>
+            <button type="button" class="suggestion" (click)="pick(food)">
+              <span>{{ food.name }}</span>
+              <span class="muted">
+                {{ food.kcalPer100g }} ккал/100
+                {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (selected(); as food) {
+    <p class="picked">
+      Выбрано: <strong>{{ food.name }}</strong>
+      <span class="muted">
+        ({{ food.kcalPer100g }} ккал/100 {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }})
+      </span>
+    </p>
+  }
+
+  <div class="row">
+    <label>
+      Прием
+      <select [value]="meal()" (change)="meal.set($any($event.target).value)">
+        @for (kind of mealKinds; track kind) {
+          <option [value]="kind">{{ titles[kind] }}</option>
+        }
+      </select>
+    </label>
+
+    <label>
+      Количество, {{ unitLabel() }}
+      <input
+        type="number"
+        min="1"
+        step="1"
+        [value]="quantity()"
+        (input)="quantity.set(+$any($event.target).value)"
+      />
+    </label>
+
+    <button type="button" (click)="submit()" [disabled]="busy()">
+      {{ busy() ? 'Сохраняю…' : 'Добавить' }}
+    </button>
+  </div>
+
+  @if (error(); as message) {
+    <p class="error">{{ message }}</p>
+  }
+</section>

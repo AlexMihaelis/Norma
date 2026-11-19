@@ -2,6 +2,8 @@
   <p class="error">{{ message }}</p>
 }
 
+<app-add-entry [date]="dateIso" (added)="load()" />
+
 <section class="card">
   <h1>Сегодня, {{ dateLabel }}</h1>
 
@@ -30,7 +32,17 @@
         <ul class="items">
           @for (item of meal.items; track item.id) {
             <li>
-              <span>{{ item.foodName }}</span>
+              <span class="item-head">
+                <span>{{ item.foodName }}</span>
+                <button
+                  type="button"
+                  class="remove"
+                  title="Удалить позицию"
+                  (click)="remove(item.id)"
+                >
+                  Удалить
+                </button>
+              </span>
               <span class="muted">
                 {{ item.quantity }} {{ unitLabel(item.unit) }} · {{ item.kcal }} ккал ·
                 Б {{ item.protein }} · Ж {{ item.fat }} · У {{ item.carbs }}
@@ -43,7 +55,7 @@
     }
 
     @if (dayValue.totals.kcal === 0) {
-      <p class="empty">Записей нет. Добавление еды - следующий шаг.</p>
+      <p class="empty">Записей нет. Добавьте первый продукт через форму выше.</p>
     }
   }
 </section>
