@@ -309,6 +309,52 @@ namespace Norma.Api.Data.Migrations
                     b.ToTable("user_profiles", (string)null);
                 });
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.UserProfileSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Activity")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Goal")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<double?>("HeightCm")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("KgPerWeek")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Sex")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<double?>("TargetWeightKg")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "EffectiveFrom");
+
+                    b.ToTable("user_profile_snapshots", (string)null);
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.WaterIntake", b =>
                 {
                     b.Property<Guid>("Id")
@@ -454,6 +500,17 @@ namespace Norma.Api.Data.Migrations
                     b.HasOne("Norma.Api.Data.Entities.User", "User")
                         .WithOne()
                         .HasForeignKey("Norma.Api.Data.Entities.UserProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.UserProfileSnapshot", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

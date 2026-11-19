@@ -106,6 +106,23 @@ public static class UpdateProfileEndpoint
         profile.KgPerWeek = request.KgPerWeek;
         profile.UpdatedAt = clock.GetUtcNow();
 
+        // Снимок действует с сегодняшнего дня: статистика за прошлые дни возьмет
+        // прошлый снимок, а не этот, и цель истории не поедет задним числом.
+        db.UserProfileSnapshots.Add(new UserProfileSnapshot
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId.Value,
+            EffectiveFrom = today,
+            CreatedAt = profile.UpdatedAt,
+            Sex = profile.Sex,
+            BirthDate = profile.BirthDate,
+            HeightCm = profile.HeightCm,
+            Activity = profile.Activity,
+            Goal = profile.Goal,
+            TargetWeightKg = profile.TargetWeightKg,
+            KgPerWeek = profile.KgPerWeek,
+        });
+
         await db.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok(new ProfileResponse(
