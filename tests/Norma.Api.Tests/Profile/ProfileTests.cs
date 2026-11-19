@@ -4,6 +4,8 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Norma.Api.Data;
+using Norma.Api.Data.Entities;
+using Norma.Core.Energy;
 
 namespace Norma.Api.Tests.Profile;
 
@@ -145,6 +147,53 @@ public sealed class ProfileTests
         Assert.NotNull(profile);
         Assert.Null(profile.Sex);
         Assert.Equal(182.0, profile.HeightCm);
+    }
+
+    [Fact]
+    public async Task Put_writes_profile_snapshot_for_history()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "snapshot@example.com");
+
+        using var first = await SendAsync(app, HttpMethod.Put, "/api/v1/me/profile", user.Token, new
+        {
+            sex = "Female",
+            birthDate = "1995-03-01",
+            heightCm = 170.0,
+            activity = "Light",
+            goal = "Lose",
+            kgPerWeek = 0.25,
+        });
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+
+        using var second = await SendAsync(app, HttpMethod.Put, "/api/v1/me/profile", user.Token, new
+        {
+            sex = "Female",
+            birthDate = "1995-03-01",
+            heightCm = 170.0,
+            activity = "Light",
+            goal = "Maintain",
+            kgPerWeek = 0,
+        });
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        await using var db = database.CreateContext();
+
+        var snapshots = await db.UserProfileSnapshots
+            .Where(snapshot => snapshot.UserId == user.UserId)
+            .OrderBy(snapshot => snapshot.CreatedAt)
+            .ToListAsync();
+
+        // Каждое сохранение оставляет снимок, действующий с сегодняшнего дня:
+        // статистика за прошлые дни останется посчитанной по старой цели.
+        Assert.Equal(2, snapshots.Count);
+        Assert.All(snapshots, snapshot => Assert.Equal(today, snapshot.EffectiveFrom));
+        Assert.Equal(Goal.Lose, snapshots[0].Goal);
+        Assert.Equal(Goal.Maintain, snapshots[1].Goal);
     }
 
     private static async Task<HttpResponseMessage> SendAsync(

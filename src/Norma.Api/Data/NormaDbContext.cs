@@ -21,6 +21,8 @@ public sealed class NormaDbContext(DbContextOptions<NormaDbContext> options) : D
 
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
+    public DbSet<UserProfileSnapshot> UserProfileSnapshots => Set<UserProfileSnapshot>();
+
     public DbSet<WaterIntake> WaterIntakes => Set<WaterIntake>();
 
     public DbSet<ActivityRecord> ActivityRecords => Set<ActivityRecord>();
