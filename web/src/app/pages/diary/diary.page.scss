@@ -30,6 +30,25 @@
   }
 }
 
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.remove {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.85rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .empty {
   color: #6b7280;
 }
