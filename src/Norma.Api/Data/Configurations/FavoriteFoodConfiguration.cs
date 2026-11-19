@@ -13,8 +13,7 @@ internal sealed class FavoriteFoodConfiguration : IEntityTypeConfiguration<Favor
 
         builder.HasKey(favorite => favorite.Id);
 
-        // Один продукт в избранном пользователя может быть только один раз:
-        // повторное «в избранное» не размножает запись.
+        // Повторное «в избранное» не размножает запись.
         builder.HasIndex(favorite => new { favorite.UserId, favorite.FoodId }).IsUnique();
 
         builder

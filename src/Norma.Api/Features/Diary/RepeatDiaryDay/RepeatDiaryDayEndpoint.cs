@@ -12,9 +12,8 @@ namespace Norma.Api.Features.Diary.RepeatDiaryDay;
 /// вчерашний день в сегодняшний, потому что это самый частый сценарий.
 /// </summary>
 /// <remarks>
-/// Копируется не прием целиком, а позиции: если в целевом дне прием уже есть,
-/// копии добавляются в него, а не создают второй завтрак. Позиции остаются
-/// отдельными записями, поэтому съеденное можно потом удалить по одной.
+/// Копируются позиции, а не прием: копии добавляются в существующий прием дня,
+/// поэтому второго завтрака не появляется.
 /// </remarks>
 public static class RepeatDiaryDayEndpoint
 {
@@ -71,7 +70,7 @@ public static class RepeatDiaryDayEndpoint
         }
 
         // Без Include продукта: для копирования нужны только ссылка, количество и
-        // единица. КБЖУ посчитается при чтении целевого дня.
+        // единица.
         var sourceItems = await db.MealItems
             .Where(item => item.Meal!.UserId == userId && item.Meal.Date == sourceDate
                 && (onlyKind == null || item.Meal.Kind == onlyKind))
@@ -97,8 +96,8 @@ public static class RepeatDiaryDayEndpoint
         var meals = await DiaryMeals.GetOrCreateAsync(
             db, userId.Value, targetDate, kinds, now, cancellationToken);
 
-        // Копии получают нарастающие метки времени: день сортируется по CreatedAt,
-        // и порядок позиций в приеме должен повторить исходный.
+        // День сортируется по CreatedAt, поэтому копии получают нарастающие метки:
+        // так порядок позиций повторит исходный.
         var tick = 0;
 
         foreach (var source in sourceItems)

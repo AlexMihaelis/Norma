@@ -3,8 +3,7 @@ using Norma.Api.Data.Entities;
 namespace Norma.Api.Features.Foods;
 
 /// <summary>
-/// Продукт в ответе API: одно представление для поиска и создания, чтобы клиент
-/// разбирал одинаковую форму в обоих случаях.
+/// Продукт в ответе API: одна форма для поиска и создания.
 /// </summary>
 public sealed record FoodSummary(
     Guid Id,

@@ -41,10 +41,7 @@ internal static class DiaryMapping
             Math.Round(values.Carbs, 1, MidpointRounding.AwayFromZero));
     }
 
-    /// <summary>
-    /// Итоги считаются по уже округленным позициям, поэтому на экране сумма
-    /// позиций всегда совпадает с итогом, а не расходится на единицу.
-    /// </summary>
+    /// <summary>Итоги по округленным позициям: сумма строк на экране совпадет с итогом.</summary>
     public static DiaryTotalsResponse Totals(IEnumerable<DiaryEntryResponse> entries)
     {
         var items = entries.ToList();

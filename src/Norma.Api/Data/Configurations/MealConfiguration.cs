@@ -16,8 +16,7 @@ internal sealed class MealConfiguration : IEntityTypeConfiguration<Meal>
         // Тип строкой: в базе видно "Breakfast", а не 0.
         builder.Property(meal => meal.Kind).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        // Один прием каждого типа в день. Второй завтрак - это утренний перекус;
-        // иначе «завтрак» на экране пришлось бы собирать из нескольких записей.
+        // Один прием каждого типа в день: второй завтрак - это утренний перекус.
         builder.HasIndex(meal => new { meal.UserId, meal.Date, meal.Kind }).IsUnique();
 
         builder
@@ -48,9 +47,8 @@ internal sealed class MealItemConfiguration : IEntityTypeConfiguration<MealItem>
             .HasForeignKey(item => item.MealId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Продукт, который уже есть в дневнике, удалить нельзя: позиция осталась
-        // бы без пищевой ценности, а пересчет - без источника. Пользователь
-        // выбрал пересчет из продукта, значит каталог должен быть целым.
+        // Restrict, а не каскад: без продукта позиция теряет пищевую ценность, а
+        // дневник пересчитывает КБЖУ из продукта.
         builder
             .HasOne(item => item.Food)
             .WithMany()

@@ -5,9 +5,8 @@ using Norma.Api.Data.Entities;
 namespace Norma.Api.Features.Diary;
 
 /// <summary>
-/// Чтение дня дневника: позиции с продуктом, шесть блоков приема и итоги.
-/// Общая операция для дня и для повтора, чтобы ответ копирования был той же
-/// формы, что и обычный день.
+/// Чтение дня дневника: позиции с продуктом, шесть блоков приема и итоги. Общая
+/// операция для дня и для повтора.
 /// </summary>
 internal static class DiaryDayReader
 {
@@ -17,9 +16,8 @@ internal static class DiaryDayReader
         DateOnly day,
         CancellationToken cancellationToken)
     {
-        // Один запрос на день: позиции вместе с продуктом и названием. КБЖУ
-        // считается в памяти: округление позиции совпадает с тем, что видит
-        // пользователь, а не с суммой до округления.
+        // КБЖУ считается в памяти: округление позиции должно совпадать с тем, что
+        // увидит пользователь.
         var items = await db.MealItems
             .Where(item => item.Meal!.UserId == userId && item.Meal.Date == day)
             .Include(item => item.Meal)
@@ -28,8 +26,7 @@ internal static class DiaryDayReader
             .OrderBy(item => item.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        // Все шесть приемов отдаются всегда, даже пустые: UI рисует день целиком
-        // и не должен угадывать, какие блоки существуют.
+        // Все шесть приемов отдаются всегда: UI рисует день целиком.
         var meals = Enum.GetValues<MealKind>()
             .Select(kind =>
             {

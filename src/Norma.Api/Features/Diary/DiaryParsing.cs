@@ -3,8 +3,8 @@ using Norma.Api.Data.Entities;
 namespace Norma.Api.Features.Diary;
 
 /// <summary>
-/// Разбор строковых значений дневника в enum-ы. Вынесено из срезов, чтобы
-/// валидация приема была одна на добавление позиции и на повтор дня.
+/// Разбор строковых значений дневника в enum-ы: одна валидация на запись позиции и
+/// на повтор дня.
 /// </summary>
 internal static class DiaryParsing
 {

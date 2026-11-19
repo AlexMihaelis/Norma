@@ -7,8 +7,8 @@ using Norma.Api.Features.Auth;
 namespace Norma.Api.Features.Diary.DeleteDiaryEntry;
 
 /// <summary>
-/// Срез «удалить позицию дневника». Ошибочную запись правят удалением и повторным
-/// добавлением: истории правок нет, но и мусора в данных не остается.
+/// Срез «удалить позицию дневника»: истории правок нет, ошибочную запись убирают и
+/// добавляют заново.
 /// </summary>
 public static class DeleteDiaryEntryEndpoint
 {
@@ -35,8 +35,8 @@ public static class DeleteDiaryEntryEndpoint
             return TypedResults.Unauthorized();
         }
 
-        // Условие по пользователю стоит в самом запросе: чужую позицию нельзя
-        // удалить, даже зная идентификатор.
+        // Чужую позицию нельзя удалить даже по идентификатору: фильтр по владельцу
+        // стоит в самом запросе.
         var item = await db.MealItems
             .Include(entry => entry.Meal)
             .FirstOrDefaultAsync(
@@ -55,8 +55,8 @@ public static class DeleteDiaryEntryEndpoint
 
         db.MealItems.Remove(item);
 
-        // Прием без позиций бесполезен: он занял бы уникальный индекс (UserId,
-        // Date, Kind) пустой строкой. Удаляем вместе с последней позицией.
+        // Пустой прием занял бы уникальный индекс (UserId, Date, Kind), поэтому
+        // уходит вместе с последней позицией.
         if (!mealHasOtherItems && item.Meal is not null)
         {
             db.Meals.Remove(item.Meal);

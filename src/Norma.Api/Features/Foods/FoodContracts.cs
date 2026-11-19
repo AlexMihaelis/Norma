@@ -1,8 +1,8 @@
 namespace Norma.Api.Features.Foods;
 
 /// <summary>
-/// Тело создания своего продукта. Обязательны название и КБЖУ; состояние и
-/// единица по умолчанию Unknown и Gram. КБЖУ - на 100 г или 100 мл.
+/// Тело создания своего продукта: КБЖУ на 100 г или 100 мл, состояние и единица
+/// необязательны.
 /// </summary>
 public sealed record CreateFoodRequest(
     string? Name,

@@ -7,8 +7,7 @@ using Norma.Api.Features.Auth;
 namespace Norma.Api.Features.Favorites.ListFavorites;
 
 /// <summary>
-/// Срез «список избранного»: свои продукты, сначала недавно добавленные - на
-/// экране быстрого ввода нужны последние.
+/// Срез «список избранного»: свои продукты, сначала недавно добавленные.
 /// </summary>
 public static class ListFavoritesEndpoint
 {
@@ -37,8 +36,6 @@ public static class ListFavoritesEndpoint
             return TypedResults.Unauthorized();
         }
 
-        // Один запрос: избранное вместе с продуктом и названием. Продукт читается
-        // без отслеживания - он только показывается.
         var items = await db.FavoriteFoods
             .AsNoTracking()
             .Where(favorite => favorite.UserId == userId)

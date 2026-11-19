@@ -17,10 +17,7 @@ public sealed record DiaryEntryResponse(
 /// <summary>Суммы по приему пищи или по дню.</summary>
 public sealed record DiaryTotalsResponse(int Kcal, double Protein, double Fat, double Carbs);
 
-/// <summary>
-/// Прием пищи за день. Пустой прием отдается с пустым списком позиций, чтобы UI
-/// показывал все шесть блоков без догадок о том, какие из них существуют.
-/// </summary>
+/// <summary>Прием пищи за день; пустой прием отдается с пустым списком позиций.</summary>
 public sealed record DiaryMealResponse(
     MealKind Kind,
     IReadOnlyList<DiaryEntryResponse> Items,
@@ -42,16 +39,10 @@ public sealed record AddDiaryEntryRequest(
     string? Unit,
     DateOnly? Date);
 
-/// <summary>
-/// Тело повтора дня: откуда, куда и какой прием. Пустое тело означает «вчера в
-/// сегодня, все приемы» - самый частый сценарий.
-/// </summary>
+/// <summary>Тело повтора: пустое означает «вчера в сегодня, все приемы».</summary>
 public sealed record RepeatDiaryRequest(DateOnly? FromDate, DateOnly? Date, string? Meal);
 
-/// <summary>
-/// Результат повтора: сколько позиций скопировано и как выглядит целевой день
-/// после копирования, чтобы клиент не делал второй запрос.
-/// </summary>
+/// <summary>Сколько позиций скопировано и как выглядит целевой день после копирования.</summary>
 public sealed record RepeatDiaryResponse(
     DateOnly Date,
     int CopiedCount,

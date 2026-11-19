@@ -13,13 +13,13 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
 
         builder.HasKey(food => food.Id);
 
-        // Enum храним строкой: в базе видно "Cooked", а не 2, и порядок значений
-        // в коде можно менять, не ломая существующие строки.
+        // Enum строкой: в базе видно "Cooked", а не 2, и порядок значений можно
+        // менять, не ломая строки.
         builder.Property(food => food.Source).HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(food => food.State).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        // У существующих продуктов миграция проставит "Gram": подавляющее
-        // большинство записей USDA - на 100 г, миллилитры появятся позже.
+        // У существующих продуктов миграция проставит "Gram": миллилитры появятся
+        // позже.
         builder
             .Property(food => food.BaseUnit)
             .HasConversion<string>()
@@ -29,9 +29,8 @@ internal sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
 
         builder.Property(food => food.SourceId).HasMaxLength(64);
 
-        // Авторство ручного продукта: ON DELETE SET NULL, а не каскад. Продукт -
-        // общее знание, удаление аккаунта не должно вычищать каталог; а вот факты
-        // питания пользователя (дневник) удаляются вместе с ним.
+        // SET NULL, а не каскад: продукт - общее знание, удаление аккаунта не должно
+        // чистить каталог. Факты питания (дневник) при этом удаляются.
         builder
             .HasOne<User>()
             .WithMany()

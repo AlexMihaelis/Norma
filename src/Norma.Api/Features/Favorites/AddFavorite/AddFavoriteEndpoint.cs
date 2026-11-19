@@ -13,8 +13,7 @@ namespace Norma.Api.Features.Favorites.AddFavorite;
 /// списка. Повторное добавление не создает вторую запись.
 /// </summary>
 /// <remarks>
-/// Ответы: 201 - отметка создана, 200 - продукт уже был в избранном (idempotent),
-/// 404 - такого продукта нет в каталоге.
+/// 201 - отметка создана, 200 - продукт уже был в избранном, 404 - продукта нет.
 /// </remarks>
 public static class AddFavoriteEndpoint
 {
@@ -89,8 +88,7 @@ public static class AddFavoriteEndpoint
         }
         catch (DbUpdateException exception) when (IsUniqueViolation(exception))
         {
-            // Два одновременных «в избранное»: второй запрос не создает дубль,
-            // а возвращает уже существующую отметку.
+            // Гонка двух одинаковых запросов: второй возвращает существующую отметку.
             db.Entry(favorite).State = EntityState.Detached;
 
             var raced = await db.FavoriteFoods

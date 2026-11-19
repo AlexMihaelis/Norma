@@ -13,10 +13,8 @@ namespace Norma.Api.Features.Stats.GetStats;
 /// расход активности и отклонение от цели.
 /// </summary>
 /// <remarks>
-/// Цель считается на каждую дату по весу того дня: прошлый месяц не должен
-/// меняться из-за сегодняшнего замера. Профиль (пол, рост, активность, цель)
-/// хранится без истории, поэтому берётся текущий - это ограничение отражено в
-/// ответе через <see cref="StatsText.TargetNote"/>.
+/// Цель считается на каждую дату по весу того дня. Профиль хранится без истории,
+/// поэтому берется текущий - ограничение видно в <see cref="StatsText.TargetNote"/>.
 /// </remarks>
 public static class GetStatsEndpoint
 {
@@ -75,8 +73,7 @@ public static class GetStatsEndpoint
             return TypedResults.ValidationProblem(errors);
         }
 
-        // Съеденное по дням. КБЖУ позиции = количество × значение продукта / 100,
-        // поэтому агрегат считается прямо в базе, без выгрузки всех позиций.
+        // Агрегат считается в базе: КБЖУ позиции = количество × значение / 100.
         var intakeByDay = await db.MealItems
             .Where(item => item.Meal!.UserId == userId && item.Meal.Date >= start && item.Meal.Date <= end)
             .GroupBy(item => item.Meal!.Date)
@@ -97,8 +94,8 @@ public static class GetStatsEndpoint
             .Select(group => new { Date = group.Key, Kcal = group.Sum(record => record.Kcal) })
             .ToListAsync(cancellationToken);
 
-        // Вес на каждую дату: последний замер не позже этой даты, без заглядывания
-        // в будущее. Берём всю историю до конца периода одним запросом.
+        // Вес на дату - последний замер не позже этой даты; берем всю историю до
+        // конца периода одним запросом.
         var weights = await db.WeightMeasurements
             .Where(measurement => measurement.UserId == userId && measurement.Date <= end)
             .OrderBy(measurement => measurement.Date)

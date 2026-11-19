@@ -7,8 +7,7 @@ using Norma.Api.Features.Auth;
 namespace Norma.Api.Features.Favorites.DeleteFavorite;
 
 /// <summary>
-/// Срез «убрать из избранного»: удаляет отметку своего списка. Продукт из
-/// каталога и записи дневника не трогает.
+/// Срез «убрать из избранного»: удаляет только отметку, каталог и дневник не трогает.
 /// </summary>
 public static class DeleteFavoriteEndpoint
 {
