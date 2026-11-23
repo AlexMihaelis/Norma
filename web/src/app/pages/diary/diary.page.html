@@ -2,6 +2,20 @@
   <p class="error">{{ message }}</p>
 }
 
+@if (needsSetup()) {
+  <section class="card setup">
+    <h2>Сначала пара шагов</h2>
+    <p class="muted">
+      Цель и норму БЖУ считаем по профилю и последнему весу. Пока их нет, вести дневник
+      можно, но цифры цели не появятся.
+    </p>
+    <ol>
+      <li><a routerLink="/profile">Заполнить профиль</a> - пол, дата рождения, рост, активность, цель.</li>
+      <li><a routerLink="/weight">Записать вес</a> - последний замер задает точку отсчета.</li>
+    </ol>
+  </section>
+}
+
 <app-add-entry [date]="dateIso" (added)="load()" />
 
 <section class="card">
@@ -12,8 +26,8 @@
       Цель: <strong>{{ planValue.targetKcal }}</strong> ккал · Б {{ planValue.macros.proteinG }} ·
       Ж {{ planValue.macros.fatG }} · У {{ planValue.macros.carbsG }}
     </p>
-  } @else {
-    <p class="muted">Цель не рассчитана: заполните профиль и запишите вес.</p>
+  } @else if (planError(); as message) {
+    <p class="muted">{{ message }}</p>
   }
 
   @if (day(); as dayValue) {
@@ -55,7 +69,7 @@
     }
 
     @if (dayValue.totals.kcal === 0) {
-      <p class="empty">Записей нет. Добавьте первый продукт через форму выше.</p>
+      <p class="empty">Записей нет. Добавь первый продукт через форму выше.</p>
     }
   }
 </section>
