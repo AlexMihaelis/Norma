@@ -183,6 +183,14 @@ export const bmiCategoryTitles: Record<BmiCategory, string> = {
   VeryHigh: 'ожирение',
 };
 
+/** Аккаунт: кто вошел, ник и аватар. */
+export interface Me {
+  userId: string;
+  email: string;
+  nickname: string | null;
+  avatarDataUrl: string | null;
+}
+
 /** День статистики: съеденное, активность и цель на эту дату. */
 export interface StatsDay {
   date: string;

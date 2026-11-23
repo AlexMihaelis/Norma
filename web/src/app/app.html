@@ -10,7 +10,16 @@
     </nav>
 
     <span class="spacer"></span>
-    <span class="account">{{ auth.email() }}</span>
+
+    <a class="account" routerLink="/profile" title="Профиль">
+      @if (account.avatarDataUrl(); as image) {
+        <img class="avatar" [src]="image" alt="Аватар" />
+      } @else {
+        <span class="avatar initials">{{ account.initials() }}</span>
+      }
+      <span class="account-name">{{ account.displayName() }}</span>
+    </a>
+
     <button type="button" class="ghost" (click)="signOut()">Выйти</button>
   }
 </header>

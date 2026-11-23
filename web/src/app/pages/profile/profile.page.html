@@ -15,6 +15,54 @@
     <p class="error">{{ message }}</p>
   }
 
+  @if (accountError(); as message) {
+    <p class="error">{{ message }}</p>
+  }
+
+  @if (accountSaved()) {
+    <p class="ok">Ник и фото обновлены.</p>
+  }
+
+  <div class="account-row">
+    <div class="avatar-preview">
+      @if (account.avatarDataUrl(); as image) {
+        <img [src]="image" alt="Аватар" />
+      } @else {
+        <span>{{ account.initials() }}</span>
+      }
+    </div>
+
+    <div class="account-fields">
+      <label>
+        Ник
+        <span class="hint" data-tip="Как показывать тебя в шапке. Если не заполнить - будет email.">?</span>
+        <input
+          maxlength="30"
+          placeholder="например, Аня"
+          [value]="nicknameInput()"
+          (input)="nicknameInput.set($any($event.target).value)"
+        />
+      </label>
+
+      <div class="account-actions">
+        <button type="button" (click)="saveNickname()" [disabled]="nicknameBusy()">
+          {{ nicknameBusy() ? 'Сохраняю…' : 'Сохранить ник' }}
+        </button>
+
+        <label class="upload">
+          Загрузить фото
+          <input type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onAvatarSelected($event)" />
+        </label>
+
+        @if (account.avatarDataUrl()) {
+          <button type="button" class="ghost danger" (click)="removeAvatar()">Удалить фото</button>
+        }
+      </div>
+
+      <p class="muted small">Картинка до 256 КБ: png, jpeg или webp.</p>
+    </div>
+  </div>
+
   @if (saved()) {
     <p class="ok">
       Профиль сохранён. Дальше - <a routerLink="/weight">записать вес</a>, чтобы посчитать цель.

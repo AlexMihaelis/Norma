@@ -28,13 +28,78 @@ select {
   }
 }
 
-.welcome {
-  margin-bottom: 1.5rem;
+.welcome {  margin-bottom: 1.5rem;
   border-left: 4px solid #2f855a;
 
   h1 {
     margin-top: 0;
   }
+}
+
+.account-row {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  margin: 0.5rem 0;
+}
+
+.avatar-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #2f855a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.account-fields {
+  flex: 1 1 320px;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.upload {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+
+  &:hover {
+    background: #f9fafb;
+  }
+}
+
+button.ghost.danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fff;
 }
 
 .current {

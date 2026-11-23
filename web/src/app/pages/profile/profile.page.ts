@@ -13,6 +13,7 @@ import {
 } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
 import { toLocalIso } from '../../core/date';
+import { AccountService } from '../../core/account.service';
 import { WeightService } from '../../core/weight.service';
 import { ProfileService } from './profile.service';
 
@@ -29,6 +30,7 @@ import { ProfileService } from './profile.service';
 export class ProfilePage implements OnInit {
   private readonly profiles = inject(ProfileService);
   private readonly weights = inject(WeightService);
+  protected readonly account = inject(AccountService);
 
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -38,6 +40,14 @@ export class ProfilePage implements OnInit {
   protected readonly weightInput = signal<number | null>(null);
   protected readonly weightBusy = signal(false);
   protected readonly weightError = signal<string | null>(null);
+
+  protected readonly nicknameInput = signal('');
+  protected readonly nicknameBusy = signal(false);
+  protected readonly accountError = signal<string | null>(null);
+  protected readonly accountSaved = signal(false);
+
+  /** Потолок как на сервере: 256 КБ на картинку. */
+  private readonly maxAvatarBytes = 256 * 1024;
 
   protected readonly sexTitles = sexTitles;
   protected readonly activityTitles = activityTitles;
@@ -64,6 +74,8 @@ export class ProfilePage implements OnInit {
   });
 
   ngOnInit(): void {
+    this.account.load().subscribe((me) => this.nicknameInput.set(me?.nickname ?? ''));
+
     this.profiles.get().subscribe({
       next: (profile) => {
         if (profile === null) {
@@ -118,6 +130,67 @@ export class ProfilePage implements OnInit {
   protected onWeightInput(raw: string): void {
     const value = Number(raw);
     this.weightInput.set(raw.trim() === '' || Number.isNaN(value) ? null : value);
+  }
+
+  protected saveNickname(): void {
+    this.nicknameBusy.set(true);
+    this.accountSaved.set(false);
+    this.accountError.set(null);
+
+    this.account.updateNickname(this.nicknameInput().trim()).subscribe({
+      next: () => {
+        this.nicknameBusy.set(false);
+        this.accountSaved.set(true);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.nicknameBusy.set(false);
+        this.accountError.set(describeProblem(error));
+      },
+    });
+  }
+
+  protected onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (file === undefined) {
+      return;
+    }
+
+    if (file.size > this.maxAvatarBytes) {
+      this.accountError.set('Картинка должна быть не больше 256 КБ.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataUrl = reader.result;
+
+      if (typeof dataUrl !== 'string') {
+        return;
+      }
+
+      this.accountError.set(null);
+
+      this.account.uploadAvatar(dataUrl).subscribe({
+        next: () => this.accountSaved.set(true),
+        error: (error: HttpErrorResponse) => this.accountError.set(describeProblem(error)),
+      });
+    };
+
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  protected removeAvatar(): void {
+    this.accountError.set(null);
+
+    this.account.removeAvatar().subscribe({
+      next: () => this.accountSaved.set(true),
+      error: (error: HttpErrorResponse) => this.accountError.set(describeProblem(error)),
+    });
   }
 
   private reloadWeight(): void {
