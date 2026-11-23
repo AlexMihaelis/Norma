@@ -1,10 +1,13 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Norma.Api.Data;
+using Norma.Api.Features.Auth;
 
 namespace Norma.Api.Features.Auth.Me;
 
 /// <summary>
-/// Защищённый срез «кто я» и образец того, как срезы получают <c>userId</c> из токена.
+/// Срез «кто я»: userId, email, ник и аватар текущего пользователя.
 /// </summary>
 public static class MeEndpoint
 {
@@ -18,17 +21,27 @@ public static class MeEndpoint
         return endpoints;
     }
 
-    private static Results<Ok<MeResponse>, UnauthorizedHttpResult> Handle(ClaimsPrincipal principal)
+    private static async Task<Results<Ok<MeResponse>, UnauthorizedHttpResult>> Handle(
+        ClaimsPrincipal principal,
+        NormaDbContext db,
+        CancellationToken cancellationToken)
     {
-        var subject = principal.FindFirstValue("sub");
+        var userId = principal.GetUserId();
 
-        if (!Guid.TryParse(subject, out var userId))
+        if (userId is null)
         {
             return TypedResults.Unauthorized();
         }
 
-        var email = principal.FindFirstValue("email") ?? string.Empty;
+        var user = await db.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(candidate => candidate.Id == userId, cancellationToken);
 
-        return TypedResults.Ok(new MeResponse(userId, email));
+        if (user is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        return TypedResults.Ok(MeResponseFactory.From(user));
     }
 }

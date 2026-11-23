@@ -4,4 +4,8 @@ namespace Norma.Api.Features.Auth;
 public sealed record AuthResponse(Guid UserId, string Email, string Token);
 
 /// <summary>Ответ защищённого эндпоинта «кто я».</summary>
-public sealed record MeResponse(Guid UserId, string Email);
+public sealed record MeResponse(
+    Guid UserId,
+    string Email,
+    string? Nickname,
+    string? AvatarDataUrl);
