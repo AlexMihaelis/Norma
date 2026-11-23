@@ -2,9 +2,21 @@
   <p class="error">{{ message }}</p>
 }
 
-<app-add-entry [date]="dateIso" (added)="load()" />
+@if (needsSetup()) {
+  <section class="card setup">
+    <h2>Сначала пара шагов</h2>
+    <p class="muted">
+      Цель и норму БЖУ считаем по профилю и последнему весу. Пока их нет, вести дневник
+      можно, но цифры цели не появятся.
+    </p>
+    <ol>
+      <li><a routerLink="/profile">Заполнить профиль</a> - пол, дата рождения, рост, активность, цель.</li>
+      <li><a routerLink="/weight">Записать вес</a> - последний замер задает точку отсчета.</li>
+    </ol>
+  </section>
+}
 
-<section class="card">
+<section class="card day">
   <h1>Сегодня, {{ dateLabel }}</h1>
 
   @if (plan(); as planValue) {
@@ -12,8 +24,8 @@
       Цель: <strong>{{ planValue.targetKcal }}</strong> ккал · Б {{ planValue.macros.proteinG }} ·
       Ж {{ planValue.macros.fatG }} · У {{ planValue.macros.carbsG }}
     </p>
-  } @else {
-    <p class="muted">Цель не рассчитана: заполните профиль и запишите вес.</p>
+  } @else if (planError(); as message) {
+    <p class="muted">{{ message }}</p>
   }
 
   @if (day(); as dayValue) {
@@ -25,37 +37,57 @@
     </p>
 
     <div class="bar"><span [style.width.%]="progressPercent()"></span></div>
-
-    @for (meal of dayValue.meals; track meal.kind) {
-      @if (meal.items.length > 0) {
-        <h2>{{ titles[meal.kind] }}</h2>
-        <ul class="items">
-          @for (item of meal.items; track item.id) {
-            <li>
-              <span class="item-head">
-                <span>{{ item.foodName }}</span>
-                <button
-                  type="button"
-                  class="remove"
-                  title="Удалить позицию"
-                  (click)="remove(item.id)"
-                >
-                  Удалить
-                </button>
-              </span>
-              <span class="muted">
-                {{ item.quantity }} {{ unitLabel(item.unit) }} · {{ item.kcal }} ккал ·
-                Б {{ item.protein }} · Ж {{ item.fat }} · У {{ item.carbs }}
-              </span>
-            </li>
-          }
-        </ul>
-        <p class="muted">Итого за {{ titles[meal.kind].toLowerCase() }}: {{ meal.totals.kcal }} ккал</p>
-      }
-    }
-
-    @if (dayValue.totals.kcal === 0) {
-      <p class="empty">Записей нет. Добавьте первый продукт через форму выше.</p>
-    }
   }
 </section>
+
+@if (day(); as dayValue) {
+  @for (meal of dayValue.meals; track meal.kind) {
+    <section class="card meal" [class.open]="openMeal() === meal.kind">
+      <button type="button" class="meal-head" (click)="toggle(meal.kind)">
+        <span class="meal-title">{{ titles[meal.kind] }}</span>
+
+        <span class="meal-meta">
+          @if (meal.items.length > 0) {
+            <span>{{ meal.totals.kcal }} ккал · Б {{ meal.totals.protein }} · Ж {{ meal.totals.fat }} · У {{ meal.totals.carbs }}</span>
+          } @else {
+            <span class="muted">пусто</span>
+          }
+          <span class="chevron">{{ openMeal() === meal.kind ? '−' : '+' }}</span>
+        </span>
+      </button>
+
+      @if (openMeal() === meal.kind) {
+        <div class="meal-body">
+          @if (meal.items.length > 0) {
+            <ul class="items">
+              @for (item of meal.items; track item.id) {
+                <li>
+                  <span class="item-head">
+                    <span>{{ item.foodName }}</span>
+                    <button
+                      type="button"
+                      class="remove"
+                      title="Удалить позицию"
+                      (click)="remove(item.id)"
+                    >
+                      Удалить
+                    </button>
+                  </span>
+                  <span class="muted">
+                    {{ item.quantity }} {{ unitLabel(item.unit) }} · {{ item.kcal }} ккал ·
+                    Б {{ item.protein }} · Ж {{ item.fat }} · У {{ item.carbs }}
+                  </span>
+                </li>
+              }
+            </ul>
+            <p class="muted">Итого за {{ titles[meal.kind].toLowerCase() }}: {{ meal.totals.kcal }} ккал</p>
+          } @else {
+            <p class="muted">Пока ничего не добавлено.</p>
+          }
+
+          <app-add-entry [date]="dateIso" [meal]="meal.kind" (added)="load()" />
+        </div>
+      }
+    </section>
+  }
+}

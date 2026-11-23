@@ -24,18 +24,25 @@
 
 @if (trend(); as value) {
   <section class="card">
-    <h2>Тренд</h2>
+    <h2>
+      Тренд
+      <span class="hint" data-tip="Считается по всем замерам: сглаженная кривая показывает направление, скорость - насколько быстро меняется вес, прогноз - когда дойдешь до цели из профиля.">?</span>
+    </h2>
 
     @if (value.currentEmaKg !== null) {
       <p class="big">
         {{ format(value.currentEmaKg) }} кг
         <span class="muted">сглаженный вес</span>
+        <span class="hint" data-tip="Сглаживание убирает скачки от воды и соли: вес за день гуляет на 1-2 кг, а тренд показывает реальное направление.">?</span>
       </p>
     }
 
     <dl class="facts">
       <div>
-        <dt>Скорость</dt>
+        <dt>
+          Скорость
+          <span class="hint" data-tip="Средний наклон веса за последние две недели, кг в неделю. Пока история короткая, не показываем - цифра была бы случайной.">?</span>
+        </dt>
         <dd>
           @if (value.rateKgPerWeek !== null) {
             {{ value.rateKgPerWeek > 0 ? '+' : '' }}{{ format(value.rateKgPerWeek, 2) }} кг/нед
@@ -45,7 +52,10 @@
         </dd>
       </div>
       <div>
-        <dt>Цель</dt>
+        <dt>
+          Цель
+          <span class="hint" data-tip="Желаемый вес из профиля. На норму калорий он не влияет - нужен, чтобы показать прогноз даты.">?</span>
+        </dt>
         <dd>
           @if (value.targetKg !== null) {
             {{ format(value.targetKg) }} кг
@@ -55,11 +65,17 @@
         </dd>
       </div>
       <div>
-        <dt>Прогноз даты цели</dt>
+        <dt>
+          Прогноз даты цели
+          <span class="hint" data-tip="Дата, когда текущая скорость приведет к желаемому весу. Это прогноз, а не обещание: темп меняется вместе с питанием и активностью.">?</span>
+        </dt>
         <dd>{{ formatDate(value.goalDate) }}</dd>
       </div>
       <div>
-        <dt>ИМТ</dt>
+        <dt>
+          ИМТ
+          <span class="hint" data-tip="Индекс массы тела: вес / рост². Пороги ВОЗ 18.5, 25 и 30; после 65 лет норма сдвигается к 22-27.">?</span>
+        </dt>
         <dd>
           @if (value.bmi !== null) {
             {{ format(value.bmi) }}
@@ -74,7 +90,10 @@
         </dd>
       </div>
       <div>
-        <dt>Норма веса</dt>
+        <dt>
+          Норма веса
+          <span class="hint" data-tip="18.5-25 по ИМТ для 18-64 лет; после 65 - 22-27, это ориентир для пожилых, а не классификация ВОЗ.">?</span>
+        </dt>
         <dd>
           @if (value.normalWeight; as normal) {
             {{ format(normal.minKg) }}–{{ format(normal.maxKg) }} кг

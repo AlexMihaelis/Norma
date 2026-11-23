@@ -1,15 +1,21 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
-import { DiaryDay, Plan, mealTitles } from '../../core/api.models';
+import { RouterLink } from '@angular/router';
+import { DiaryDay, MealKind, Plan, mealTitles } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
 import { AddEntryComponent } from './add-entry.component';
 import { DiaryService } from './diary.service';
 
-/** Экран дня: цель на сегодня, записи по приемам и добавление еды. */
+/**
+ * Экран дня: итоги за день и приемы пищи карточками. Прием раскрывается
+ * кликом: внутри его позиции и форма добавления.
+ *
+ * День и цель грузятся независимо: без профиля и веса цель не посчитать, но
+ * дневник должен открываться.
+ */
 @Component({
   selector: 'app-diary-page',
-  imports: [AddEntryComponent],
+  imports: [AddEntryComponent, RouterLink],
   templateUrl: './diary.page.html',
   styleUrl: './diary.page.scss',
 })
@@ -19,6 +25,9 @@ export class DiaryPage implements OnInit {
   protected readonly day = signal<DiaryDay | null>(null);
   protected readonly plan = signal<Plan | null>(null);
   protected readonly error = signal<string | null>(null);
+  protected readonly planError = signal<string | null>(null);
+  protected readonly needsSetup = signal(false);
+  protected readonly openMeal = signal<MealKind | null>(null);
   protected readonly titles = mealTitles;
 
   protected readonly today = new Date();
@@ -34,17 +43,37 @@ export class DiaryPage implements OnInit {
   }
 
   protected load(): void {
-    forkJoin({
-      day: this.diary.day(this.dateIso),
-      plan: this.diary.plan(),
-    }).subscribe({
-      next: ({ day, plan }) => {
-        this.day.set(day);
-        this.plan.set(plan);
-        this.error.set(null);
-      },
+    this.error.set(null);
+
+    this.diary.day(this.dateIso).subscribe({
+      next: (day) => this.day.set(day),
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
     });
+
+    this.diary.plan().subscribe({
+      next: (plan) => {
+        this.plan.set(plan);
+        this.planError.set(null);
+        this.needsSetup.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.plan.set(null);
+
+        // 400 значит «профиль не заполнен»: сервер перечисляет поля, но
+        // пользователю полезнее ссылки на экраны, где их заполнить.
+        if (error.status === 400) {
+          this.needsSetup.set(true);
+          this.planError.set('Цель не рассчитана: заполни профиль и запиши вес.');
+        } else {
+          this.needsSetup.set(false);
+          this.planError.set(describeProblem(error));
+        }
+      },
+    });
+  }
+
+  protected toggle(kind: MealKind): void {
+    this.openMeal.set(this.openMeal() === kind ? null : kind);
   }
 
   protected remove(entryId: string): void {
