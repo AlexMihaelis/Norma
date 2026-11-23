@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
+using Norma.Api.Data.Seeding;
 using Norma.Api.Features.Activity.AddActivity;
 using Norma.Api.Features.Activity.GetActivityDay;
 using Norma.Api.Features.Auth;
@@ -114,6 +115,14 @@ public static class ApiHost
             ?? DevelopmentConnectionString;
 
         builder.Services.AddDbContext<NormaDbContext>(options => options.UseNpgsql(connectionString));
+
+        // Стартовый набор продуктов: только Development и по флагу, чтобы не лить
+        // данные в тестовые и продуктовые базы. Повторный запуск ничего не дублирует.
+        if (builder.Environment.IsDevelopment()
+            && builder.Configuration.GetValue<bool>("Database:SeedFoodsOnStartup"))
+        {
+            builder.Services.AddHostedService<FoodSeedHostedService>();
+        }
 
         var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
             ?? new JwtOptions();
