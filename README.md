@@ -58,6 +58,10 @@ npm install   # один раз
 npm start     # http://localhost:4200
 ```
 
+Дев-сервер слушает `127.0.0.1:4200` (задано в `angular.json`), а не IPv6
+`[::1]`: иначе браузер, идущий на `localhost` через IPv4, получает
+`ERR_CONNECTION_REFUSED`.
+
 Сборка проверяется командой `npm run build` в `web/`.
 
 ## Тесты
