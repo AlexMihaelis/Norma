@@ -84,6 +84,54 @@ export interface AddDiaryEntryRequest {
   date: string;
 }
 
+export type Sex = 'Female' | 'Male';
+
+export type ActivityLevel = 'Sedentary' | 'Light' | 'Moderate' | 'Active' | 'VeryActive';
+
+export type Goal = 'Lose' | 'Maintain' | 'Gain';
+
+/** Профиль: все поля необязательны, план считается, когда заполнены ключевые. */
+export interface Profile {
+  sex: Sex | null;
+  birthDate: string | null;
+  heightCm: number | null;
+  activity: ActivityLevel | null;
+  goal: Goal | null;
+  targetWeightKg: number | null;
+  kgPerWeek: number | null;
+  updatedAt: string;
+}
+
+/** Тело сохранения профиля: PUT - полная замена, пустые поля стираются. */
+export interface UpdateProfileRequest {
+  sex: Sex | null;
+  birthDate: string | null;
+  heightCm: number | null;
+  activity: ActivityLevel | null;
+  goal: Goal | null;
+  targetWeightKg: number | null;
+  kgPerWeek: number | null;
+}
+
+export const sexTitles: Record<Sex, string> = {
+  Female: 'Женский',
+  Male: 'Мужской',
+};
+
+export const activityTitles: Record<ActivityLevel, string> = {
+  Sedentary: 'Сидячий образ жизни',
+  Light: 'Небольшая активность',
+  Moderate: 'Умеренная активность',
+  Active: 'Высокая активность',
+  VeryActive: 'Очень высокая активность',
+};
+
+export const goalTitles: Record<Goal, string> = {
+  Lose: 'Похудение',
+  Maintain: 'Поддержание',
+  Gain: 'Набор массы',
+};
+
 /** Названия приемов для экрана; порядок задает API, здесь только подписи. */
 export const mealTitles: Record<MealKind, string> = {
   Breakfast: 'Завтрак',

@@ -1,0 +1,73 @@
+<section class="card">
+  <h1>Профиль</h1>
+  <p class="muted">
+    По этим данным считается цель и БЖУ. Незаполненные поля - «не указано», их можно
+    дополнить позже.
+  </p>
+
+  @if (error(); as message) {
+    <p class="error">{{ message }}</p>
+  }
+
+  @if (saved()) {
+    <p class="ok">Профиль сохранён.</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="grid">
+      <label>
+        Пол
+        <select formControlName="sex">
+          <option [ngValue]="null">не указан</option>
+          @for (value of sexes; track value) {
+            <option [ngValue]="value">{{ sexTitles[value] }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Дата рождения
+        <input type="date" formControlName="birthDate" />
+      </label>
+
+      <label>
+        Рост, см
+        <input type="number" min="100" max="250" step="1" formControlName="heightCm" />
+      </label>
+
+      <label>
+        Активность
+        <select formControlName="activity">
+          <option [ngValue]="null">не указана</option>
+          @for (value of activities; track value) {
+            <option [ngValue]="value">{{ activityTitles[value] }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Цель
+        <select formControlName="goal">
+          <option [ngValue]="null">не указана</option>
+          @for (value of goals; track value) {
+            <option [ngValue]="value">{{ goalTitles[value] }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Желаемый вес, кг
+        <input type="number" min="20" max="500" step="0.1" formControlName="targetWeightKg" />
+      </label>
+
+      <label>
+        Темп, кг/нед
+        <input type="number" min="0" max="1.5" step="0.05" formControlName="kgPerWeek" />
+      </label>
+    </div>
+
+    <button type="submit" [disabled]="busy()">
+      {{ busy() ? 'Сохраняю…' : 'Сохранить' }}
+    </button>
+  </form>
+</section>
