@@ -48,7 +48,14 @@ export class LoginPage {
     request.subscribe({
       next: () => this.router.navigateByUrl('/'),
       error: (error: HttpErrorResponse) => {
-        this.error.set(describeProblem(error));
+        // Сервер намеренно отвечает одинаковым 401 на «нет такого email» и
+        // «неверный пароль», чтобы перебором нельзя было узнать, кто зарегистрирован.
+        // Поэтому подсказываем оба варианта, а не гадаем.
+        this.error.set(
+          error.status === 401
+            ? 'Неверный email или пароль. Если аккаунта ещё нет - нажми «Зарегистрироваться».'
+            : describeProblem(error),
+        );
         this.busy.set(false);
       },
     });
