@@ -4,6 +4,7 @@
   @if (auth.signedIn()) {
     <nav>
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Дневник</a>
+      <a routerLink="/weight" routerLinkActive="active">Вес</a>
       <a routerLink="/profile" routerLinkActive="active">Профиль</a>
     </nav>
 
