@@ -80,6 +80,24 @@ export class AddEntryComponent implements OnInit {
     return this.selected()?.baseUnit === 'Milliliter' ? 'мл' : 'г';
   }
 
+  /**
+   * Количество из поля. Браузер отдаёт «150,5» при русской раскладке, а `+`
+   * превращает такую строку в NaN - и на сервер уходил null. Запятую меняем на
+   * точку и пустое поле считаем нулем, чтобы ошибка была понятной.
+   */
+  protected onQuantityInput(raw: string): void {
+    const normalized = raw.replace(',', '.').trim();
+
+    if (normalized === '') {
+      this.quantity.set(0);
+      return;
+    }
+
+    const value = Number(normalized);
+
+    this.quantity.set(Number.isNaN(value) ? 0 : value);
+  }
+
   protected submit(): void {
     const food = this.selected();
 
