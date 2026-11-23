@@ -1,0 +1,113 @@
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+<section class="card">
+  <h2>Добавить замер</h2>
+
+  @if (saved()) {
+    <p class="ok">Замер сохранён.</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="row">
+    <label>
+      Вес, кг
+      <input type="number" min="20" max="500" step="0.1" formControlName="kg" placeholder="например, 72,4" />
+    </label>
+    <label>
+      Дата
+      <input type="date" formControlName="date" />
+    </label>
+    <button type="submit" [disabled]="busy()">{{ busy() ? 'Сохраняю…' : 'Записать' }}</button>
+  </form>
+</section>
+
+@if (trend(); as value) {
+  <section class="card">
+    <h2>Тренд</h2>
+
+    @if (value.currentEmaKg !== null) {
+      <p class="big">
+        {{ format(value.currentEmaKg) }} кг
+        <span class="muted">сглаженный вес</span>
+      </p>
+    }
+
+    <dl class="facts">
+      <div>
+        <dt>Скорость</dt>
+        <dd>
+          @if (value.rateKgPerWeek !== null) {
+            {{ value.rateKgPerWeek > 0 ? '+' : '' }}{{ format(value.rateKgPerWeek, 2) }} кг/нед
+          } @else {
+            <span class="muted">нужно около четырёх недель замеров</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Цель</dt>
+        <dd>
+          @if (value.targetKg !== null) {
+            {{ format(value.targetKg) }} кг
+          } @else {
+            <span class="muted">не задана в профиле</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Прогноз даты цели</dt>
+        <dd>{{ formatDate(value.goalDate) }}</dd>
+      </div>
+      <div>
+        <dt>ИМТ</dt>
+        <dd>
+          @if (value.bmi !== null) {
+            {{ format(value.bmi) }}
+            @if (value.bmiCategory !== null) {
+              <span class="badge" [class]="bmiClass(value.bmiCategory)">
+                {{ bmiTitles[value.bmiCategory] }}
+              </span>
+            }
+          } @else {
+            <span class="muted">нужен рост в профиле</span>
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Норма веса</dt>
+        <dd>
+          @if (value.normalWeight; as normal) {
+            {{ format(normal.minKg) }}–{{ format(normal.maxKg) }} кг
+          } @else {
+            <span class="muted">нужен рост в профиле</span>
+          }
+        </dd>
+      </div>
+    </dl>
+
+    @if (chart(); as polyline) {
+      <svg class="chart" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="Тренд веса">
+        <polyline [attr.points]="polyline" fill="none" stroke="#2f855a" stroke-width="1.5" />
+      </svg>
+    } @else {
+      <p class="muted">Для графика нужно хотя бы два замера.</p>
+    }
+  </section>
+}
+
+<section class="card">
+  <h2>Замеры</h2>
+
+  @if (entries().length === 0) {
+    <p class="muted">Замеров пока нет.</p>
+  } @else {
+    <ul class="entries">
+      @for (entry of entries(); track entry.id) {
+        <li>
+          <span>{{ formatDate(entry.date) }}</span>
+          <strong>{{ format(entry.kg) }} кг</strong>
+        </li>
+      }
+    </ul>
+  }
+</section>

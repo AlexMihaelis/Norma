@@ -132,6 +132,57 @@ export const goalTitles: Record<Goal, string> = {
   Gain: 'Набор массы',
 };
 
+export interface WeightEntry {
+  id: string;
+  date: string;
+  kg: number;
+}
+
+export interface WeightList {
+  items: WeightEntry[];
+}
+
+export type WeightAgeBand = 'Unknown' | 'Adult' | 'OlderAdult' | 'Minor';
+
+export type BmiCategory = 'Low' | 'Normal' | 'High' | 'VeryHigh';
+
+/** Норма веса для роста и возраста: границы в кг и в ИМТ. */
+export interface NormalWeight {
+  minKg: number;
+  maxKg: number;
+  bmiMin: number;
+  bmiMax: number;
+}
+
+export interface TrendPoint {
+  date: string;
+  emaKg: number;
+}
+
+/** Тренд веса: сглаженная кривая, скорость, прогноз цели, ИМТ и норма. */
+export interface WeightTrend {
+  currentEmaKg: number | null;
+  rateKgPerWeek: number | null;
+  targetKg: number | null;
+  goalDate: string | null;
+  heightCm: number | null;
+  sex: Sex | null;
+  age: number | null;
+  ageBand: WeightAgeBand;
+  bmi: number | null;
+  bmiCategory: BmiCategory | null;
+  obeseFromKg: number | null;
+  normalWeight: NormalWeight | null;
+  points: TrendPoint[];
+}
+
+export const bmiCategoryTitles: Record<BmiCategory, string> = {
+  Low: 'ниже нормы',
+  Normal: 'норма',
+  High: 'выше нормы',
+  VeryHigh: 'ожирение',
+};
+
 /** Названия приемов для экрана; порядок задает API, здесь только подписи. */
 export const mealTitles: Record<MealKind, string> = {
   Breakfast: 'Завтрак',
