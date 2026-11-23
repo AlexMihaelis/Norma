@@ -1,30 +1,39 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   ActivityLevel,
   Goal,
   Sex,
+  WeightEntry,
   activityTitles,
   goalTitles,
   sexTitles,
 } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
+import { WeightService } from '../../core/weight.service';
 import { ProfileService } from './profile.service';
 
-/** Экран профиля: данные, из которых считается цель и БЖУ. */
+/**
+ * Экран профиля: данные, из которых считается цель и БЖУ. Текущий вес здесь
+ * только показывается - он ведется замерами на экране «Вес».
+ */
 @Component({
   selector: 'app-profile-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './profile.page.html',
   styleUrl: './profile.page.scss',
 })
 export class ProfilePage implements OnInit {
   private readonly profiles = inject(ProfileService);
+  private readonly weights = inject(WeightService);
 
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly saved = signal(false);
+  protected readonly onboarding = signal(false);
+  protected readonly currentWeight = signal<WeightEntry | null>(null);
 
   protected readonly sexTitles = sexTitles;
   protected readonly activityTitles = activityTitles;
@@ -54,6 +63,7 @@ export class ProfilePage implements OnInit {
     this.profiles.get().subscribe({
       next: (profile) => {
         if (profile === null) {
+          this.onboarding.set(true);
           return;
         }
 
@@ -68,6 +78,11 @@ export class ProfilePage implements OnInit {
         });
       },
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
+    });
+
+    this.weights.list().subscribe({
+      next: (list) => this.currentWeight.set(list.items[0] ?? null),
+      error: () => this.currentWeight.set(null),
     });
   }
 
@@ -94,11 +109,16 @@ export class ProfilePage implements OnInit {
         next: () => {
           this.busy.set(false);
           this.saved.set(true);
+          this.onboarding.set(false);
         },
         error: (error: HttpErrorResponse) => {
           this.busy.set(false);
           this.error.set(describeProblem(error));
         },
       });
+  }
+
+  protected format(value: number | null | undefined): string {
+    return value === null || value === undefined ? '—' : value.toFixed(1).replace('.', ',');
   }
 }

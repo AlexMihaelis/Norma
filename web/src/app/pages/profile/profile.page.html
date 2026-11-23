@@ -1,22 +1,45 @@
+@if (onboarding()) {
+  <section class="card welcome">
+    <h1>Начнём с профиля</h1>
+    <p class="muted">
+      По этим данным посчитаем норму калорий и БЖУ. Заполни то, что знаешь: пустые поля
+      можно оставить и дополнить позже. После профиля запишем вес - без него цель не
+      посчитать.
+    </p>
+  </section>
+}
+
 <section class="card">
   <h1>Профиль</h1>
-  <p class="muted">
-    По этим данным считается цель и БЖУ. Незаполненные поля - «не указано», их можно
-    дополнить позже.
-  </p>
 
   @if (error(); as message) {
     <p class="error">{{ message }}</p>
   }
 
   @if (saved()) {
-    <p class="ok">Профиль сохранён.</p>
+    <p class="ok">
+      Профиль сохранён. Дальше - <a routerLink="/weight">записать вес</a>, чтобы посчитать цель.
+    </p>
   }
+
+  <div class="current">
+    @if (currentWeight(); as weight) {
+      <span>
+        Текущий вес: <strong>{{ format(weight.kg) }} кг</strong>
+        <span class="muted">замер от {{ weight.date }}</span>
+      </span>
+      <a routerLink="/weight">Изменить</a>
+    } @else {
+      <span class="muted">Замеров веса пока нет</span>
+      <a routerLink="/weight">Записать вес</a>
+    }
+  </div>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="grid">
       <label>
         Пол
+        <span class="hint" data-tip="Нужен для формулы обмена: у мужчин и женщин разная константа.">?</span>
         <select formControlName="sex">
           <option [ngValue]="null">не указан</option>
           @for (value of sexes; track value) {
@@ -27,16 +50,19 @@
 
       <label>
         Дата рождения
+        <span class="hint" data-tip="Из неё считается возраст: с годами обмен снижается.">?</span>
         <input type="date" formControlName="birthDate" />
       </label>
 
       <label>
         Рост, см
+        <span class="hint" data-tip="Нужен для ИМТ и нормы веса: 18.5-25 для 18-64 лет, 22-27 после 65.">?</span>
         <input type="number" min="100" max="250" step="1" formControlName="heightCm" />
       </label>
 
       <label>
         Активность
+        <span class="hint" data-tip="Множитель к обмену покоя: от 1.2 при сидячем образе жизни до 1.9 при очень высокой активности.">?</span>
         <select formControlName="activity">
           <option [ngValue]="null">не указана</option>
           @for (value of activities; track value) {
@@ -47,6 +73,7 @@
 
       <label>
         Цель
+        <span class="hint" data-tip="Похудение - дефицит, поддержание - без поправки, набор - профицит. Безопасный минимум 1200 ккал для женщин и 1500 для мужчин.">?</span>
         <select formControlName="goal">
           <option [ngValue]="null">не указана</option>
           @for (value of goals; track value) {
@@ -57,11 +84,13 @@
 
       <label>
         Желаемый вес, кг
+        <span class="hint" data-tip="На норму калорий не влияет: нужен для прогноза даты цели на экране веса.">?</span>
         <input type="number" min="20" max="500" step="0.1" formControlName="targetWeightKg" />
       </label>
 
       <label>
         Темп, кг/нед
+        <span class="hint" data-tip="Сколько килограммов в неделю. В 1 кг жира около 7700 ккал; 0.25-0.5 - спокойный темп.">?</span>
         <input type="number" min="0" max="1.5" step="0.05" formControlName="kgPerWeek" />
       </label>
     </div>
