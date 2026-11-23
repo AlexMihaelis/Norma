@@ -2,9 +2,8 @@
   <section class="card welcome">
     <h1>Начнём с профиля</h1>
     <p class="muted">
-      По этим данным посчитаем норму калорий и БЖУ. Заполни то, что знаешь: пустые поля
-      можно оставить и дополнить позже. После профиля запишем вес - без него цель не
-      посчитать.
+      Шаг 1: данные ниже - по ним считаем норму калорий и БЖУ. Пустые поля можно
+      оставить и дополнить позже. Шаг 2: текущий вес, без него цель не посчитать.
     </p>
   </section>
 }
@@ -30,8 +29,28 @@
       </span>
       <a routerLink="/weight">Изменить</a>
     } @else {
-      <span class="muted">Замеров веса пока нет</span>
-      <a routerLink="/weight">Записать вес</a>
+      <div class="weight-add">
+        <label>
+          Текущий вес, кг
+          <span class="hint" data-tip="Берется из замеров веса и задает точку отсчета для цели. Позже можно вести график на экране «Вес».">?</span>
+          <input
+            type="number"
+            min="20"
+            max="500"
+            step="0.1"
+            placeholder="например, 68,5"
+            [value]="weightInput() === null ? '' : weightInput()"
+            (input)="onWeightInput($any($event.target).value)"
+          />
+        </label>
+        <button type="button" (click)="saveWeight()" [disabled]="weightBusy()">
+          {{ weightBusy() ? 'Сохраняю…' : 'Записать вес' }}
+        </button>
+      </div>
+
+      @if (weightError(); as message) {
+        <p class="error">{{ message }}</p>
+      }
     }
   </div>
 

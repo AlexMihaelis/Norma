@@ -12,6 +12,7 @@ import {
   sexTitles,
 } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
+import { toLocalIso } from '../../core/date';
 import { WeightService } from '../../core/weight.service';
 import { ProfileService } from './profile.service';
 
@@ -34,6 +35,9 @@ export class ProfilePage implements OnInit {
   protected readonly saved = signal(false);
   protected readonly onboarding = signal(false);
   protected readonly currentWeight = signal<WeightEntry | null>(null);
+  protected readonly weightInput = signal<number | null>(null);
+  protected readonly weightBusy = signal(false);
+  protected readonly weightError = signal<string | null>(null);
 
   protected readonly sexTitles = sexTitles;
   protected readonly activityTitles = activityTitles;
@@ -80,6 +84,43 @@ export class ProfilePage implements OnInit {
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
     });
 
+    this.weights.list().subscribe({
+      next: (list) => this.currentWeight.set(list.items[0] ?? null),
+      error: () => this.currentWeight.set(null),
+    });
+  }
+
+  /** Первый замер можно записать прямо здесь: без веса цель не посчитать. */
+  protected saveWeight(): void {
+    const kg = this.weightInput();
+
+    if (kg === null || kg < 20 || kg > 500) {
+      this.weightError.set('Вес должен быть в диапазоне 20-500 кг.');
+      return;
+    }
+
+    this.weightBusy.set(true);
+    this.weightError.set(null);
+
+    this.weights.add(kg, toLocalIso(new Date())).subscribe({
+      next: () => {
+        this.weightBusy.set(false);
+        this.weightInput.set(null);
+        this.reloadWeight();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.weightBusy.set(false);
+        this.weightError.set(describeProblem(error));
+      },
+    });
+  }
+
+  protected onWeightInput(raw: string): void {
+    const value = Number(raw);
+    this.weightInput.set(raw.trim() === '' || Number.isNaN(value) ? null : value);
+  }
+
+  private reloadWeight(): void {
     this.weights.list().subscribe({
       next: (list) => this.currentWeight.set(list.items[0] ?? null),
       error: () => this.currentWeight.set(null),

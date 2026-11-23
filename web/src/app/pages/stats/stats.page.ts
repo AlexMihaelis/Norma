@@ -1,6 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Stats, StatsDay } from '../../core/api.models';
+import { toLocalIso } from '../../core/date';
 import { describeProblem } from '../../core/problem';
 import { StatsService } from './stats.service';
 
@@ -53,7 +54,7 @@ export class StatsPage implements OnInit {
 
     this.error.set(null);
 
-    this.stats.get(toIso(from), toIso(to)).subscribe({
+    this.stats.get(toLocalIso(from), toLocalIso(to)).subscribe({
       next: (value) => this.data.set(value),
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
     });
@@ -98,11 +99,4 @@ export class StatsPage implements OnInit {
       1,
     )}%)`;
   }
-}
-
-/** Дата в формате yyyy-MM-dd без сдвига часового пояса. */
-function toIso(date: Date): string {
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-
-  return local.toISOString().slice(0, 10);
 }
