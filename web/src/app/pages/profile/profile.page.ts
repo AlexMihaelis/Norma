@@ -25,6 +25,7 @@ export class ProfilePage implements OnInit {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly saved = signal(false);
+  protected readonly missingGoal = signal(false);
 
   protected readonly sexTitles = sexTitles;
   protected readonly activityTitles = activityTitles;
@@ -94,6 +95,7 @@ export class ProfilePage implements OnInit {
         next: () => {
           this.busy.set(false);
           this.saved.set(true);
+          this.missingGoal.set(value.goal === null);
         },
         error: (error: HttpErrorResponse) => {
           this.busy.set(false);
