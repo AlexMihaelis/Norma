@@ -85,6 +85,11 @@
   }
 }
 
+.facts .zone {
+  grid-column: 1 / -1;
+  margin: -0.25rem 0 0.75rem;
+}
+
 h3 {
   font-size: 1rem;
 }

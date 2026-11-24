@@ -3,6 +3,11 @@
 }
 
 <section class="card">
+  <h2>Вес по замерам</h2>
+  <app-weight-chart [entries]="entries()" />
+</section>
+
+<section class="card">
   <h2>Добавить замер</h2>
 
   @if (saved()) {
@@ -37,7 +42,7 @@
       </p>
     }
 
-    <dl class="facts">
+    <div class="facts">
       <div>
         <dt>
           Скорость
@@ -71,6 +76,7 @@
         </dt>
         <dd>{{ formatDate(value.goalDate) }}</dd>
       </div>
+
       <div>
         <dt>
           ИМТ
@@ -89,6 +95,15 @@
           }
         </dd>
       </div>
+
+      <div class="zone">
+        @if (bmiBoundaries(); as boundaries) {
+          <app-zone-scale [value]="value.bmi" [boundaries]="boundaries" [labels]="bmiZoneLabels" />
+        } @else {
+          <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
+        }
+      </div>
+
       <div>
         <dt>
           Норма веса
@@ -102,49 +117,19 @@
           }
         </dd>
       </div>
-    </dl>
 
-    <div class="zones">
-      <h3>
-        Вес по зонам
-        <span class="hint" data-tip="Синяя - недостаток, зеленая - норма, оранжевая - избыток, красная - ожирение. Кружок стоит там, где сейчас твой последний замер.">?</span>
-      </h3>
-
-      @if (weightBoundaries(); as boundaries) {
-        <app-zone-scale
-          [value]="currentKg()"
-          [boundaries]="boundaries"
-          [labels]="weightZoneLabels"
-        />
-        <p class="muted small">
-          Норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг; ожирение от
-          {{ format(boundaries[2]) }} кг.
-        </p>
-      } @else {
-        <p class="muted">Нужен рост в профиле, чтобы посчитать границы.</p>
-      }
+      <div class="zone">
+        @if (weightBoundaries(); as boundaries) {
+          <app-zone-scale
+            [value]="currentKg()"
+            [boundaries]="boundaries"
+            [labels]="weightZoneLabels"
+          />
+        } @else {
+          <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
+        }
+      </div>
     </div>
-
-    <div class="zones">
-      <h3>
-        ИМТ по зонам
-        <span class="hint" data-tip="Синий - ниже 18.5, зеленый - 18.5-25 (для 65+ 22-27), оранжевый - 25-30, красный - от 30.">?</span>
-      </h3>
-
-      @if (bmiBoundaries(); as boundaries) {
-        <app-zone-scale
-          [value]="value.bmi"
-          [boundaries]="boundaries"
-          [labels]="bmiZoneLabels"
-        />
-      } @else {
-        <p class="muted">Нужен рост в профиле, чтобы посчитать границы.</p>
-      }
-    </div>
-
-    <h3>Вес по замерам</h3>
-
-    <app-weight-chart [entries]="entries()" />
   </section>
 }
 

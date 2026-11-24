@@ -9,18 +9,12 @@
         [attr.fill]="segment.color"
       />
     }
-
-    @if (geometry().marker !== null) {
-      <circle
-        [attr.cx]="geometry().marker"
-        cy="5"
-        r="3.2"
-        fill="#111827"
-        stroke="#fff"
-        stroke-width="1.2"
-      />
-    }
   </svg>
+
+  <!-- Маркер отдельным элементом: внутри растянутого SVG круг становится овалом. -->
+  @if (geometry().marker !== null) {
+    <span class="marker" [style.left.%]="geometry().marker"></span>
+  }
 </div>
 
 <div class="labels">
