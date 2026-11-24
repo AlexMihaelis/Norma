@@ -33,6 +33,7 @@ using Norma.Api.Features.Water.GetWaterDay;
 using Norma.Api.Features.Weight.AddWeight;
 using Norma.Api.Features.Weight.GetWeightTrend;
 using Norma.Api.Features.Weight.ListWeight;
+using Norma.Api.Features.Weight.UpdateWeight;
 using Scalar.AspNetCore;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -230,6 +231,7 @@ public static class ApiHost
         api.MapMe();
         api.MapAddWeight();
         api.MapListWeight();
+        api.MapUpdateWeight();
         api.MapGetWeightTrend();
         api.MapGetProfile();
         api.MapUpdateProfile();
