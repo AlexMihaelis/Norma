@@ -1,0 +1,37 @@
+<div class="scale-wrap">
+  <svg class="scale" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+    @for (segment of geometry().segments; track segment.index) {
+      <rect
+        [attr.x]="segment.x"
+        [attr.width]="segment.width"
+        y="2"
+        height="6"
+        [attr.fill]="segment.color"
+      />
+    }
+
+    @if (geometry().marker !== null) {
+      <circle
+        [attr.cx]="geometry().marker"
+        cy="5"
+        r="3.2"
+        fill="#111827"
+        stroke="#fff"
+        stroke-width="1.2"
+      />
+    }
+  </svg>
+</div>
+
+<div class="labels">
+  @for (segment of geometry().segments; track segment.index) {
+    <span
+      class="label"
+      [class.active]="geometry().active === segment.index"
+      [style.color]="segment.color"
+      [style.flex-grow]="segment.width"
+    >
+      {{ segment.label }}
+    </span>
+  }
+</div>

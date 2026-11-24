@@ -9,12 +9,14 @@ import {
   bmiCategoryTitles,
 } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
+import { WeightChartComponent } from './weight-chart.component';
 import { WeightService } from './weight.service';
+import { ZoneScaleComponent } from './zone-scale.component';
 
-/** Экран веса: запись замера, тренд, прогноз цели и ИМТ. */
+/** Экран веса: запись замера, тренд, зоны веса и ИМТ, прогноз цели. */
 @Component({
   selector: 'app-weight-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, WeightChartComponent, ZoneScaleComponent],
   templateUrl: './weight.page.html',
   styleUrl: './weight.page.scss',
 })
@@ -30,32 +32,45 @@ export class WeightPage implements OnInit {
   protected readonly bmiTitles = bmiCategoryTitles;
   protected readonly today = new Date().toISOString().slice(0, 10);
 
+  protected readonly zoneColors = ['#60a5fa', '#22c55e', '#f59e0b', '#dc2626'];
+  protected readonly weightZoneLabels = [
+    'Недостаток веса',
+    'Норма',
+    'Избыток веса',
+    'Ожирение',
+  ] as const;
+  protected readonly bmiZoneLabels = [
+    'Низкий',
+    'Нормальный',
+    'Высокий',
+    'Очень высокий',
+  ] as const;
+
   protected readonly form = new FormGroup({
     kg: new FormControl<number | null>(null),
     date: new FormControl(this.today),
   });
 
-  /** Полилиния тренда: 100x40, по оси Y - диапазон веса, по X - дни. */
-  protected readonly chart = computed(() => {
-    const points = this.trend()?.points ?? [];
+  /** Текущий вес - самый свежий замер; по нему ставим маркер на шкале. */
+  protected readonly currentKg = computed(() => this.entries()[0]?.kg ?? null);
 
-    if (points.length < 2) {
+  protected readonly weightBoundaries = computed<readonly [number, number, number] | null>(() => {
+    const trend = this.trend();
+    const normal = trend?.normalWeight;
+
+    if (!trend || !normal) {
       return null;
     }
 
-    const values = points.map((point) => point.emaKg);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const span = max - min || 1;
+    return [normal.minKg, normal.maxKg, trend.obeseFromKg ?? normal.maxKg * 1.2];
+  });
 
-    return points
-      .map((point, index) => {
-        const x = (index / (points.length - 1)) * 100;
-        const y = 40 - ((point.emaKg - min) / span) * 36 - 2;
+  protected readonly bmiBoundaries = computed<readonly [number, number, number] | null>(() => {
+    const normal = this.trend()?.normalWeight;
 
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(' ');
+    return normal === null || normal === undefined
+      ? null
+      : [normal.bmiMin, normal.bmiMax, 30];
   });
 
   ngOnInit(): void {
