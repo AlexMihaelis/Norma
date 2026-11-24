@@ -107,10 +107,37 @@ h3 {
 
   li {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
+
+    > span:first-child {
+      flex: 1;
+    }
   }
+}
+
+.edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+
+  input {
+    width: auto;
+    flex: 0 1 120px;
+  }
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #2f855a;
+  padding: 0;
+  font-size: 0.9rem;
+  text-decoration: underline;
 }
 
 .ok {

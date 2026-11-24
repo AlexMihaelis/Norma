@@ -20,4 +20,9 @@ export class WeightService {
   add(kg: number, date: string): Observable<WeightEntry> {
     return this.http.post<WeightEntry>(`${environment.apiUrl}/weight`, { kg, date });
   }
+
+  /** Исправить существующий замер: опечатку в весе или дату. */
+  update(id: string, kg: number, date: string): Observable<WeightEntry> {
+    return this.http.put<WeightEntry>(`${environment.apiUrl}/weight/${id}`, { kg, date });
+  }
 }

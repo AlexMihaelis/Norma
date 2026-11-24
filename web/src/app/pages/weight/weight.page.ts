@@ -57,6 +57,12 @@ export class WeightPage implements OnInit {
   /** Выбранная точка графика: показатели переключаются на этот замер. */
   protected readonly selectedEntry = signal<WeightEntry | null>(null);
 
+  protected readonly editingId = signal<string | null>(null);
+  protected readonly editKg = signal<number | null>(null);
+  protected readonly editDate = signal('');
+  protected readonly editBusy = signal(false);
+  protected readonly editError = signal<string | null>(null);
+
   /** Вес, который показываем: выбранный замер или последний. */
   protected readonly displayKg = computed(() => this.selectedEntry()?.kg ?? this.currentKg());
 
@@ -99,6 +105,62 @@ export class WeightPage implements OnInit {
 
   protected clearSelection(): void {
     this.selectedEntry.set(null);
+  }
+
+  /** Правка опечатки в истории: вес и дата этого же замера. */
+  protected startEdit(entry: WeightEntry): void {
+    this.editingId.set(entry.id);
+    this.editKg.set(entry.kg);
+    this.editDate.set(entry.date);
+    this.editError.set(null);
+  }
+
+  protected cancelEdit(): void {
+    this.editingId.set(null);
+    this.editError.set(null);
+  }
+
+  protected onEditKg(raw: string): void {
+    const normalized = raw.replace(',', '.').trim();
+
+    if (normalized === '') {
+      this.editKg.set(null);
+      return;
+    }
+
+    const value = Number(normalized);
+
+    this.editKg.set(Number.isNaN(value) ? null : value);
+  }
+
+  protected saveEdit(): void {
+    const id = this.editingId();
+    const kg = this.editKg();
+
+    if (id === null) {
+      return;
+    }
+
+    if (kg === null || kg < 20 || kg > 500) {
+      this.editError.set('Вес должен быть в диапазоне 20-500 кг.');
+      return;
+    }
+
+    this.editBusy.set(true);
+    this.editError.set(null);
+
+    this.weights.update(id, kg, this.editDate()).subscribe({
+      next: () => {
+        this.editBusy.set(false);
+        this.editingId.set(null);
+        // Перезагрузка обновляет и график, и тренд: вес мог поменять ИМТ и скорость.
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.editBusy.set(false);
+        this.editError.set(describeProblem(error));
+      },
+    });
   }
 
   protected readonly weightBoundaries = computed<readonly [number, number, number] | null>(() => {
