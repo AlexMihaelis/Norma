@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { WeightEntry } from '../../core/api.models';
 
 interface ChartPoint {
@@ -22,7 +22,20 @@ export class WeightChartComponent {
   /** Замеры в любом порядке: компонент сам сортирует по дате. */
   readonly entries = input.required<WeightEntry[]>();
 
+  /** Выбранная точка: родитель переключает на нее показатели тренда. */
+  readonly picked = output<WeightEntry | null>();
+
   protected readonly selected = signal<number | null>(null);
+
+  constructor() {
+    // После нового замера список меняется - сбрасываем выбор и возвращаем
+    // показатели к текущему весу.
+    effect(() => {
+      this.entries();
+      this.selected.set(null);
+      this.picked.emit(null);
+    });
+  }
 
   protected readonly points = computed<ChartPoint[]>(() => {
     const sorted = [...this.entries()].sort(
@@ -71,7 +84,9 @@ export class WeightChartComponent {
   });
 
   protected toggle(index: number): void {
-    this.selected.set(this.selected() === index ? null : index);
+    const next = this.selected() === index ? null : index;
+    this.selected.set(next);
+    this.picked.emit(next === null ? null : this.points()[next].entry);
   }
 
   protected formatDate(iso: string): string {

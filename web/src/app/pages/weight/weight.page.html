@@ -4,7 +4,7 @@
 
 <section class="card">
   <h2>Вес по замерам</h2>
-  <app-weight-chart [entries]="entries()" />
+  <app-weight-chart [entries]="entries()" (picked)="onPicked($event)" />
 </section>
 
 <section class="card">
@@ -34,12 +34,21 @@
       <span class="hint" data-tip="Считается по всем замерам: сглаженная кривая показывает направление, скорость - насколько быстро меняется вес, прогноз - когда дойдешь до цели из профиля.">?</span>
     </h2>
 
-    @if (value.currentEmaKg !== null) {
+    @if (displayKg() !== null) {
       <p class="big">
-        {{ format(value.currentEmaKg) }} кг
-        <span class="muted">сглаженный вес</span>
-        <span class="hint" data-tip="Сглаживание убирает скачки от воды и соли: вес за день гуляет на 1-2 кг, а тренд показывает реальное направление.">?</span>
+        {{ format(displayKg()) }} кг
+        <span class="muted">
+          {{ selectedEntry() ? 'замер от ' + formatDate(displayDate()) : 'текущий вес' }}
+        </span>
       </p>
+
+      @if (selectedEntry() === null && value.currentEmaKg !== null) {
+        <p class="muted small">сглаженный вес: {{ format(value.currentEmaKg) }} кг</p>
+      }
+
+      @if (selectedEntry() !== null) {
+        <button type="button" class="link" (click)="clearSelection()">вернуться к текущему весу</button>
+      }
     }
 
     <div class="facts">
@@ -83,11 +92,11 @@
           <span class="hint" data-tip="Индекс массы тела: вес / рост². Пороги ВОЗ 18.5, 25 и 30; после 65 лет норма сдвигается к 22-27.">?</span>
         </dt>
         <dd>
-          @if (value.bmi !== null) {
-            {{ format(value.bmi) }}
-            @if (value.bmiCategory !== null) {
-              <span class="badge" [class]="bmiClass(value.bmiCategory)">
-                {{ bmiTitles[value.bmiCategory] }}
+          @if (displayBmi() !== null) {
+            {{ format(displayBmi()) }}
+            @if (displayBmiCategory(); as category) {
+              <span class="badge" [class]="bmiClass(category)">
+                {{ bmiTitles[category] }}
               </span>
             }
           } @else {
@@ -98,7 +107,7 @@
 
       <div class="zone">
         @if (bmiBoundaries(); as boundaries) {
-          <app-zone-scale [value]="value.bmi" [boundaries]="boundaries" [labels]="bmiZoneLabels" />
+          <app-zone-scale [value]="displayBmi()" [boundaries]="boundaries" [labels]="bmiZoneLabels" />
         } @else {
           <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
         }
@@ -121,7 +130,7 @@
       <div class="zone">
         @if (weightBoundaries(); as boundaries) {
           <app-zone-scale
-            [value]="currentKg()"
+            [value]="displayKg()"
             [boundaries]="boundaries"
             [labels]="weightZoneLabels"
           />

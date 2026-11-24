@@ -54,6 +54,53 @@ export class WeightPage implements OnInit {
   /** Текущий вес - самый свежий замер; по нему ставим маркер на шкале. */
   protected readonly currentKg = computed(() => this.entries()[0]?.kg ?? null);
 
+  /** Выбранная точка графика: показатели переключаются на этот замер. */
+  protected readonly selectedEntry = signal<WeightEntry | null>(null);
+
+  /** Вес, который показываем: выбранный замер или последний. */
+  protected readonly displayKg = computed(() => this.selectedEntry()?.kg ?? this.currentKg());
+
+  protected readonly displayDate = computed(
+    () => this.selectedEntry()?.date ?? this.entries()[0]?.date ?? null,
+  );
+
+  /** ИМТ для показанного веса: при клике по истории считается по тому весу. */
+  protected readonly displayBmi = computed<number | null>(() => {
+    const heightCm = this.trend()?.heightCm;
+    const kg = this.displayKg();
+
+    if (!heightCm || kg === null) {
+      return null;
+    }
+
+    return kg / (heightCm / 100) ** 2;
+  });
+
+  protected readonly displayBmiCategory = computed<BmiCategory | null>(() => {
+    const bmi = this.displayBmi();
+    const normal = this.trend()?.normalWeight;
+
+    if (bmi === null || !normal) {
+      return null;
+    }
+
+    return bmi < normal.bmiMin
+      ? 'Low'
+      : bmi < normal.bmiMax
+        ? 'Normal'
+        : bmi < 30
+          ? 'High'
+          : 'VeryHigh';
+  });
+
+  protected onPicked(entry: WeightEntry | null): void {
+    this.selectedEntry.set(entry);
+  }
+
+  protected clearSelection(): void {
+    this.selectedEntry.set(null);
+  }
+
   protected readonly weightBoundaries = computed<readonly [number, number, number] | null>(() => {
     const trend = this.trend();
     const normal = trend?.normalWeight;

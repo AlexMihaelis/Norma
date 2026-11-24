@@ -23,7 +23,8 @@
       class="label"
       [class.active]="geometry().active === segment.index"
       [style.color]="segment.color"
-      [style.flex-grow]="segment.width"
+      [style.left.%]="segment.x"
+      [style.width.%]="segment.width"
     >
       {{ segment.label }}
     </span>
