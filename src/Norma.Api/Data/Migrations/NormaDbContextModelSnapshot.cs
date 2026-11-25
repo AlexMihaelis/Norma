@@ -55,6 +55,36 @@ namespace Norma.Api.Data.Migrations
                     b.ToTable("activity_records", (string)null);
                 });
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.BodyMeasurement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Cm")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("Kind")
+                        .HasMaxLength(32)
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date", "Kind")
+                        .IsUnique();
+
+                    b.ToTable("body_measurements", (string)null);
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.FavoriteFood", b =>
                 {
                     b.Property<Guid>("Id")
@@ -417,6 +447,17 @@ namespace Norma.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.ActivityRecord", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.BodyMeasurement", b =>
                 {
                     b.HasOne("Norma.Api.Data.Entities.User", "User")
                         .WithMany()
