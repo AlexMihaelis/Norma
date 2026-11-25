@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Norma · экспорт дизайна</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 12px;
+        font: 12px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: var(--figma-color-bg, #ffffff);
+        color: var(--figma-color-text, #111827);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        gap: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .muted {
+        color: var(--figma-color-text-secondary, #6b7280);
+        margin: 2px 0 0;
+      }
+
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px;
+        border: 1px solid var(--figma-color-border, #e5e7eb);
+        border-radius: 8px;
+        background: var(--figma-color-bg-secondary, #f8fafc);
+      }
+
+      label.option {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        cursor: pointer;
+      }
+
+      label.option input {
+        margin: 2px 0 0;
+        accent-color: #2f855a;
+      }
+
+      label.option span strong {
+        display: block;
+        font-weight: 600;
+      }
+
+      label.option span em {
+        font-style: normal;
+        color: var(--figma-color-text-secondary, #6b7280);
+      }
+
+      button {
+        font: inherit;
+        cursor: pointer;
+        border-radius: 8px;
+        padding: 9px 12px;
+        border: 1px solid #2f855a;
+        background: #2f855a;
+        color: #ffffff;
+      }
+
+      button.secondary {
+        background: transparent;
+        border-color: var(--figma-color-border, #d1d5db);
+        color: var(--figma-color-text, #111827);
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .row > button {
+        flex: 1;
+      }
+
+      .status {
+        color: var(--figma-color-text-secondary, #6b7280);
+        min-height: 16px;
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
+      textarea {
+        flex: 1;
+        min-height: 140px;
+        resize: none;
+        width: 100%;
+        font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid var(--figma-color-border, #d1d5db);
+        background: var(--figma-color-bg-secondary, #f8fafc);
+        color: var(--figma-color-text, #111827);
+        white-space: pre;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--figma-color-text-secondary, #6b7280);
+      }
+
+      code {
+        font: 11px ui-monospace, SFMono-Regular, Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Норма · экспорт дизайна</h1>
+      <p class="muted">Выдели фреймы на холсте и нажми кнопку. Плагин соберет JSON: переменные, стили, структуру и сводку частот.</p>
+    </header>
+
+    <section class="options">
+      <label class="option">
+        <input type="checkbox" id="opt-tokens" checked />
+        <span>
+          <strong>Переменные и стили</strong>
+          <em>цвета, шрифты, эффекты, сетки из панелей Figma</em>
+        </span>
+      </label>
+      <label class="option">
+        <input type="checkbox" id="opt-tree" checked />
+        <span>
+          <strong>Структура выделения</strong>
+          <em>слои, размеры, отступы, авторазметка, тексты</em>
+        </span>
+      </label>
+      <label class="option">
+        <input type="checkbox" id="opt-usage" checked />
+        <span>
+          <strong>Сводка частот</strong>
+          <em>какие цвета, кегли, радиусы и отступы реально используются</em>
+        </span>
+      </label>
+    </section>
+
+    <button id="run">Собрать JSON</button>
+
+    <div id="status" class="status">Плагин готов.</div>
+
+    <div class="row">
+      <button id="copy" class="secondary" disabled>Копировать</button>
+      <button id="save" class="secondary" disabled>Скачать .json</button>
+    </div>
+
+    <textarea id="out" readonly spellcheck="false" placeholder="Здесь появится JSON"></textarea>
+
+    <p class="hint">Скачивание может не сработать внутри Figma: тогда нажми «Копировать» и вставь в файл сам. Агент ждет файл в папке <code>design/</code> репозитория.</p>
+
+    <script>
+      const checkbox = (id) => document.getElementById(id).checked;
+      const runButton = document.getElementById('run');
+      const copyButton = document.getElementById('copy');
+      const saveButton = document.getElementById('save');
+      const status = document.getElementById('status');
+      const out = document.getElementById('out');
+
+      let lastJson = '';
+      let lastFileName = 'norma-figma.json';
+
+      function setStatus(text, isError) {
+        status.textContent = text;
+        status.classList.toggle('error', Boolean(isError));
+      }
+
+      function post(message) {
+        parent.postMessage({ pluginMessage: message }, '*');
+      }
+
+      runButton.addEventListener('click', () => {
+        runButton.disabled = true;
+        copyButton.disabled = true;
+        saveButton.disabled = true;
+        out.value = '';
+        lastJson = '';
+        setStatus('Собираю... на больших фреймах это занимает несколько секунд.');
+
+        post({
+          type: 'export',
+          options: {
+            tokens: checkbox('opt-tokens'),
+            tree: checkbox('opt-tree'),
+            usage: checkbox('opt-usage'),
+          },
+        });
+      });
+
+      copyButton.addEventListener('click', async () => {
+        if (!lastJson) return;
+        try {
+          await navigator.clipboard.writeText(lastJson);
+          setStatus('JSON скопирован в буфер обмена.');
+        } catch (error) {
+          out.removeAttribute('readonly');
+          out.select();
+          const copied = document.execCommand('copy');
+          out.setAttribute('readonly', 'readonly');
+          setStatus(copied ? 'JSON скопирован в буфер обмена.' : 'Не получилось скопировать: выдели текст и нажми Ctrl+C.', !copied);
+        }
+      });
+
+      saveButton.addEventListener('click', () => {
+        if (!lastJson) return;
+        try {
+          const blob = new Blob([lastJson], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = lastFileName;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+          setStatus('Файл ' + lastFileName + ' сохранен в загрузки.');
+        } catch (error) {
+          setStatus('Скачать не удалось: нажми «Копировать» и сохрани файл вручную.', true);
+        }
+      });
+
+      window.onmessage = (event) => {
+        const message = event.data && event.data.pluginMessage;
+        if (!message) return;
+
+        if (message.type === 'error') {
+          runButton.disabled = false;
+          setStatus(message.message, true);
+          return;
+        }
+
+        if (message.type === 'result') {
+          lastJson = message.json;
+          const stats = message.stats || {};
+          const kilobytes = (lastJson.length / 1024).toFixed(1);
+          lastFileName = buildFileName(stats.fileName);
+
+          out.value = lastJson;
+          copyButton.disabled = false;
+          saveButton.disabled = false;
+          runButton.disabled = false;
+
+          const parts = [
+            'Готово: ' + (stats.nodes || 0) + ' узлов',
+            (stats.variables || 0) + ' переменных',
+            (stats.styles || 0) + ' стилей',
+            kilobytes + ' КБ',
+          ];
+          if (stats.truncated) parts.push('сработал потолок обхода, часть дерева пропущена');
+          setStatus(parts.join(', ') + '.');
+        }
+      };
+
+      function buildFileName(name) {
+        const slug = String(name || 'norma')
+          .toLowerCase()
+          .replace(/[^a-z0-9а-я]+/gi, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 40);
+        const date = new Date().toISOString().slice(0, 10);
+        return 'figma-' + (slug || 'norma') + '-' + date + '.json';
+      }
+    </script>
+  </body>
+</html>
