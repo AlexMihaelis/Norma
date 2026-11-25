@@ -127,8 +127,31 @@
 }
 
 .cell-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
   font-size: clamp(10px, 0.78vw, 13px);
   color: var(--color-text-muted);
+}
+
+/* Маркеры цветов кольца: тот же цвет, что у сегмента КБЖУ. */
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+
+  &.protein {
+    background: var(--color-protein);
+  }
+
+  &.fat {
+    background: var(--color-fat-pastel);
+  }
+
+  &.carbs {
+    background: var(--color-carbs-pastel);
+  }
 }
 
 .cell-value {
