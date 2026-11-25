@@ -33,6 +33,8 @@ public sealed class NormaDbContext(DbContextOptions<NormaDbContext> options) : D
 
     public DbSet<FavoriteFood> FavoriteFoods => Set<FavoriteFood>();
 
+    public DbSet<BodyMeasurement> BodyMeasurements => Set<BodyMeasurement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Все IEntityTypeConfiguration из этой сборки: конфигурации лежат рядом с

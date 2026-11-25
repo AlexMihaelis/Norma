@@ -17,6 +17,8 @@ using Norma.Api.Features.Auth;
 using Norma.Api.Features.Auth.Login;
 using Norma.Api.Features.Auth.Me;
 using Norma.Api.Features.Auth.Register;
+using Norma.Api.Features.BodyMeasurements.AddBodyMeasurement;
+using Norma.Api.Features.BodyMeasurements.GetLatestBodyMeasurements;
 using Norma.Api.Features.Diary.AddDiaryEntry;
 using Norma.Api.Features.Diary.DeleteDiaryEntry;
 using Norma.Api.Features.Diary.GetDiaryDay;
@@ -239,6 +241,8 @@ public static class ApiHost
         api.MapListWeight();
         api.MapUpdateWeight();
         api.MapGetWeightTrend();
+        api.MapAddBodyMeasurement();
+        api.MapGetLatestBodyMeasurements();
         api.MapGetProfile();
         api.MapUpdateProfile();
         api.MapAddWater();
