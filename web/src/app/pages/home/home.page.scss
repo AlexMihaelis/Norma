@@ -481,3 +481,94 @@
     height: 120px;
   }
 }
+
+/*
+ * Типографика тоже резиновая: в макете кегли посчитаны для 1440, поэтому
+ * переводим их в vw и ограничиваем min/max, чтобы текст рос вместе с карточками.
+ */
+.greeting h1 {
+  font-size: clamp(21px, 1.8vw, 32px);
+  line-height: 1.25;
+}
+
+.greeting-date {
+  font-size: clamp(12px, 0.97vw, 17px);
+}
+
+.card-label {
+  font-size: clamp(12px, 0.9vw, 15px);
+}
+
+.weight-value {
+  .value {
+    font-size: clamp(28px, 2.36vw, 44px);
+    line-height: 1.2;
+  }
+
+  .unit {
+    font-size: clamp(13px, 1.1vw, 19px);
+  }
+
+  .goal {
+    font-size: clamp(12px, 0.9vw, 15px);
+  }
+}
+
+.delta {
+  font-size: clamp(11px, 0.83vw, 14px);
+}
+
+.weight-button {
+  font-size: clamp(12px, 0.9vw, 16px);
+}
+
+.chart-caption,
+.chart-today {
+  font-size: clamp(10px, 0.76vw, 13px);
+}
+
+.legend-label,
+.legend-value {
+  font-size: clamp(11px, 0.9vw, 15px);
+}
+
+.ring-center {
+  strong {
+    font-size: clamp(17px, 1.4vw, 24px);
+    line-height: 1.2;
+  }
+
+  span {
+    font-size: clamp(10px, 0.76vw, 13px);
+  }
+}
+
+.nutrition-target {
+  font-size: clamp(11px, 0.83vw, 14px);
+}
+
+.primary-button {
+  font-size: clamp(13px, 0.97vw, 17px);
+}
+
+.remaining,
+.remaining-macros {
+  font-size: clamp(11px, 0.83vw, 14px);
+}
+
+.water-value,
+.activity-value {
+  .value {
+    font-size: clamp(21px, 1.8vw, 32px);
+    line-height: 1.2;
+  }
+
+  .unit {
+    font-size: clamp(12px, 0.9vw, 15px);
+  }
+}
+
+.water-remaining,
+.activity-entry {
+  font-size: clamp(11px, 0.83vw, 15px);
+}

@@ -386,3 +386,42 @@ a {
     visibility: visible;
   }
 }
+
+/* Шапка тоже тянется: высота и кегли растут вместе с шириной экрана. */
+.topbar {
+  height: clamp(56px, 4.44vw, 72px);
+}
+
+.brand-mark {
+  width: clamp(28px, 2.22vw, 38px);
+  height: clamp(28px, 2.22vw, 38px);
+  font-size: clamp(16px, 1.3vw, 23px);
+}
+
+.brand-name {
+  font-size: clamp(16px, 1.25vw, 22px);
+}
+
+.topbar nav a {
+  font-size: clamp(12px, 0.97vw, 16px);
+}
+
+.account-name {
+  font-size: clamp(12px, 0.97vw, 16px);
+}
+
+.avatar {
+  width: clamp(28px, 2.22vw, 36px);
+  height: clamp(28px, 2.22vw, 36px);
+}
+
+.avatar.initials {
+  font-size: clamp(11px, 0.8vw, 14px);
+}
+
+.account-menu {
+  a,
+  .menu-item {
+    font-size: clamp(13px, 0.97vw, 16px);
+  }
+}
