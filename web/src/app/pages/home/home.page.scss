@@ -50,7 +50,7 @@
 /* Вес: карточка тянется по ширине, график занимает правую часть и не жмется. */
 .weight-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 42%);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 396px);
   column-gap: var(--space-24);
   padding: var(--space-24);
   min-height: 220px;
@@ -97,6 +97,11 @@
   @include text-style('body-smallbold');
   color: var(--color-accent);
   margin-top: var(--space-8);
+
+  /* Набор веса не красим в акцент: зеленый означает «минус», как в макете. */
+  &.up {
+    color: var(--color-text-muted);
+  }
 }
 
 .weight-button {
@@ -138,6 +143,10 @@
     stroke-width: 1;
   }
 
+  .area {
+    fill: var(--color-accent-soft);
+  }
+
   .line {
     fill: none;
     stroke: var(--color-accent);
@@ -147,6 +156,8 @@
 
   .dot {
     fill: var(--color-accent);
+    stroke: var(--color-surface);
+    stroke-width: 1.5;
   }
 }
 

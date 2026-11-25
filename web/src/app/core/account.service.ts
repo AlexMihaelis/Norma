@@ -20,8 +20,21 @@ export class AccountService {
   readonly nickname = signal<string | null>(null);
   readonly avatarDataUrl = signal<string | null>(null);
 
-  /** Что показывать в шапке: ник, иначе email. */
-  readonly displayName = computed(() => this.nickname() ?? this.email() ?? '');
+  /**
+   * Что показывать в шапке и приветствии: ник, иначе часть email до «@» с
+   * большой буквы - полный адрес в шапке читается плохо.
+   */
+  readonly displayName = computed(() => {
+    const nickname = this.nickname()?.trim();
+
+    if (nickname) {
+      return nickname;
+    }
+
+    const local = this.email()?.split('@')[0] ?? '';
+
+    return local === '' ? '' : local.charAt(0).toUpperCase() + local.slice(1);
+  });
 
   /** Инициалы для кружка, если картинки нет: «Анна Петрова» -> «АП». */
   readonly initials = computed(() => {

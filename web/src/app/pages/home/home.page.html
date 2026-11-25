@@ -3,7 +3,9 @@
 }
 
 <header class="greeting">
-  <h1>Добрый день</h1>
+  <h1>
+    Добрый день@if (account.displayName(); as name) {, {{ name }}}
+  </h1>
   <span class="greeting-date">{{ dateLabel }}</span>
 </header>
 
@@ -19,8 +21,8 @@
       }
     </p>
 
-    @if (rate(); as rateValue) {
-      <span class="delta">{{ formatRate(rateValue) }}</span>
+    @if (weightDelta(); as delta) {
+      <span class="delta" [class.up]="delta.value >= 0">{{ formatDelta(delta.value, delta.label) }}</span>
     }
 
     <a class="weight-button" routerLink="/weight">Внести текущий вес</a>
@@ -34,12 +36,16 @@
       <line x1="0" y1="74" x2="396" y2="74" class="grid" />
       <line x1="0" y1="111" x2="396" y2="111" class="grid" />
 
+      @if (sparkline().area) {
+        <path [attr.d]="sparkline().area" class="area" />
+      }
+
       @if (sparkline().polyline) {
         <polyline [attr.points]="sparkline().polyline" class="line" />
       }
 
-      @if (sparkline().last; as last) {
-        <circle [attr.cx]="last.x" [attr.cy]="last.y" r="4" class="dot" />
+      @for (point of sparkline().points; track point.date) {
+        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3" class="dot" />
       }
     </svg>
 

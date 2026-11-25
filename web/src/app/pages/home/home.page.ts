@@ -15,6 +15,7 @@ import {
 import { describeProblem } from '../../core/problem';
 import { DiaryService } from '../diary/diary.service';
 import { WeightService } from '../../core/weight.service';
+import { AccountService } from '../../core/account.service';
 import { HomeService } from './home.service';
 
 interface RingSegment {
@@ -23,9 +24,22 @@ interface RingSegment {
   offset: number;
 }
 
+interface SparklinePoint {
+  x: number;
+  y: number;
+  kg: number;
+  date: string;
+}
+
 interface Sparkline {
   polyline: string;
-  last: { x: number; y: number } | null;
+  area: string;
+  points: SparklinePoint[];
+}
+
+interface WeightDelta {
+  value: number;
+  label: string;
 }
 
 /**
@@ -43,6 +57,7 @@ export class HomePage implements OnInit {
   private readonly home = inject(HomeService);
   private readonly diaryService = inject(DiaryService);
   private readonly weights = inject(WeightService);
+  protected readonly account = inject(AccountService);
 
   protected readonly error = signal<string | null>(null);
   protected readonly diary = signal<DiaryDay | null>(null);
@@ -125,14 +140,14 @@ export class HomePage implements OnInit {
     });
   });
 
-  /** Мини-график веса: последние замеры, подъемы и спады как есть. */
+  /** Мини-график веса: все замеры окна, подъемы и спады как есть. */
   protected readonly sparkline = computed<Sparkline>(() => {
     const entries = [...this.weightList()]
       .sort((left, right) => left.date.localeCompare(right.date))
       .slice(-14);
 
     if (entries.length === 0) {
-      return { polyline: '', last: null };
+      return { polyline: '', area: '', points: [] };
     }
 
     const values = entries.map((entry) => entry.kg);
@@ -140,15 +155,49 @@ export class HomePage implements OnInit {
     const max = Math.max(...values);
     const span = max - min || 1;
 
-    const points = entries.map((entry, index) => ({
+    const points: SparklinePoint[] = entries.map((entry, index) => ({
       x: entries.length === 1 ? 198 : (index / (entries.length - 1)) * 396,
       y: 6 + (1 - (entry.kg - min) / span) * 136,
+      kg: entry.kg,
+      date: entry.date,
     }));
 
-    return {
-      polyline: points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' '),
-      last: points[points.length - 1],
-    };
+    const polyline = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+    const first = points[0];
+    const last = points[points.length - 1];
+    const area = `M ${first.x.toFixed(1)},148 L ${polyline.replaceAll(' ', ' L ')} L ${last.x.toFixed(1)},148 Z`;
+
+    return { polyline, area, points };
+  });
+
+  /**
+   * Изменение веса: скорость из тренда, если история уже набралась, иначе
+   * разница первого и последнего замера в окне - цифра под весом должна быть
+   * видна всегда.
+   */
+  protected readonly weightDelta = computed<WeightDelta | null>(() => {
+    const rate = this.trend()?.rateKgPerWeek;
+
+    if (rate !== null && rate !== undefined) {
+      return { value: rate, label: 'за неделю' };
+    }
+
+    const entries = [...this.weightList()].sort((left, right) => left.date.localeCompare(right.date));
+
+    if (entries.length < 2) {
+      return null;
+    }
+
+    const first = entries[0];
+    const last = entries[entries.length - 1];
+    const days = Math.max(
+      1,
+      Math.round(
+        (new Date(last.date).getTime() - new Date(first.date).getTime()) / (24 * 60 * 60 * 1000),
+      ),
+    );
+
+    return { value: last.kg - first.kg, label: `за ${days} дн.` };
   });
 
   protected readonly waterPercent = computed(() => {
@@ -220,10 +269,10 @@ export class HomePage implements OnInit {
     return value === null ? '—' : value.toFixed(1).replace('.', ',');
   }
 
-  protected formatRate(value: number): string {
+  protected formatDelta(value: number, label: string): string {
     const sign = value > 0 ? '+' : '';
 
-    return `${sign}${value.toFixed(1).replace('.', ',')} кг за неделю`;
+    return `${sign}${value.toFixed(1).replace('.', ',')} кг ${label}`;
   }
 
   protected formatNumber(value: number | null | undefined): string {

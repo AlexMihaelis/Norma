@@ -27,6 +27,16 @@
           <span class="avatar initials">{{ account.initials() }}</span>
         }
         <span class="account-name">{{ account.displayName() }}</span>
+        <svg
+          class="account-chevron"
+          [class.open]="menuOpen()"
+          viewBox="0 0 12 8"
+          width="12"
+          height="8"
+          aria-hidden="true"
+        >
+          <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
       </button>
 
       @if (menuOpen()) {
