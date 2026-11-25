@@ -76,16 +76,39 @@ export class WeightPage implements OnInit {
   protected readonly editError = signal<string | null>(null);
 
   protected readonly currentKg = computed(() => this.entries()[0]?.kg ?? null);
+
+  /** Точка, выбранная на графике: показатели ниже переключаются на нее. */
+  protected readonly selectedEntry = signal<WeightEntry | null>(null);
+
+  protected readonly displayKg = computed(() => this.selectedEntry()?.kg ?? this.currentKg());
+
+  protected readonly displayDate = computed(
+    () => this.selectedEntry()?.date ?? this.entries()[0]?.date ?? null,
+  );
+
   protected readonly targetKg = computed(() => this.trend()?.targetKg ?? null);
+
   protected readonly remainingKg = computed(() => {
-    const current = this.currentKg();
+    const current = this.displayKg();
     const target = this.targetKg();
 
     return current === null || target === null ? null : Math.round((current - target) * 10) / 10;
   });
 
-  /** Изменение веса: скорость из тренда, иначе разница первого и последнего замера. */
+  /** Показатель «Изменение»: для выбранной точки - разница с прошлым замером. */
   protected readonly change = computed<{ value: number; label: string } | null>(() => {
+    const selected = this.selectedEntry();
+
+    if (selected !== null) {
+      const all = this.entries();
+      const index = all.findIndex((entry) => entry.id === selected.id);
+      const previous = index < 0 ? undefined : all[index + 1];
+
+      return previous === undefined
+        ? null
+        : { value: Math.round((selected.kg - previous.kg) * 10) / 10, label: 'к прошлому замеру' };
+    }
+
     const rate = this.trend()?.rateKgPerWeek;
 
     if (rate !== null && rate !== undefined) {
@@ -109,6 +132,14 @@ export class WeightPage implements OnInit {
 
     return { value: last.kg - first.kg, label: `за ${days} дн.` };
   });
+
+  protected onPicked(entry: WeightEntry | null): void {
+    this.selectedEntry.set(entry);
+  }
+
+  protected clearSelection(): void {
+    this.selectedEntry.set(null);
+  }
 
   protected readonly weightBoundaries = computed<readonly [number, number, number] | null>(() => {
     const trend = this.trend();
@@ -142,6 +173,8 @@ export class WeightPage implements OnInit {
         this.entries.set(list.items);
         this.trend.set(trend);
         this.bodyLatest.set(body);
+        // После перезагрузки список обновился - выбор сбрасываем на текущий вес.
+        this.selectedEntry.set(null);
       },
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
     });

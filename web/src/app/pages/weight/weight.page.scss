@@ -135,6 +135,22 @@
   white-space: nowrap;
 }
 
+.back-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: clamp(9px, 0.76vw, 13px);
+  text-align: left;
+}
+
+.history-row.selected {
+  background: var(--color-track);
+  border-radius: var(--radius-field);
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
+}
+
 /* Замеры тела: шесть ячеек в ряд, как в макете. */
 .body-grid {
   display: grid;

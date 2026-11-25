@@ -17,7 +17,7 @@
     </span>
   </div>
 
-  <app-weight-chart [entries]="entries()" />
+  <app-weight-chart [entries]="entries()" (picked)="onPicked($event)" />
 
   @if (weightFormOpen()) {
     <div class="inline-form">
@@ -41,9 +41,14 @@
 
 <section class="card totals-card">
   <div class="total">
-    <span class="total-label">Сейчас</span>
-    <span class="total-value">{{ format(currentKg()) }} <span class="total-unit">кг</span></span>
-    <span class="total-note">{{ formatDate(entries()[0]?.date ?? null) }}</span>
+    <span class="total-label">{{ selectedEntry() ? 'Выбранный замер' : 'Сейчас' }}</span>
+    <span class="total-value">{{ format(displayKg()) }} <span class="total-unit">кг</span></span>
+    <span class="total-note">{{ formatDate(displayDate()) }}</span>
+    @if (selectedEntry()) {
+      <button type="button" class="link back-link" (click)="clearSelection()">
+        вернуться к текущему
+      </button>
+    }
   </div>
 
   <div class="total">
@@ -150,7 +155,7 @@
 
     <ul class="history">
       @for (entry of entries(); track entry.id; let index = $index) {
-        <li class="history-row">
+        <li class="history-row" [class.selected]="selectedEntry()?.id === entry.id">
           @if (editingId() === entry.id) {
             <div class="history-edit">
               <input
@@ -196,8 +201,8 @@
       </h3>
 
       @if (weightBoundaries(); as boundaries) {
-        <p class="zone-values">{{ format(currentKg()) }} кг</p>
-        <app-zone-scale [value]="currentKg()" [boundaries]="boundaries" [labels]="weightZoneLabels" />
+        <p class="zone-values">{{ format(displayKg()) }} кг</p>
+        <app-zone-scale [value]="displayKg()" [boundaries]="boundaries" [labels]="weightZoneLabels" />
         <p class="muted small">
           Норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг; ожирение от
           {{ format(boundaries[2]) }} кг.
