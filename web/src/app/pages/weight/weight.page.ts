@@ -9,7 +9,7 @@ import {
   bmiCategoryTitles,
 } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
-import { WeightService } from './weight.service';
+import { WeightService } from '../../core/weight.service';
 
 /** Экран веса: запись замера, тренд, прогноз цели и ИМТ. */
 @Component({

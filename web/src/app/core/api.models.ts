@@ -183,6 +183,56 @@ export const bmiCategoryTitles: Record<BmiCategory, string> = {
   VeryHigh: 'ожирение',
 };
 
+/** Аккаунт: кто вошел, ник и аватар. */
+export interface Me {
+  userId: string;
+  email: string;
+  nickname: string | null;
+  avatarDataUrl: string | null;
+}
+
+/** День статистики: съеденное, активность и цель на эту дату. */
+export interface StatsDay {
+  date: string;
+  kcal: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  entries: number;
+  activityKcal: number;
+  targetKcal: number | null;
+  diffKcal: number | null;
+}
+
+/** Средние по дням с записями: пустые дни в среднее не входят. */
+export interface StatsAverages {
+  daysWithEntries: number;
+  kcal: number;
+  protein: number;
+  fat: number;
+  carbs: number;
+  activityKcal: number;
+  targetKcal: number | null;
+}
+
+/** Отклонение среднего факта от средней цели. */
+export interface StatsDeviation {
+  targetKcal: number;
+  diffKcal: number;
+  diffPercent: number;
+}
+
+/** Статистика за период. */
+export interface Stats {
+  from: string;
+  to: string;
+  days: StatsDay[];
+  averages: StatsAverages;
+  deviation: StatsDeviation | null;
+  targetHint: string | null;
+  targetNote: string;
+}
+
 /** Названия приемов для экрана; порядок задает API, здесь только подписи. */
 export const mealTitles: Record<MealKind, string> = {
   Breakfast: 'Завтрак',

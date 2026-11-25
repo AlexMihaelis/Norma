@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { WeightEntry, WeightList, WeightTrend } from '../../core/api.models';
+import { environment } from '../../environments/environment';
+import { WeightEntry, WeightList, WeightTrend } from './api.models';
 
 /** Вес: список замеров, запись нового и тренд с ИМТ. */
 @Injectable({ providedIn: 'root' })

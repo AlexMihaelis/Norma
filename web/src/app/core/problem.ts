@@ -35,5 +35,11 @@ export function describeProblem(error: HttpErrorResponse): string {
     return body;
   }
 
+  // status 0 - запрос не дошел до сервера: API выключен или браузер отклонил
+  // адрес по CORS. Без этой подсказки пользователь видит только "(0)".
+  if (error.status === 0) {
+    return 'Сервер не ответил. Проверьте, что API запущен (http://localhost:5150/api/v1/health), и откройте сайт по адресу http://localhost:4200.';
+  }
+
   return `Не удалось выполнить запрос (${error.status}).`;
 }

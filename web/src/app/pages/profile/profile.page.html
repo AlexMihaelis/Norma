@@ -1,22 +1,112 @@
+@if (onboarding()) {
+  <section class="card welcome">
+    <h1>Начнём с профиля</h1>
+    <p class="muted">
+      Шаг 1: данные ниже - по ним считаем норму калорий и БЖУ. Пустые поля можно
+      оставить и дополнить позже. Шаг 2: текущий вес, без него цель не посчитать.
+    </p>
+  </section>
+}
+
 <section class="card">
   <h1>Профиль</h1>
-  <p class="muted">
-    По этим данным считается цель и БЖУ. Незаполненные поля - «не указано», их можно
-    дополнить позже.
-  </p>
 
   @if (error(); as message) {
     <p class="error">{{ message }}</p>
   }
 
-  @if (saved()) {
-    <p class="ok">Профиль сохранён.</p>
+  @if (accountError(); as message) {
+    <p class="error">{{ message }}</p>
   }
+
+  @if (accountSaved()) {
+    <p class="ok">Ник и фото обновлены.</p>
+  }
+
+  <div class="account-row">
+    <div class="avatar-preview">
+      @if (account.avatarDataUrl(); as image) {
+        <img [src]="image" alt="Аватар" />
+      } @else {
+        <span>{{ account.initials() }}</span>
+      }
+    </div>
+
+    <div class="account-fields">
+      <label>
+        Ник
+        <span class="hint" data-tip="Как показывать тебя в шапке. Если не заполнить - будет email.">?</span>
+        <input
+          maxlength="30"
+          placeholder="например, Аня"
+          [value]="nicknameInput()"
+          (input)="nicknameInput.set($any($event.target).value)"
+        />
+      </label>
+
+      <div class="account-actions">
+        <button type="button" (click)="saveNickname()" [disabled]="nicknameBusy()">
+          {{ nicknameBusy() ? 'Сохраняю…' : 'Сохранить ник' }}
+        </button>
+
+        <label class="upload">
+          Загрузить фото
+          <input type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onAvatarSelected($event)" />
+        </label>
+
+        @if (account.avatarDataUrl()) {
+          <button type="button" class="ghost danger" (click)="removeAvatar()">Удалить фото</button>
+        }
+      </div>
+
+      <p class="muted small">Картинка до 256 КБ: png, jpeg или webp.</p>
+    </div>
+  </div>
+
+  @if (saved()) {
+    <p class="ok">
+      Профиль сохранён. Дальше - <a routerLink="/weight">записать вес</a>, чтобы посчитать цель.
+    </p>
+  }
+
+  <div class="current">
+    @if (currentWeight(); as weight) {
+      <span>
+        Текущий вес: <strong>{{ format(weight.kg) }} кг</strong>
+        <span class="muted">замер от {{ weight.date }}</span>
+      </span>
+      <a routerLink="/weight">Изменить</a>
+    } @else {
+      <div class="weight-add">
+        <label>
+          Текущий вес, кг
+          <span class="hint" data-tip="Берется из замеров веса и задает точку отсчета для цели. Позже можно вести график на экране «Вес».">?</span>
+          <input
+            type="number"
+            min="20"
+            max="500"
+            step="0.1"
+            placeholder="например, 68,5"
+            [value]="weightInput() === null ? '' : weightInput()"
+            (input)="onWeightInput($any($event.target).value)"
+          />
+        </label>
+        <button type="button" (click)="saveWeight()" [disabled]="weightBusy()">
+          {{ weightBusy() ? 'Сохраняю…' : 'Записать вес' }}
+        </button>
+      </div>
+
+      @if (weightError(); as message) {
+        <p class="error">{{ message }}</p>
+      }
+    }
+  </div>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="grid">
       <label>
         Пол
+        <span class="hint" data-tip="Нужен для формулы обмена: у мужчин и женщин разная константа.">?</span>
         <select formControlName="sex">
           <option [ngValue]="null">не указан</option>
           @for (value of sexes; track value) {
@@ -27,16 +117,19 @@
 
       <label>
         Дата рождения
+        <span class="hint" data-tip="Из неё считается возраст: с годами обмен снижается.">?</span>
         <input type="date" formControlName="birthDate" />
       </label>
 
       <label>
         Рост, см
+        <span class="hint" data-tip="Нужен для ИМТ и нормы веса: 18.5-25 для 18-64 лет, 22-27 после 65.">?</span>
         <input type="number" min="100" max="250" step="1" formControlName="heightCm" />
       </label>
 
       <label>
         Активность
+        <span class="hint" data-tip="Множитель к обмену покоя: от 1.2 при сидячем образе жизни до 1.9 при очень высокой активности.">?</span>
         <select formControlName="activity">
           <option [ngValue]="null">не указана</option>
           @for (value of activities; track value) {
@@ -47,6 +140,7 @@
 
       <label>
         Цель
+        <span class="hint" data-tip="Похудение - дефицит, поддержание - без поправки, набор - профицит. Безопасный минимум 1200 ккал для женщин и 1500 для мужчин.">?</span>
         <select formControlName="goal">
           <option [ngValue]="null">не указана</option>
           @for (value of goals; track value) {
@@ -57,11 +151,13 @@
 
       <label>
         Желаемый вес, кг
+        <span class="hint" data-tip="На норму калорий не влияет: нужен для прогноза даты цели на экране веса.">?</span>
         <input type="number" min="20" max="500" step="0.1" formControlName="targetWeightKg" />
       </label>
 
       <label>
         Темп, кг/нед
+        <span class="hint" data-tip="Сколько килограммов в неделю. В 1 кг жира около 7700 ккал; 0.25-0.5 - спокойный темп.">?</span>
         <input type="number" min="0" max="1.5" step="0.05" formControlName="kgPerWeek" />
       </label>
     </div>

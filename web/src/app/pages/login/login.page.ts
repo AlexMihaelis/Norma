@@ -1,12 +1,15 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../../core/auth.service';
 import { describeProblem } from '../../core/problem';
 
-/** Вход и регистрация на одном экране: переключатель режима. */
+/**
+ * Вход и регистрация на одном экране. После первой регистрации ведем в профиль:
+ * без него не посчитать цель, а дневник без цели выглядит сломанным.
+ */
 @Component({
   selector: 'app-login-page',
   imports: [ReactiveFormsModule],
@@ -20,6 +23,11 @@ export class LoginPage {
   protected readonly mode = signal<'login' | 'register'>('login');
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
+  protected readonly showPassword = signal(false);
+
+  /** Четность переключателя: меняет класс, чтобы анимация запускалась заново. */
+  protected readonly swap = signal(0);
+  protected readonly isRegister = () => this.mode() === 'register';
 
   protected readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
@@ -28,7 +36,12 @@ export class LoginPage {
 
   protected toggleMode(): void {
     this.mode.set(this.mode() === 'login' ? 'register' : 'login');
+    this.swap.update((value) => value + 1);
     this.error.set(null);
+    this.showPassword.set(false);
+
+    // Пароль между режимами не переносим: на экране регистрации он должен быть пустым.
+    this.form.controls.password.setValue('');
   }
 
   protected submit(): void {
@@ -41,14 +54,20 @@ export class LoginPage {
     this.error.set(null);
 
     const { email, password } = this.form.getRawValue();
-    const request = this.mode() === 'login'
-      ? this.auth.login(email, password)
-      : this.auth.register(email, password);
+    const isRegister = this.isRegister();
+    const request = isRegister ? this.auth.register(email, password) : this.auth.login(email, password);
 
     request.subscribe({
-      next: () => this.router.navigateByUrl('/'),
+      next: () => this.router.navigateByUrl(isRegister ? '/profile' : '/'),
       error: (error: HttpErrorResponse) => {
-        this.error.set(describeProblem(error));
+        // Сервер намеренно отвечает одинаковым 401 на «нет такого email» и
+        // «неверный пароль», чтобы перебором нельзя было узнать, кто зарегистрирован.
+        // Поэтому подсказываем оба варианта, а не гадаем.
+        this.error.set(
+          error.status === 401
+            ? 'Неверный email или пароль. Если аккаунта ещё нет - нажми «Зарегистрироваться».'
+            : describeProblem(error),
+        );
         this.busy.set(false);
       },
     });

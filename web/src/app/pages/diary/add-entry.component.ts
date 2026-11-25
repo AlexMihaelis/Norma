@@ -39,6 +39,7 @@ export class AddEntryComponent implements OnInit {
   protected readonly quantity = signal(100);
   protected readonly query = signal('');
   protected readonly results = signal<FoodSummary[]>([]);
+  protected readonly noResults = signal(false);
   protected readonly selected = signal<FoodSummary | null>(null);
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -60,13 +61,22 @@ export class AddEntryComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: (items) => this.results.set(items),
-        error: () => this.results.set([]),
+        next: (items) => {
+          this.results.set(items);
+          this.noResults.set(
+            items.length === 0 && this.query().trim().length >= 2 && this.selected() === null,
+          );
+        },
+        error: () => {
+          this.results.set([]);
+          this.noResults.set(false);
+        },
       });
   }
 
   protected onQuery(value: string): void {
     this.query.set(value);
+    this.noResults.set(false);
     this.queries.next(value);
   }
 
@@ -74,6 +84,7 @@ export class AddEntryComponent implements OnInit {
     this.selected.set(food);
     this.query.set(food.name);
     this.results.set([]);
+    this.noResults.set(false);
   }
 
   protected unitLabel(): string {
@@ -84,7 +95,7 @@ export class AddEntryComponent implements OnInit {
     const food = this.selected();
 
     if (food === null || this.quantity() <= 0) {
-      this.error.set('Выберите продукт из списка и укажите количество.');
+      this.error.set('Выбери продукт из подсказок (нажми на строку в списке) и укажи количество больше нуля.');
       return;
     }
 

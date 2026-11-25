@@ -7,6 +7,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then((module) => module.LoginPage),
   },
   {
+    path: 'stats',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/stats/stats.page').then((module) => module.StatsPage),
+  },
+  {
     path: 'weight',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/weight/weight.page').then((module) => module.WeightPage),
