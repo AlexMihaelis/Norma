@@ -2,148 +2,150 @@
   <p class="error">{{ message }}</p>
 }
 
-<section class="card">
-  <h2>Вес по замерам</h2>
+<header class="page-head">
+  <h1>Вес</h1>
+</header>
+
+<section class="card chart-card">
+  <div class="card-head">
+    <h2>Динамика веса</h2>
+    <span class="card-meta">30 дней</span>
+  </div>
+
   <app-weight-chart [entries]="entries()" (picked)="onPicked($event)" />
 </section>
 
-<section class="card">
-  <h2>Добавить замер</h2>
+<section class="card totals-card">
+  <div class="total">
+    <span class="total-label">{{ selectedEntry() ? 'Выбранный замер' : 'Сейчас' }}</span>
+    <span class="total-value">{{ format(displayKg()) }} <span class="total-unit">кг</span></span>
+    <span class="total-note">{{ formatDate(displayDate()) }}</span>
+    @if (selectedEntry()) {
+      <button type="button" class="link back-link" (click)="clearSelection()">
+        вернуться к текущему
+      </button>
+    }
+  </div>
 
-  @if (saved()) {
-    <p class="ok">Замер сохранён.</p>
+  <div class="total">
+    <span class="total-label">Изменение</span>
+    <span class="total-value">
+      {{ change() ? formatSigned(change()!.value) : '—' }} <span class="total-unit">кг</span>
+    </span>
+    <span class="total-note">{{ change()?.label ?? 'мало данных' }}</span>
+  </div>
+
+  <div class="total">
+    <span class="total-label">Цель</span>
+    <span class="total-value">{{ format(targetKg()) }} <span class="total-unit">кг</span></span>
+    <span class="total-note">
+      @if (remainingKg(); as remaining) {
+        осталось {{ format(Math.abs(remaining)) }} кг
+      } @else {
+        цель не задана
+      }
+    </span>
+  </div>
+
+  <div class="totals-actions">
+    <button type="button" class="outline-button" (click)="toggleWeightForm()">
+      {{ weightFormOpen() ? 'Скрыть форму' : '+ Внести вес' }}
+    </button>
+  </div>
+
+  @if (weightFormOpen()) {
+    <div class="inline-form totals-form">
+      @if (saved()) {
+        <p class="ok">Замер сохранён.</p>
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
+        <label>
+          Вес, кг
+          <input type="number" min="20" max="500" step="0.1" formControlName="kg" placeholder="72,4" />
+        </label>
+        <label>
+          Дата
+          <input type="date" formControlName="date" />
+        </label>
+        <button type="submit" [disabled]="busy()">{{ busy() ? 'Сохраняю…' : 'Записать' }}</button>
+      </form>
+    </div>
   }
-
-  <form [formGroup]="form" (ngSubmit)="submit()" class="row">
-    <label>
-      Вес, кг
-      <input type="number" min="20" max="500" step="0.1" formControlName="kg" placeholder="например, 72,4" />
-    </label>
-    <label>
-      Дата
-      <input type="date" formControlName="date" />
-    </label>
-    <button type="submit" [disabled]="busy()">{{ busy() ? 'Сохраняю…' : 'Записать' }}</button>
-  </form>
 </section>
 
-@if (trend(); as value) {
-  <section class="card">
-    <h2>
-      Тренд
-      <span class="hint" data-tip="Считается по всем замерам: сглаженная кривая показывает направление, скорость - насколько быстро меняется вес, прогноз - когда дойдешь до цели из профиля.">?</span>
-    </h2>
+<section class="card body-card">
+  <div class="card-head">
+    <h2>Замеры тела</h2>
+    <span class="card-meta">{{ formatDate(entries()[0]?.date ?? null) }}</span>
+  </div>
 
-    @if (displayKg() !== null) {
-      <p class="big">
-        {{ format(displayKg()) }} кг
-        <span class="muted">
-          {{ selectedEntry() ? 'замер от ' + formatDate(displayDate()) : 'текущий вес' }}
+  <div class="body-grid">
+    @for (kind of bodyKinds; track kind) {
+      @let item = bodyFor(kind);
+      <div class="body-cell">
+        <span class="body-label">
+          {{ bodyTitles[kind] }}
+          <span class="hint" data-tip="Обхват измеряется сантиметровой лентой в самом широком месте: для талии - на выдохе, без натяжения.">?</span>
         </span>
-      </p>
-
-      @if (selectedEntry() === null && value.currentEmaKg !== null) {
-        <p class="muted small">сглаженный вес: {{ format(value.currentEmaKg) }} кг</p>
-      }
-
-      @if (selectedEntry() !== null) {
-        <button type="button" class="link" (click)="clearSelection()">вернуться к текущему весу</button>
-      }
+        <span class="body-value">
+          {{ item ? format(item.cm, 0) : '—' }}
+          <span class="body-unit">см</span>
+        </span>
+        <span class="body-note" [class.good]="item !== null && (item.deltaCm ?? 0) < 0">
+          {{ item ? bodyFootnote(item) : 'нет замера' }}
+        </span>
+      </div>
     }
+  </div>
 
-    <div class="facts">
-      <div>
-        <dt>
-          Скорость
-          <span class="hint" data-tip="Средний наклон веса за последние две недели, кг в неделю. Пока история короткая, не показываем - цифра была бы случайной.">?</span>
-        </dt>
-        <dd>
-          @if (value.rateKgPerWeek !== null) {
-            {{ value.rateKgPerWeek > 0 ? '+' : '' }}{{ format(value.rateKgPerWeek, 2) }} кг/нед
-          } @else {
-            <span class="muted">нужно около четырёх недель замеров</span>
-          }
-        </dd>
-      </div>
-      <div>
-        <dt>
-          Цель
-          <span class="hint" data-tip="Желаемый вес из профиля. На норму калорий он не влияет - нужен, чтобы показать прогноз даты.">?</span>
-        </dt>
-        <dd>
-          @if (value.targetKg !== null) {
-            {{ format(value.targetKg) }} кг
-          } @else {
-            <span class="muted">не задана в профиле</span>
-          }
-        </dd>
-      </div>
-      <div>
-        <dt>
-          Прогноз даты цели
-          <span class="hint" data-tip="Дата, когда текущая скорость приведет к желаемому весу. Это прогноз, а не обещание: темп меняется вместе с питанием и активностью.">?</span>
-        </dt>
-        <dd>{{ formatDate(value.goalDate) }}</dd>
-      </div>
+  @if (bodyError(); as message) {
+    <p class="error">{{ message }}</p>
+  }
 
-      <div>
-        <dt>
-          ИМТ
-          <span class="hint" data-tip="Индекс массы тела: вес / рост². Пороги ВОЗ 18.5, 25 и 30; после 65 лет норма сдвигается к 22-27.">?</span>
-        </dt>
-        <dd>
-          @if (displayBmi() !== null) {
-            {{ format(displayBmi()) }}
-            @if (displayBmiCategory(); as category) {
-              <span class="badge" [class]="bmiClass(category)">
-                {{ bmiTitles[category] }}
-              </span>
+  <div class="body-actions">
+    <button type="button" class="outline-button" (click)="openBody()">
+      {{ bodyOpen() ? 'Скрыть форму' : '+ Внести замер' }}
+    </button>
+
+    @if (bodyOpen()) {
+      <div class="body-form">
+        <label>
+          Что измеряем
+          <select [value]="bodyKind()" (change)="bodyKind.set($any($event.target).value)">
+            @for (kind of bodyKinds; track kind) {
+              <option [value]="kind">{{ bodyTitles[kind] }}</option>
             }
-          } @else {
-            <span class="muted">нужен рост в профиле</span>
-          }
-        </dd>
-      </div>
-
-      <div class="zone">
-        @if (bmiBoundaries(); as boundaries) {
-          <app-zone-scale [value]="displayBmi()" [boundaries]="boundaries" [labels]="bmiZoneLabels" />
-        } @else {
-          <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
-        }
-      </div>
-
-      <div>
-        <dt>
-          Норма веса
-          <span class="hint" data-tip="18.5-25 по ИМТ для 18-64 лет; после 65 - 22-27, это ориентир для пожилых, а не классификация ВОЗ.">?</span>
-        </dt>
-        <dd>
-          @if (value.normalWeight; as normal) {
-            {{ format(normal.minKg) }}–{{ format(normal.maxKg) }} кг
-          } @else {
-            <span class="muted">нужен рост в профиле</span>
-          }
-        </dd>
-      </div>
-
-      <div class="zone">
-        @if (weightBoundaries(); as boundaries) {
-          <app-zone-scale
-            [value]="displayKg()"
-            [boundaries]="boundaries"
-            [labels]="weightZoneLabels"
+          </select>
+        </label>
+        <label>
+          Обхват, см
+          <input
+            type="number"
+            min="20"
+            max="300"
+            step="0.1"
+            inputmode="decimal"
+            [value]="bodyCm() ?? ''"
+            (input)="onBodyCm($any($event.target).value)"
           />
-        } @else {
-          <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
-        }
+        </label>
+        <label>
+          Дата
+          <input type="date" [value]="bodyDate()" (input)="bodyDate.set($any($event.target).value)" />
+        </label>
+        <button type="button" (click)="saveBody()" [disabled]="bodyBusy()">
+          {{ bodyBusy() ? 'Сохраняю…' : 'Сохранить' }}
+        </button>
       </div>
-    </div>
-  </section>
-}
+    }
+  </div>
+</section>
 
-<section class="card">
-  <h2>Замеры</h2>
+<section class="card history-card">
+  <div class="card-head">
+    <h2>История веса</h2>
+    <span class="card-meta">все замеры</span>
+  </div>
 
   @if (entries().length === 0) {
     <p class="muted">Замеров пока нет.</p>
@@ -152,11 +154,11 @@
       <p class="error">{{ message }}</p>
     }
 
-    <ul class="entries">
-      @for (entry of entries(); track entry.id) {
-        <li>
+    <ul class="history">
+      @for (entry of entries(); track entry.id; let index = $index) {
+        <li class="history-row" [class.selected]="selectedEntry()?.id === entry.id">
           @if (editingId() === entry.id) {
-            <div class="edit-row">
+            <div class="history-edit">
               <input
                 type="number"
                 min="20"
@@ -167,18 +169,68 @@
                 (input)="onEditKg($any($event.target).value)"
               />
               <input type="date" [value]="editDate()" (input)="editDate.set($any($event.target).value)" />
-              <button type="button" (click)="saveEdit()" [disabled]="editBusy()">
-                {{ editBusy() ? 'Сохраняю…' : 'Сохранить' }}
-              </button>
+              <button type="button" (click)="saveEdit()" [disabled]="editBusy()">Сохранить</button>
               <button type="button" class="link" (click)="cancelEdit()">Отмена</button>
             </div>
           } @else {
-            <span>{{ formatDate(entry.date) }}</span>
-            <strong>{{ format(entry.kg) }} кг</strong>
-            <button type="button" class="link" (click)="startEdit(entry)">Изменить</button>
+            <span class="history-date">{{ formatDate(entry.date) }}</span>
+            <span class="history-kg">{{ format(entry.kg) }} <span class="history-unit">кг</span></span>
+            <span class="history-delta" [class.good]="(delta(index) ?? 0) < 0">
+              {{ delta(index) === null ? '' : formatSigned(delta(index)!) }}
+            </span>
+            <button type="button" class="link history-edit-link" (click)="startEdit(entry)">
+              изменить
+            </button>
           }
         </li>
       }
     </ul>
   }
 </section>
+
+@if (trend(); as value) {
+  <section class="card zones-card">
+    <div class="card-head">
+      <h2>ИМТ и нормы</h2>
+      <span class="card-meta">{{ bmiTitles[displayBmiCategory() ?? 'Normal'] }}</span>
+    </div>
+
+    <div class="zones">
+      <h3>
+        Вес по зонам
+        <span class="hint" data-tip="Синяя - недостаток, зеленая - норма, оранжевая - избыток, красная - ожирение. Кружок стоит на последнем замере.">?</span>
+      </h3>
+
+      @if (weightBoundaries(); as boundaries) {
+        <p class="zone-values">{{ format(displayKg()) }} кг</p>
+        <app-zone-scale [value]="displayKg()" [boundaries]="boundaries" [labels]="weightZoneLabels" />
+        <p class="muted small">
+          Норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг; ожирение от
+          {{ format(boundaries[2]) }} кг.
+        </p>
+      } @else {
+        <p class="muted">Нужен рост в профиле.</p>
+      }
+    </div>
+
+    <div class="zones">
+      <h3>
+        ИМТ по зонам
+        <span class="hint" data-tip="Индекс массы тела: вес / рост². Пороги 18.5, 25 и 30; после 65 лет норма сдвигается к 22-27.">?</span>
+      </h3>
+
+      @if (bmiBoundaries(); as boundaries) {
+        <p class="zone-values">
+          {{ format(displayBmi()) }} · {{ bmiTitles[displayBmiCategory() ?? 'Normal'] }}
+        </p>
+        <app-zone-scale
+          [value]="displayBmi()"
+          [boundaries]="boundaries"
+          [labels]="bmiZoneLabels"
+        />
+      } @else {
+        <p class="muted">Нужен рост в профиле.</p>
+      }
+    </div>
+  </section>
+}

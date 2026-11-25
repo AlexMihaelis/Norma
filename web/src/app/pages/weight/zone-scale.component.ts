@@ -18,7 +18,13 @@ export class ZoneScaleComponent {
   /** Подписи под шкалой в том же порядке, что и цвета. */
   readonly labels = input.required<readonly [string, string, string, string]>();
 
-  protected readonly colors = ['#60a5fa', '#22c55e', '#f59e0b', '#dc2626'];
+  /* Цвета зон из токенов макета, красный и синий - локальные нейтральные. */
+  protected readonly colors = [
+    'var(--color-zone-blue)',
+    'var(--color-protein)',
+    'var(--color-fat-pastel)',
+    'var(--color-zone-red)',
+  ];
 
   protected readonly geometry = computed(() => {
     const [first, second, third] = this.boundaries();
