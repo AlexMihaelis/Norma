@@ -1,8 +1,8 @@
 :host {
   display: flex;
   flex-direction: column;
-  /* Пастельного красного нет в токенах Figma: завела локально для зоны ожирения. */
-  --color-zone-red: #f2b8b5;
+  /* Пастельного красного нет в токенах Figma: локальный нейтральный красный. */
+  --color-zone-red: #d4928d;
 }
 
 .chart-card {
