@@ -54,32 +54,47 @@
         }
 
         <div #stripRef class="strip">
-          <div
-            class="strip-inner"
-            [class.dense]="period() > 7"
-            [style.grid-template-columns]="
-              period() > 7
-                ? 'repeat(' + chartDays().length + ', clamp(28px, 3.2vw, 44px))'
-                : 'repeat(' + chartDays().length + ', minmax(0, 1fr))'
-            "
-          >
-            @for (day of chartDays(); track day.iso) {
-              <div class="column" [class.month-start]="day.isMonthStart">
-                <span class="bar-value">
-                  {{ day.kcal === null || period() !== 7 ? '' : formatNumber(day.kcal) }}
-                </span>
+          <div class="strip-content" [class.dense]="period() > 7">
+            <div
+              class="strip-inner"
+              [class.dense]="period() > 7"
+              [style.grid-template-columns]="
+                period() > 7
+                  ? 'repeat(' + chartDays().length + ', var(--day-w))'
+                  : 'repeat(' + chartDays().length + ', minmax(0, 1fr))'
+              "
+            >
+              @for (day of chartDays(); track day.iso) {
+                <div class="column" [class.month-start]="day.label === '1'">
+                  <span class="bar-value">
+                    {{ day.kcal === null || period() !== 7 ? '' : formatNumber(day.kcal) }}
+                  </span>
 
-                <div class="bar-track">
-                  @if (day.kcal !== null) {
-                    <span
-                      class="bar"
-                      [class.over]="isOver(day)"
-                      [style.height.%]="barHeight(day.kcal)"
-                    ></span>
-                  }
+                  <div class="bar-track">
+                    @if (day.kcal !== null) {
+                      <span
+                        class="bar"
+                        [class.over]="isOver(day)"
+                        [style.height.%]="barHeight(day.kcal)"
+                      ></span>
+                    }
+                  </div>
+
+                  <span class="bar-day">{{ day.label }}</span>
                 </div>
+              }
+            </div>
 
-                <span class="bar-day">{{ day.label }}</span>
+            @if (months().length > 0) {
+              <div class="month-labels">
+                @for (month of months(); track month.key) {
+                  <span
+                    class="month-label"
+                    [style.left]="'calc(' + month.offset + ' * (var(--day-w) + var(--gap)))'"
+                  >
+                    {{ month.title }}
+                  </span>
+                }
               </div>
             }
           </div>

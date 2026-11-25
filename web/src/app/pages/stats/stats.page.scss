@@ -121,20 +121,51 @@
   background: var(--color-surface);
 }
 
-/* Лента дней: одна прокрутка на столбцы и месяцы, чтобы подписи не разъезжались. */
+:host {
+  /* Ширина дня и промежуток: по ним же выравниваем подписи месяцев. */
+  --day-w: clamp(28px, 3.2vw, 44px);
+  --gap: clamp(4px, 0.5vw, 8px);
+}
+
+/* Лента дней: одна прокрутка на столбцы и подписи месяцев. */
 .strip {
   overflow-x: auto;
   border-bottom: 1px solid var(--color-border);
 }
 
-.strip-inner {
-  display: grid;
-  gap: clamp(var(--space-4), 0.5vw, var(--space-8));
+.strip-content {
   width: 100%;
 
   &.dense {
     width: max-content;
   }
+}
+
+.strip-inner {
+  display: grid;
+  gap: var(--gap);
+  width: 100%;
+
+  &.dense {
+    width: max-content;
+  }
+}
+
+/* Подписи границ месяцев идут отдельной строкой и не спорят с числами дней. */
+.month-labels {
+  position: relative;
+  height: 20px;
+  margin-top: var(--space-4);
+}
+
+.month-label {
+  position: absolute;
+  top: 0;
+  padding-left: var(--space-4);
+  border-left: 1px solid var(--color-track);
+  font-size: clamp(9px, 0.74vw, 12px);
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
 /* Начало месяца отделяем линией и подписью «1 ноя» прямо в строке дат. */

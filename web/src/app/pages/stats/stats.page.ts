@@ -22,10 +22,15 @@ interface ChartDay {
   iso: string;
   label: string;
   weekday: string;
-  isMonthStart: boolean;
   kcal: number | null;
   targetKcal: number | null;
   diffKcal: number | null;
+}
+
+interface MonthMarker {
+  key: string;
+  title: string;
+  offset: number;
 }
 
 /** Экран статистики: средние, столбцы по дням и таблица дней за период. */
@@ -45,7 +50,7 @@ export class StatsPage implements OnInit {
     }
 
     requestAnimationFrame(() => {
-      ref.nativeElement.scrollLeft = 0;
+      ref.nativeElement.scrollLeft = ref.nativeElement.scrollWidth;
     });
   }
 
@@ -81,19 +86,14 @@ export class StatsPage implements OnInit {
     while (cursor <= end) {
       const iso = toLocalIso(cursor);
       const day = byDate.get(iso);
-      const isMonthStart = cursor.getDate() === 1 || result.length === 0;
-      const monthShort = cursor.toLocaleDateString('ru-RU', { month: 'short' });
 
       result.push({
         iso,
         label:
           this.period() === 7
             ? cursor.toLocaleDateString('ru-RU', { weekday: 'short' })
-            : isMonthStart
-              ? `${cursor.getDate()} ${monthShort}`
-              : String(cursor.getDate()),
+            : String(cursor.getDate()),
         weekday: cursor.toLocaleDateString('ru-RU', { weekday: 'short' }),
-        isMonthStart,
         kcal: day?.kcal ?? null,
         targetKcal: day?.targetKcal ?? null,
         diffKcal: day?.diffKcal ?? null,
@@ -102,8 +102,27 @@ export class StatsPage implements OnInit {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    // Длинные периоды листаются с сегодняшнего дня: он первый слева, прошлое - справа.
-    return this.period() === 7 ? result : result.reverse();
+    // Хронология: старые дни слева, сегодня справа. Листаем к сегодняшнему краю.
+    return result;
+  });
+
+  /** Подписи границ месяцев с полным названием: «1 декабря», «1 января». */
+  protected readonly months = computed<MonthMarker[]>(() => {
+    if (this.period() === 7) {
+      return [];
+    }
+
+    return this.chartDays()
+      .map((day, index) => ({ day, index }))
+      .filter(({ day }) => day.iso.endsWith('-01'))
+      .map(({ day, index }) => ({
+        key: day.iso,
+        title: new Date(`${day.iso}T00:00:00`).toLocaleDateString('ru-RU', {
+          day: 'numeric',
+          month: 'long',
+        }),
+        offset: index,
+      }));
   });
 
   protected readonly target = computed(() => this.data()?.averages.targetKcal ?? null);
