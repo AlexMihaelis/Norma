@@ -191,7 +191,7 @@
   <section class="card zones-card">
     <div class="card-head">
       <h2>ИМТ и нормы</h2>
-      <span class="card-meta">{{ bmiTitles[value.bmiCategory ?? 'Normal'] }}</span>
+      <span class="card-meta">{{ bmiTitles[displayBmiCategory() ?? 'Normal'] }}</span>
     </div>
 
     <div class="zones">
@@ -220,10 +220,10 @@
 
       @if (bmiBoundaries(); as boundaries) {
         <p class="zone-values">
-          {{ format(value.bmi) }} · {{ bmiTitles[value.bmiCategory ?? 'Normal'] }}
+          {{ format(displayBmi()) }} · {{ bmiTitles[displayBmiCategory() ?? 'Normal'] }}
         </p>
         <app-zone-scale
-          [value]="value.bmi"
+          [value]="displayBmi()"
           [boundaries]="boundaries"
           [labels]="bmiZoneLabels"
         />

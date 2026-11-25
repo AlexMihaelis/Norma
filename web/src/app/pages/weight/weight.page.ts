@@ -88,6 +88,35 @@ export class WeightPage implements OnInit {
 
   protected readonly targetKg = computed(() => this.trend()?.targetKg ?? null);
 
+  /** ИМТ для показанного веса: при клике по истории считается по тому весу. */
+  protected readonly displayBmi = computed<number | null>(() => {
+    const heightCm = this.trend()?.heightCm;
+    const kg = this.displayKg();
+
+    if (!heightCm || kg === null) {
+      return null;
+    }
+
+    return kg / (heightCm / 100) ** 2;
+  });
+
+  protected readonly displayBmiCategory = computed<BmiCategory | null>(() => {
+    const bmi = this.displayBmi();
+    const normal = this.trend()?.normalWeight;
+
+    if (bmi === null || !normal) {
+      return null;
+    }
+
+    return bmi < normal.bmiMin
+      ? 'Low'
+      : bmi < normal.bmiMax
+        ? 'Normal'
+        : bmi < 30
+          ? 'High'
+          : 'VeryHigh';
+  });
+
   protected readonly remainingKg = computed(() => {
     const current = this.displayKg();
     const target = this.targetKg();
