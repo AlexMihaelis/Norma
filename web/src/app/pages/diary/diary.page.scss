@@ -19,33 +19,146 @@
   display: inline-flex;
 }
 
-.day-date {
-  padding: 0 var(--space-4);
-  border: none;
-  background: none;
+/* Дата выглядит кнопкой: рамка, иконка календаря и стрелка вниз. */
+.date-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: clamp(var(--space-4), 0.5vw, var(--space-8)) clamp(var(--space-8), 0.9vw, var(--space-12));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: clamp(12px, 0.97vw, 17px);
-  color: var(--color-text-muted);
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 3px;
 
   &:hover {
-    color: var(--color-text);
-    text-decoration-color: currentColor;
+    background: var(--color-track);
   }
 }
 
-/* Нативный календарь: поле спрятано, но не display:none, иначе showPicker не работает. */
-.date-native {
+.date-icon {
+  color: var(--color-accent);
+  flex: 0 0 auto;
+}
+
+/* Календарь: крупная сетка 7 x 6, сегодня и выбранный день подсвечены. */
+.calendar {
   position: absolute;
   right: 0;
-  bottom: 0;
-  width: 1px;
-  height: 1px;
+  top: calc(100% + var(--space-8));
+  width: clamp(280px, 22vw, 340px);
+  padding: var(--space-16);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 16%);
+  z-index: 40;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.cal-month {
+  font-size: clamp(13px, 1vw, 16px);
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+.cal-nav {
+  width: 28px;
+  height: 28px;
   padding: 0;
-  border: 0;
-  opacity: 0;
-  pointer-events: none;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover:not(:disabled) {
+    background: var(--color-track);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.cal-weekdays {
+  margin-bottom: var(--space-4);
+
+  span {
+    font-size: clamp(10px, 0.76vw, 12px);
+    color: var(--color-text-muted);
+  }
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  min-height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--space-8);
+  background: none;
+  color: var(--color-text);
+  font-size: clamp(12px, 0.9vw, 14px);
+
+  &:hover:not(:disabled) {
+    background: var(--color-track);
+  }
+
+  /* Дни соседних месяцев приглушены, но выбирать их можно. */
+  &.out {
+    color: var(--color-text-muted);
+    opacity: 0.55;
+  }
+
+  &.today {
+    box-shadow: inset 0 0 0 1px var(--color-accent);
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  &.selected {
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
+    font-weight: 700;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.cal-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-12);
+}
+
+.cal-today {
+  padding: var(--space-4) var(--space-12);
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: clamp(11px, 0.9vw, 14px);
+  text-decoration: underline;
 }
 
 /* Стрелки по датам: показывают прошлые дни с их рационом. */

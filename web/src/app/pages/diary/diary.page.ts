@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DiaryDay, MealKind, Plan, mealTitles } from '../../core/api.models';
 import { toLocalIso } from '../../core/date';
@@ -11,6 +11,15 @@ interface RingSegment {
   color: string;
   dash: string;
   offset: number;
+}
+
+interface CalendarDay {
+  iso: string;
+  number: number;
+  inMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+  isFuture: boolean;
 }
 
 /**
@@ -43,6 +52,52 @@ export class DiaryPage implements OnInit {
 
   /** Верхняя граница календаря: будущие дни выбирать незачем. */
   protected readonly maxDateIso = toLocalIso(this.startOfToday());
+
+  /** Календарь: открыт/закрыт и какой месяц показан. */
+  protected readonly calendarOpen = signal(false);
+  protected readonly viewMonth = signal<Date>(this.firstOfMonth(this.startOfToday()));
+
+  protected readonly monthLabel = computed(() => {
+    const date = this.viewMonth();
+    const month = date.toLocaleDateString('ru-RU', { month: 'long' });
+
+    return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${date.getFullYear()}`;
+  });
+
+  protected readonly isCurrentMonth = computed(
+    () => this.viewMonth().getTime() >= this.firstOfMonth(this.startOfToday()).getTime(),
+  );
+
+  /** Сетка 6 недель с понедельника, чтобы месяцы не прыгали по высоте. */
+  protected readonly calendarDays = computed<CalendarDay[]>(() => {
+    const first = this.viewMonth();
+    const offset = (first.getDay() + 6) % 7;
+    const start = new Date(first);
+
+    start.setDate(start.getDate() - offset);
+
+    const todayIso = toLocalIso(this.startOfToday());
+    const selectedIso = this.dateIso();
+    const days: CalendarDay[] = [];
+
+    for (let index = 0; index < 42; index += 1) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+
+      const iso = toLocalIso(date);
+
+      days.push({
+        iso,
+        number: date.getDate(),
+        inMonth: date.getMonth() === first.getMonth(),
+        isToday: iso === todayIso,
+        isSelected: iso === selectedIso,
+        isFuture: iso > todayIso,
+      });
+    }
+
+    return days;
+  });
 
   private readonly ringRadius = 46;
   private readonly ringLength = 2 * Math.PI * 46;
@@ -142,25 +197,56 @@ export class DiaryPage implements OnInit {
   }
 
   /** Клик по дате открывает календарь: за неделю-две так быстрее, чем стрелками. */
-  protected openDatePicker(input: HTMLInputElement): void {
-    const picker = input as HTMLInputElement & { showPicker?: () => void };
-
-    if (typeof picker.showPicker === 'function') {
-      picker.showPicker();
-    } else {
-      input.focus();
-      input.click();
-    }
+  protected toggleCalendar(event: MouseEvent): void {
+    event.stopPropagation();
+    this.viewMonth.set(this.firstOfMonth(this.selected()));
+    this.calendarOpen.update((open) => !open);
   }
 
-  protected onDatePicked(value: string): void {
-    if (value === '' || value > this.maxDateIso) {
+  @HostListener('document:click')
+  protected closeCalendar(): void {
+    this.calendarOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected closeCalendarOnEscape(): void {
+    this.calendarOpen.set(false);
+  }
+
+  protected previousMonth(): void {
+    const date = new Date(this.viewMonth());
+    date.setMonth(date.getMonth() - 1);
+    this.viewMonth.set(date);
+  }
+
+  protected nextMonth(): void {
+    if (this.isCurrentMonth()) {
       return;
     }
 
-    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(this.viewMonth());
+    date.setMonth(date.getMonth() + 1);
+    this.viewMonth.set(date);
+  }
 
-    this.selected.set(new Date(year, month - 1, day));
+  protected pickDay(day: CalendarDay, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (day.isFuture) {
+      return;
+    }
+
+    const [year, month, date] = day.iso.split('-').map(Number);
+
+    this.selected.set(new Date(year, month - 1, date));
+    this.calendarOpen.set(false);
+    this.load();
+  }
+
+  protected pickToday(event: MouseEvent): void {
+    event.stopPropagation();
+    this.selected.set(this.startOfToday());
+    this.calendarOpen.set(false);
     this.load();
   }
 
@@ -211,6 +297,10 @@ export class DiaryPage implements OnInit {
     const now = new Date();
 
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  private firstOfMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
   }
 
   private share(value: number, target: number): number {
