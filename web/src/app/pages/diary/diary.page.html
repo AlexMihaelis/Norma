@@ -18,15 +18,81 @@
 
 <header class="day-head">
   <h1>Дневник</h1>
-  <span class="day-date">{{ dateLabel }}</span>
+
+  <div class="day-nav">
+    <button type="button" class="day-arrow" aria-label="Предыдущий день" (click)="previousDay()">‹</button>
+    <span class="day-date">{{ dateLabel() }}</span>
+    <button
+      type="button"
+      class="day-arrow"
+      aria-label="Следующий день"
+      [disabled]="isToday()"
+      (click)="nextDay()"
+    >
+      ›
+    </button>
+
+    @if (!isToday()) {
+      <button type="button" class="day-today" (click)="today()">сегодня</button>
+    }
+  </div>
 </header>
 
-@if (plan(); as planValue) {
-  <p class="day-plan">
-    Цель {{ planValue.targetKcal }} ккал · съедено {{ day()?.totals?.kcal ?? 0 }} ккал ·
-    осталось {{ planValue.targetKcal - (day()?.totals?.kcal ?? 0) }} ккал
-  </p>
-} @else if (planError(); as message) {
+<section class="nutrition">
+  <div class="ring">
+    <svg viewBox="0 0 108 108" aria-hidden="true">
+      <circle class="ring-track" cx="54" cy="54" [attr.r]="46" />
+      @for (segment of ringSegments(); track segment.color) {
+        <circle
+          class="ring-segment"
+          cx="54"
+          cy="54"
+          [attr.r]="46"
+          [attr.stroke]="segment.color"
+          [attr.stroke-dasharray]="segment.dash"
+          [attr.stroke-dashoffset]="segment.offset"
+          transform="rotate(-90 54 54)"
+        />
+      }
+    </svg>
+
+    <div class="ring-center">
+      <strong>{{ formatNumber(eaten()) }}</strong>
+      <span>ккал</span>
+    </div>
+  </div>
+
+  <div class="nutrition-cells">
+    <div class="cell">
+      <span class="cell-label">Цель</span>
+      <span class="cell-value">{{ formatNumber(plan()?.targetKcal) }} ккал</span>
+    </div>
+    <div class="cell">
+      <span class="cell-label">Осталось</span>
+      <span class="cell-value">{{ formatNumber(remainingKcal()) }} ккал</span>
+    </div>
+    <div class="cell">
+      <span class="cell-label">Белки</span>
+      <span class="cell-value">
+        {{ formatNumber(remainingMacros()?.protein) }} / {{ formatNumber(plan()?.macros?.proteinG) }} г
+      </span>
+    </div>
+    <div class="cell">
+      <span class="cell-label">Жиры</span>
+      <span class="cell-value">
+        {{ formatNumber(remainingMacros()?.fat) }} / {{ formatNumber(plan()?.macros?.fatG) }} г
+      </span>
+    </div>
+    <div class="cell">
+      <span class="cell-label">Углеводы</span>
+      <span class="cell-value">
+        {{ formatNumber(remainingMacros()?.carbs) }} / {{ formatNumber(plan()?.macros?.carbsG) }} г
+      </span>
+    </div>
+  </div>
+</section>
+
+@if (!plan() && planError(); as message) {
   <p class="day-plan muted">{{ message }}</p>
 }
 
@@ -69,7 +135,7 @@
 
       @if (openMeal() === meal.kind) {
         <div class="meal-form">
-          <app-add-entry [date]="dateIso" [meal]="meal.kind" (added)="load()" />
+          <app-add-entry [date]="dateIso()" [meal]="meal.kind" (added)="load()" />
         </div>
       }
     </section>
