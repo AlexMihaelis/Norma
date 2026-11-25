@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Plan, Stats, StatsDay } from '../../core/api.models';
 import { toLocalIso } from '../../core/date';
@@ -18,6 +18,14 @@ interface SummaryItem {
   unit: string;
 }
 
+interface ChartDay {
+  iso: string;
+  weekday: string;
+  kcal: number | null;
+  targetKcal: number | null;
+  diffKcal: number | null;
+}
+
 /** Экран статистики: средние, столбцы по дням и таблица дней за период. */
 @Component({
   selector: 'app-stats-page',
@@ -26,6 +34,9 @@ interface SummaryItem {
 })
 export class StatsPage implements OnInit {
   private readonly stats = inject(StatsService);
+
+  /** Лента дней: после загрузки прокручиваем к сегодняшнему дню, а не к началу. */
+  @ViewChild('columnsRef') private columnsRef?: ElementRef<HTMLDivElement>;
 
   protected readonly periods: PeriodOption[] = [
     { days: 7, title: '7 дней' },
@@ -40,8 +51,48 @@ export class StatsPage implements OnInit {
 
   protected readonly days = computed(() => this.data()?.days ?? []);
 
-  /** Для столбцов берем не больше 14 последних дней, иначе они становятся нечитаемыми. */
-  protected readonly barDays = computed(() => this.days().slice(-14));
+  /**
+   * Лента всех дней периода, а не только дней с записями: подписи должны быть
+   * всегда, а пустой день просто без столбца.
+   */
+  protected readonly chartDays = computed<ChartDay[]>(() => {
+    const value = this.data();
+
+    if (!value) {
+      return [];
+    }
+
+    const byDate = new Map(value.days.map((day) => [day.date, day]));
+    const result: ChartDay[] = [];
+    const cursor = new Date(`${value.from}T00:00:00`);
+    const end = new Date(`${value.to}T00:00:00`);
+
+    while (cursor <= end) {
+      const iso = toLocalIso(cursor);
+      const day = byDate.get(iso);
+
+      result.push({
+        iso,
+        weekday: cursor.toLocaleDateString('ru-RU', { weekday: 'short' }),
+        kcal: day?.kcal ?? null,
+        targetKcal: day?.targetKcal ?? null,
+        diffKcal: day?.diffKcal ?? null,
+      });
+
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return result;
+  });
+
+  protected readonly target = computed(() => this.data()?.averages.targetKcal ?? null);
+
+  /** Высота пунктирной линии цели в процентах от шкалы. */
+  protected readonly targetPercent = computed(() => {
+    const target = this.target();
+
+    return target === null ? null : Math.min(100, Math.round((target / this.scale()) * 100));
+  });
 
   protected readonly scale = computed(() => {
     const values = this.days().map((day) => day.kcal);
@@ -89,8 +140,20 @@ export class StatsPage implements OnInit {
       next: ({ stats, plan }) => {
         this.data.set(stats);
         this.plan.set(plan);
+        this.scrollToLatest();
       },
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
+    });
+  }
+
+  /** Столбцы рисуются после смены данных, поэтому прокрутка ждет кадр. */
+  private scrollToLatest(): void {
+    setTimeout(() => {
+      const element = this.columnsRef?.nativeElement;
+
+      if (element) {
+        element.scrollLeft = element.scrollWidth;
+      }
     });
   }
 
@@ -98,12 +161,8 @@ export class StatsPage implements OnInit {
     return Math.max(2, Math.round((kcal / this.scale()) * 100));
   }
 
-  protected isOverTarget(day: StatsDay): boolean {
+  protected isOver(day: ChartDay): boolean {
     return day.diffKcal !== null && day.diffKcal > 0;
-  }
-
-  protected weekday(iso: string): string {
-    return new Date(iso).toLocaleDateString('ru-RU', { weekday: 'short' });
   }
 
   protected formatDate(iso: string): string {

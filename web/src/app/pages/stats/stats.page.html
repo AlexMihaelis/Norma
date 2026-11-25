@@ -41,25 +41,38 @@
   <section class="card bars-card">
     <div class="card-head">
       <h2>Калории по дням</h2>
-      @if (value.averages.targetKcal; as target) {
-        <span class="card-meta">цель {{ formatNumber(target) }}</span>
+      @if (target(); as targetKcal) {
+        <span class="card-meta">цель {{ formatNumber(targetKcal) }}</span>
       }
     </div>
 
-    <div class="bars">
-      @for (day of barDays(); track day.date) {
-        <div class="bar-col">
-          <span class="bar-value">{{ formatNumber(day.kcal) }}</span>
-          <div class="bar-track">
-            <span
-              class="bar"
-              [class.over]="isOverTarget(day)"
-              [style.height.%]="barHeight(day.kcal)"
-            ></span>
-          </div>
-          <span class="bar-day">{{ weekday(day.date) }}</span>
+    <div class="chart">
+      <div class="plot">
+        @if (targetPercent(); as percent) {
+          <div class="target-line" [style.bottom.%]="percent"></div>
+          <span class="target-label" [style.bottom.%]="percent">{{ formatNumber(target()) }}</span>
+        }
+
+        <div #columnsRef class="columns">
+          @for (day of chartDays(); track day.iso) {
+            <div class="column">
+              <span class="bar-value">{{ day.kcal === null ? '' : formatNumber(day.kcal) }}</span>
+
+              <div class="bar-track">
+                @if (day.kcal !== null) {
+                  <span
+                    class="bar"
+                    [class.over]="isOver(day)"
+                    [style.height.%]="barHeight(day.kcal)"
+                  ></span>
+                }
+              </div>
+
+              <span class="bar-day">{{ day.weekday }}</span>
+            </div>
+          }
         </div>
-      }
+      </div>
     </div>
   </section>
 
