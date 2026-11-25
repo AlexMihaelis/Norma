@@ -32,11 +32,7 @@ export class DiaryPage implements OnInit {
 
   protected readonly today = new Date();
   protected readonly dateIso = this.today.toISOString().slice(0, 10);
-  protected readonly dateLabel = this.today.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    weekday: 'long',
-  });
+  protected readonly dateLabel = this.formatDateLabel(this.today);
 
   ngOnInit(): void {
     this.load();
@@ -85,6 +81,14 @@ export class DiaryPage implements OnInit {
 
   protected unitLabel(unit: 'Gram' | 'Milliliter'): string {
     return unit === 'Milliliter' ? 'мл' : 'г';
+  }
+
+  /** «Среда, 25 ноября»: день недели в макете с большой буквы. */
+  private formatDateLabel(date: Date): string {
+    const weekday = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+    const rest = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+
+    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${rest}`;
   }
 
   protected progressPercent(): number {

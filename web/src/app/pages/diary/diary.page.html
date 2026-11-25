@@ -16,75 +16,59 @@
   </section>
 }
 
-<section class="card day">
-  <h1>Сегодня, {{ dateLabel }}</h1>
+<header class="day-head">
+  <h1>Дневник</h1>
+  <span class="day-date">{{ dateLabel }}</span>
+</header>
 
-  @if (plan(); as planValue) {
-    <p class="muted">
-      Цель: <strong>{{ planValue.targetKcal }}</strong> ккал · Б {{ planValue.macros.proteinG }} ·
-      Ж {{ planValue.macros.fatG }} · У {{ planValue.macros.carbsG }}
-    </p>
-  } @else if (planError(); as message) {
-    <p class="muted">{{ message }}</p>
-  }
-
-  @if (day(); as dayValue) {
-    <p class="eaten">
-      Съедено: <strong>{{ dayValue.totals.kcal }}</strong> ккал
-      @if (plan()) {
-        <span class="muted">({{ progressPercent() }}% цели)</span>
-      }
-    </p>
-
-    <div class="bar"><span [style.width.%]="progressPercent()"></span></div>
-  }
-</section>
+@if (plan(); as planValue) {
+  <p class="day-plan">
+    Цель {{ planValue.targetKcal }} ккал · съедено {{ day()?.totals?.kcal ?? 0 }} ккал ·
+    осталось {{ planValue.targetKcal - (day()?.totals?.kcal ?? 0) }} ккал
+  </p>
+} @else if (planError(); as message) {
+  <p class="day-plan muted">{{ message }}</p>
+}
 
 @if (day(); as dayValue) {
   @for (meal of dayValue.meals; track meal.kind) {
-    <section class="card meal" [class.open]="openMeal() === meal.kind">
-      <button type="button" class="meal-head" (click)="toggle(meal.kind)">
+    <section class="meal">
+      <div class="meal-head">
         <span class="meal-title">{{ titles[meal.kind] }}</span>
 
-        <span class="meal-meta">
-          @if (meal.items.length > 0) {
-            <span>{{ meal.totals.kcal }} ккал · Б {{ meal.totals.protein }} · Ж {{ meal.totals.fat }} · У {{ meal.totals.carbs }}</span>
-          } @else {
-            <span class="muted">пусто</span>
+        @if (meal.items.length > 0) {
+          <span class="meal-total">{{ meal.totals.kcal }} ккал</span>
+        }
+
+        <button
+          type="button"
+          class="plus"
+          [attr.aria-label]="'Добавить в ' + titles[meal.kind]"
+          [class.open]="openMeal() === meal.kind"
+          (click)="toggle(meal.kind)"
+        >
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+
+      @if (meal.items.length > 0) {
+        <div class="meal-rows">
+          @for (item of meal.items; track item.id) {
+            <div class="meal-row">
+              <span class="row-name">{{ item.foodName }}</span>
+              <span class="row-qty">{{ item.quantity }} {{ unitLabel(item.unit) }}</span>
+              <span class="row-kcal">{{ item.kcal }} ккал</span>
+              <button type="button" class="row-remove" title="Удалить позицию" (click)="remove(item.id)">
+                ×
+              </button>
+            </div>
           }
-          <span class="chevron">{{ openMeal() === meal.kind ? '−' : '+' }}</span>
-        </span>
-      </button>
+        </div>
+      }
 
       @if (openMeal() === meal.kind) {
-        <div class="meal-body">
-          @if (meal.items.length > 0) {
-            <ul class="items">
-              @for (item of meal.items; track item.id) {
-                <li>
-                  <span class="item-head">
-                    <span>{{ item.foodName }}</span>
-                    <button
-                      type="button"
-                      class="remove"
-                      title="Удалить позицию"
-                      (click)="remove(item.id)"
-                    >
-                      Удалить
-                    </button>
-                  </span>
-                  <span class="muted">
-                    {{ item.quantity }} {{ unitLabel(item.unit) }} · {{ item.kcal }} ккал ·
-                    Б {{ item.protein }} · Ж {{ item.fat }} · У {{ item.carbs }}
-                  </span>
-                </li>
-              }
-            </ul>
-            <p class="muted">Итого за {{ titles[meal.kind].toLowerCase() }}: {{ meal.totals.kcal }} ккал</p>
-          } @else {
-            <p class="muted">Пока ничего не добавлено.</p>
-          }
-
+        <div class="meal-form">
           <app-add-entry [date]="dateIso" [meal]="meal.kind" (added)="load()" />
         </div>
       }
