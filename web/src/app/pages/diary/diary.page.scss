@@ -14,9 +14,38 @@
   }
 }
 
+.date-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
 .day-date {
+  padding: 0 var(--space-4);
+  border: none;
+  background: none;
   font-size: clamp(12px, 0.97vw, 17px);
   color: var(--color-text-muted);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: var(--color-text);
+    text-decoration-color: currentColor;
+  }
+}
+
+/* Нативный календарь: поле спрятано, но не display:none, иначе showPicker не работает. */
+.date-native {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Стрелки по датам: показывают прошлые дни с их рационом. */

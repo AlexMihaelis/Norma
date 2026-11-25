@@ -21,7 +21,27 @@
 
   <div class="day-nav">
     <button type="button" class="day-arrow" aria-label="Предыдущий день" (click)="previousDay()">‹</button>
-    <span class="day-date">{{ dateLabel() }}</span>
+
+    <span class="date-wrap">
+      <button
+        type="button"
+        class="day-date"
+        title="Выбрать дату в календаре"
+        (click)="openDatePicker(dateInput)"
+      >
+        {{ dateLabel() }}
+      </button>
+
+      <input
+        #dateInput
+        type="date"
+        class="date-native"
+        [value]="dateIso()"
+        [attr.max]="maxDateIso"
+        (change)="onDatePicked($any($event.target).value)"
+      />
+    </span>
+
     <button
       type="button"
       class="day-arrow"

@@ -41,6 +41,9 @@ export class DiaryPage implements OnInit {
   protected readonly dateLabel = computed(() => this.formatDateLabel(this.selected()));
   protected readonly isToday = computed(() => this.dateIso() === toLocalIso(this.startOfToday()));
 
+  /** Верхняя граница календаря: будущие дни выбирать незачем. */
+  protected readonly maxDateIso = toLocalIso(this.startOfToday());
+
   private readonly ringRadius = 46;
   private readonly ringLength = 2 * Math.PI * 46;
 
@@ -135,6 +138,29 @@ export class DiaryPage implements OnInit {
     const date = new Date(this.selected());
     date.setDate(date.getDate() - 1);
     this.selected.set(date);
+    this.load();
+  }
+
+  /** Клик по дате открывает календарь: за неделю-две так быстрее, чем стрелками. */
+  protected openDatePicker(input: HTMLInputElement): void {
+    const picker = input as HTMLInputElement & { showPicker?: () => void };
+
+    if (typeof picker.showPicker === 'function') {
+      picker.showPicker();
+    } else {
+      input.focus();
+      input.click();
+    }
+  }
+
+  protected onDatePicked(value: string): void {
+    if (value === '' || value > this.maxDateIso) {
+      return;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+
+    this.selected.set(new Date(year, month - 1, day));
     this.load();
   }
 
