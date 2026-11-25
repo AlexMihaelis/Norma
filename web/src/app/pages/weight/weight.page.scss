@@ -1,149 +1,323 @@
-.row {
+.page-head {
+  margin: 0 0 var(--space-16);
+
+  h1 {
+    margin: 0;
+    font-size: clamp(22px, 1.95vw, 32px);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text);
+  }
+}
+
+.card {
+  box-shadow: none;
+  padding: clamp(var(--space-16), 1.4vw, var(--space-24));
+  margin-bottom: var(--space-20);
+}
+
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-16);
+  margin-bottom: var(--space-12);
+
+  h2 {
+    margin: 0;
+    font-size: clamp(13px, 1.04vw, 17px);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.card-meta {
+  font-size: clamp(10px, 0.83vw, 14px);
+  color: var(--color-text-muted);
+}
+
+.chart-card app-weight-chart {
+  display: block;
+  height: clamp(140px, 11vw, 190px);
+}
+
+.head-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: inherit;
+}
+
+.inline-form {
+  margin-top: var(--space-12);
+  padding-top: var(--space-12);
+  border-top: 1px solid var(--color-border);
+}
+
+.form-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: var(--space-12);
 
   label {
-    flex: 1 1 160px;
+    flex: 1 1 150px;
   }
 }
 
-.big {
-  margin: 0.5rem 0 1rem;
-  font-size: 2rem;
+/* Итоги: три колонки, как в макете - Сейчас, Изменение, Цель. */
+.totals-card {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-16);
+  min-height: clamp(84px, 7vw, 110px);
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.total-label {
+  font-size: clamp(10px, 0.83vw, 14px);
+  color: var(--color-text-muted);
+}
+
+.total-value {
+  font-size: clamp(18px, 1.5vw, 24px);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.total-unit {
+  font-size: clamp(10px, 0.83vw, 14px);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.total-note {
+  font-size: clamp(9px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Замеры тела: шесть ячеек в ряд, как в макете. */
+.body-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-12);
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid var(--color-track);
+}
+
+.body-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.body-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: clamp(9px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.body-value {
+  font-size: clamp(16px, 1.4vw, 22px);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.body-unit {
+  font-size: clamp(10px, 0.83vw, 13px);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.body-note {
+  font-size: clamp(9px, 0.7vw, 12px);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.good {
+    color: var(--color-accent);
+  }
+}
+
+.body-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  padding-top: var(--space-12);
+}
+
+.outline-button {
+  height: 40px;
+  padding: 0 var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-accent);
+  font-size: clamp(11px, 0.9vw, 14px);
   font-weight: 700;
 
-  .muted {
-    font-size: 0.9rem;
-    font-weight: 400;
+  &:hover {
+    background: var(--color-track);
   }
 }
 
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin: 0 0 1.5rem;
-
-  dt {
-    color: #6b7280;
-    font-size: 0.85rem;
-  }
-
-  dd {
-    margin: 0.15rem 0 0;
-    font-weight: 600;
-  }
-}
-
-.badge {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.05rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-
-  &.low {
-    background: #eff6ff;
-    color: #1d4ed8;
-  }
-
-  &.normal {
-    background: #f0fdf4;
-    color: #15803d;
-  }
-
-  &.high {
-    background: #fefce8;
-    color: #a16207;
-  }
-
-  &.veryhigh {
-    background: #fef2f2;
-    color: #b91c1c;
-  }
-
-  &.neutral {
-    background: #f3f4f6;
-    color: #4b5563;
-  }
-}
-
-.zones {
-  margin: 1.25rem 0;
-
-  h3 {
-    margin: 0 0 0.4rem;
-    font-size: 1rem;
-  }
-
-  .small {
-    margin: 0.35rem 0 0;
-  }
-}
-
-.facts .zone {
-  grid-column: 1 / -1;
-  margin: -0.25rem 0 0.75rem;
-}
-
-h3 {
-  font-size: 1rem;
-}
-
-.chart {
+.body-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-12);
   width: 100%;
-  height: 120px;
-  display: block;
+
+  label {
+    flex: 1 1 120px;
+  }
 }
 
-.entries {
+.body-form select {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-8);
+  font: inherit;
+  background: var(--color-surface);
+}
+
+/* История веса: строка дата - вес - изменение - изменить. */
+.history {
   list-style: none;
   margin: 0;
   padding: 0;
+}
 
-  li {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f5f9;
+.history-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 70px 80px;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
+  border-bottom: 1px solid var(--color-track);
+  font-size: clamp(11px, 0.9vw, 15px);
 
-    > span:first-child {
-      flex: 1;
-    }
+  &:last-child {
+    border-bottom: none;
   }
 }
 
-.edit-row {
+.history-date {
+  color: var(--color-text-muted);
+}
+
+.history-kg {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.history-unit {
+  font-size: clamp(9px, 0.76vw, 12px);
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.history-delta {
+  color: var(--color-text-muted);
+  font-size: clamp(10px, 0.83vw, 13px);
+
+  &.good {
+    color: var(--color-accent);
+  }
+}
+
+.history-edit-link {
+  justify-self: end;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: clamp(10px, 0.83vw, 13px);
+
+  &:hover {
+    color: var(--color-accent);
+  }
+}
+
+.history-edit {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  width: 100%;
+  gap: var(--space-8);
+  grid-column: 1 / -1;
 
   input {
     width: auto;
-    flex: 0 1 120px;
+    flex: 0 1 110px;
   }
 }
 
-.link {
-  background: none;
-  border: none;
-  color: #2f855a;
-  padding: 0;
-  font-size: 0.9rem;
-  text-decoration: underline;
+/* Зоны ИМТ: оставили под макетными блоками, цвета из токенов. */
+.zones-card h2 {
+  font-size: clamp(13px, 1.04vw, 17px);
+}
+
+.zones {
+  margin-top: var(--space-12);
+
+  h3 {
+    display: flex;
+    align-items: center;
+    margin: 0 0 var(--space-4);
+    font-size: clamp(11px, 0.9vw, 15px);
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .small {
+    margin: var(--space-4) 0 0;
+  }
 }
 
 .ok {
-  color: #166534;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  padding: 0.6rem 0.75rem;
-  border-radius: 8px;
+  color: var(--color-accent);
+  font-size: clamp(11px, 0.9vw, 14px);
+}
+
+@media (max-width: 760px) {
+  .body-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: var(--space-16);
+  }
+
+  .totals-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+
+  .history-row {
+    grid-template-columns: minmax(0, 1fr) 70px 60px;
+
+    .history-edit-link {
+      grid-column: 3;
+      justify-self: end;
+    }
+  }
 }

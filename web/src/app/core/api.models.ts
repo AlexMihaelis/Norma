@@ -195,6 +195,34 @@ export interface WaterDay {
   disclaimer: string;
 }
 
+/** Виды обхватов тела; порядок совпадает с перечислением в API. */
+export type BodyMeasurementKind = 'Chest' | 'Waist' | 'Hips' | 'Thigh' | 'Shoulder' | 'Calf';
+
+export const bodyMeasurementTitles: Record<BodyMeasurementKind, string> = {
+  Chest: 'Грудь',
+  Waist: 'Талия',
+  Hips: 'Бедра',
+  Thigh: 'Бедро',
+  Shoulder: 'Плечо',
+  Calf: 'Икра',
+};
+
+export interface BodyMeasurementLatest {
+  kind: BodyMeasurementKind;
+  date: string;
+  cm: number;
+  previousDate: string | null;
+  previousCm: number | null;
+  deltaCm: number | null;
+}
+
+export interface BodyMeasurement {
+  id: string;
+  date: string;
+  kind: BodyMeasurementKind;
+  cm: number;
+}
+
 export interface WeightEntry {
   id: string;
   date: string;

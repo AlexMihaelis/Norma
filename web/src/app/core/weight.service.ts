@@ -2,9 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { WeightEntry, WeightList, WeightTrend } from './api.models';
+import {
+  BodyMeasurement,
+  BodyMeasurementKind,
+  BodyMeasurementLatest,
+  WeightEntry,
+  WeightList,
+  WeightTrend,
+} from './api.models';
 
-/** Вес: список замеров, запись нового и тренд с ИМТ. */
+/** Вес и обхваты тела: замеры, тренд, последние обхваты. */
 @Injectable({ providedIn: 'root' })
 export class WeightService {
   private readonly http = inject(HttpClient);
@@ -24,5 +31,13 @@ export class WeightService {
   /** Исправить существующий замер: опечатку в весе или дату. */
   update(id: string, kg: number, date: string): Observable<WeightEntry> {
     return this.http.put<WeightEntry>(`${environment.apiUrl}/weight/${id}`, { kg, date });
+  }
+
+  latestBodyMeasurements(): Observable<BodyMeasurementLatest[]> {
+    return this.http.get<BodyMeasurementLatest[]>(`${environment.apiUrl}/body-measurements/latest`);
+  }
+
+  addBodyMeasurement(kind: BodyMeasurementKind, cm: number, date: string): Observable<BodyMeasurement> {
+    return this.http.post<BodyMeasurement>(`${environment.apiUrl}/body-measurements`, { kind, cm, date });
   }
 }

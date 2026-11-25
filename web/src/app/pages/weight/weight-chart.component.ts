@@ -38,9 +38,10 @@ export class WeightChartComponent {
   }
 
   protected readonly points = computed<ChartPoint[]>(() => {
-    const sorted = [...this.entries()].sort(
-      (left, right) => left.date.localeCompare(right.date) || left.id.localeCompare(right.id),
-    );
+    // Окно графика - последние 30 замеров, как подписано в макете.
+    const sorted = [...this.entries()]
+      .sort((left, right) => left.date.localeCompare(right.date) || left.id.localeCompare(right.id))
+      .slice(-30);
 
     if (sorted.length === 0) {
       return [];
@@ -76,6 +77,19 @@ export class WeightChartComponent {
       .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
       .join(' '),
   );
+
+  /** Заливка под линией, как в макете: от первой точки до последней. */
+  protected readonly area = computed(() => {
+    const points = this.points();
+
+    if (points.length < 2) {
+      return '';
+    }
+
+    const body = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' L ');
+
+    return `M ${points[0].x.toFixed(1)},100 L ${body} L ${points[points.length - 1].x.toFixed(1)},100 Z`;
+  });
 
   protected readonly selectedPoint = computed(() => {
     const index = this.selected();
