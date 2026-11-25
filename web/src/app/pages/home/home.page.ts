@@ -25,6 +25,7 @@ interface RingSegment {
 }
 
 interface SparklinePoint {
+  id: string;
   x: number;
   y: number;
   kg: number;
@@ -156,6 +157,7 @@ export class HomePage implements OnInit {
     const span = max - min || 1;
 
     const points: SparklinePoint[] = entries.map((entry, index) => ({
+      id: entry.id,
       x: entries.length === 1 ? 198 : (index / (entries.length - 1)) * 396,
       y: 6 + (1 - (entry.kg - min) / span) * 136,
       kg: entry.kg,

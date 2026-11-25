@@ -44,7 +44,7 @@
         <polyline [attr.points]="sparkline().polyline" class="line" />
       }
 
-      @for (point of sparkline().points; track point.date) {
+      @for (point of sparkline().points; track point.id) {
         <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3" class="dot" />
       }
     </svg>

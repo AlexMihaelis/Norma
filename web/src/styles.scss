@@ -21,11 +21,15 @@ body {
   line-height: 1.5;
 }
 
-/* 720 px контента из макета: 768 = 720 + два отступа по 24. */
+/*
+ * Контейнер как в макете (720 при 1440), но тянется за монитором:
+ * на большом экране чуть шире, на маленьком - уже, на мобильном - во всю ширину.
+ */
 .page {
-  max-width: 768px;
+  width: clamp(680px, 50vw, 1080px);
+  max-width: calc(100% - 2 * var(--space-16));
   margin: 0 auto;
-  padding: var(--space-24);
+  padding: clamp(var(--space-16), 1.7vw, var(--space-32));
 }
 
 .card {
@@ -100,17 +104,18 @@ body {
   font-weight: 700;
   font-size: 19px;
 
-  /* Листок в углу знака, как в макете: без картинки, только CSS. */
+  /* Листок из макета: белый, лежит на верхнем правом углу знака и выступает за него. */
   &::after {
     content: '';
     position: absolute;
-    top: 5px;
-    right: 5px;
-    width: 6px;
-    height: 9px;
+    top: -5px;
+    right: -6px;
+    width: 15px;
+    height: 15px;
     background: var(--color-text-inverse);
-    border-radius: 0 70% 0 70%;
-    transform: rotate(20deg);
+    border-radius: 2px 100% 2px 100%;
+    transform: rotate(-18deg);
+    box-shadow: inset -2px -2px 0 0 rgb(47 133 90 / 35%);
   }
 }
 
