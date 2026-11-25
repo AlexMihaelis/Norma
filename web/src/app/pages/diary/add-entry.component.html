@@ -1,66 +1,61 @@
-<section class="card add">
-  <h2>Добавить еду</h2>
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
 
-  <div class="field product">
-    <label>
-      Продукт
-      <input
-        [value]="query()"
-        (input)="onQuery($any($event.target).value)"
-        placeholder="начните вводить название, например «гречка»"
-      />
-    </label>
+<div class="search">
+  <label>
+    Продукт
+    <input
+      [value]="query()"
+      (input)="onQuery($any($event.target).value)"
+      (keydown.enter)="searchNow()"
+      placeholder="например, молоко или гречка"
+    />
+  </label>
 
-    @if (results().length > 0) {
-      <ul class="suggestions">
-        @for (food of results(); track food.id) {
-          <li>
-            <button type="button" class="suggestion" (click)="pick(food)">
-              <span>{{ food.name }}</span>
-              <span class="muted">
-                {{ food.kcalPer100g }} ккал/100
-                {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}
-              </span>
-            </button>
-          </li>
-        }
-      </ul>
-    }
-
-    @if (noResults()) {
-      <p class="muted small">
-        Ничего не найдено. Проверь название или поищи по другому слову: база пока небольшая.
-      </p>
-    }
-  </div>
-
-  @if (selected(); as food) {
-    <p class="picked">
-      Выбрано: <strong>{{ food.name }}</strong>
-      <span class="muted">
-        ({{ food.kcalPer100g }} ккал/100 {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }})
-      </span>
+  @if (results().length > 0) {
+    <ul class="found">
+      @for (food of results(); track food.id) {
+        <li>
+          <button type="button" class="found-row" (click)="pick(food)">
+            <span class="found-name">{{ food.name }}</span>
+            <span class="muted">
+              {{ food.kcalPer100g }} ккал/100 {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }} ·
+              Б {{ food.proteinPer100g }} · Ж {{ food.fatPer100g }} · У {{ food.carbsPer100g }}
+            </span>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else if (searched()) {
+    <p class="muted small">
+      Ничего не найдено. Попробуй другое слово - в каталоге ~70 базовых продуктов.
     </p>
   }
+</div>
+
+@if (selected(); as food) {
+  <div class="picked">
+    <div>
+      <strong>{{ food.name }}</strong>
+      <span class="muted">
+        {{ food.kcalPer100g }} ккал/100 {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}
+      </span>
+    </div>
+    <button type="button" class="link" (click)="clearSelection()">другой продукт</button>
+  </div>
 
   <div class="row">
-    <label>
-      Прием
-      <select [value]="meal()" (change)="meal.set($any($event.target).value)">
-        @for (kind of mealKinds; track kind) {
-          <option [value]="kind">{{ titles[kind] }}</option>
-        }
-      </select>
-    </label>
-
     <label>
       Количество, {{ unitLabel() }}
       <input
         type="number"
-        min="1"
-        step="1"
+        min="0.1"
+        max="5000"
+        step="0.1"
+        inputmode="decimal"
         [value]="quantity()"
-        (input)="quantity.set(+$any($event.target).value)"
+        (input)="onQuantityInput($any($event.target).value)"
       />
     </label>
 
@@ -68,8 +63,4 @@
       {{ busy() ? 'Сохраняю…' : 'Добавить' }}
     </button>
   </div>
-
-  @if (error(); as message) {
-    <p class="error">{{ message }}</p>
-  }
-</section>
+}

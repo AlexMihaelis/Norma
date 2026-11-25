@@ -3,6 +3,11 @@
 }
 
 <section class="card">
+  <h2>Вес по замерам</h2>
+  <app-weight-chart [entries]="entries()" (picked)="onPicked($event)" />
+</section>
+
+<section class="card">
   <h2>Добавить замер</h2>
 
   @if (saved()) {
@@ -24,18 +29,34 @@
 
 @if (trend(); as value) {
   <section class="card">
-    <h2>Тренд</h2>
+    <h2>
+      Тренд
+      <span class="hint" data-tip="Считается по всем замерам: сглаженная кривая показывает направление, скорость - насколько быстро меняется вес, прогноз - когда дойдешь до цели из профиля.">?</span>
+    </h2>
 
-    @if (value.currentEmaKg !== null) {
+    @if (displayKg() !== null) {
       <p class="big">
-        {{ format(value.currentEmaKg) }} кг
-        <span class="muted">сглаженный вес</span>
+        {{ format(displayKg()) }} кг
+        <span class="muted">
+          {{ selectedEntry() ? 'замер от ' + formatDate(displayDate()) : 'текущий вес' }}
+        </span>
       </p>
+
+      @if (selectedEntry() === null && value.currentEmaKg !== null) {
+        <p class="muted small">сглаженный вес: {{ format(value.currentEmaKg) }} кг</p>
+      }
+
+      @if (selectedEntry() !== null) {
+        <button type="button" class="link" (click)="clearSelection()">вернуться к текущему весу</button>
+      }
     }
 
-    <dl class="facts">
+    <div class="facts">
       <div>
-        <dt>Скорость</dt>
+        <dt>
+          Скорость
+          <span class="hint" data-tip="Средний наклон веса за последние две недели, кг в неделю. Пока история короткая, не показываем - цифра была бы случайной.">?</span>
+        </dt>
         <dd>
           @if (value.rateKgPerWeek !== null) {
             {{ value.rateKgPerWeek > 0 ? '+' : '' }}{{ format(value.rateKgPerWeek, 2) }} кг/нед
@@ -45,7 +66,10 @@
         </dd>
       </div>
       <div>
-        <dt>Цель</dt>
+        <dt>
+          Цель
+          <span class="hint" data-tip="Желаемый вес из профиля. На норму калорий он не влияет - нужен, чтобы показать прогноз даты.">?</span>
+        </dt>
         <dd>
           @if (value.targetKg !== null) {
             {{ format(value.targetKg) }} кг
@@ -55,17 +79,24 @@
         </dd>
       </div>
       <div>
-        <dt>Прогноз даты цели</dt>
+        <dt>
+          Прогноз даты цели
+          <span class="hint" data-tip="Дата, когда текущая скорость приведет к желаемому весу. Это прогноз, а не обещание: темп меняется вместе с питанием и активностью.">?</span>
+        </dt>
         <dd>{{ formatDate(value.goalDate) }}</dd>
       </div>
+
       <div>
-        <dt>ИМТ</dt>
+        <dt>
+          ИМТ
+          <span class="hint" data-tip="Индекс массы тела: вес / рост². Пороги ВОЗ 18.5, 25 и 30; после 65 лет норма сдвигается к 22-27.">?</span>
+        </dt>
         <dd>
-          @if (value.bmi !== null) {
-            {{ format(value.bmi) }}
-            @if (value.bmiCategory !== null) {
-              <span class="badge" [class]="bmiClass(value.bmiCategory)">
-                {{ bmiTitles[value.bmiCategory] }}
+          @if (displayBmi() !== null) {
+            {{ format(displayBmi()) }}
+            @if (displayBmiCategory(); as category) {
+              <span class="badge" [class]="bmiClass(category)">
+                {{ bmiTitles[category] }}
               </span>
             }
           } @else {
@@ -73,8 +104,20 @@
           }
         </dd>
       </div>
+
+      <div class="zone">
+        @if (bmiBoundaries(); as boundaries) {
+          <app-zone-scale [value]="displayBmi()" [boundaries]="boundaries" [labels]="bmiZoneLabels" />
+        } @else {
+          <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
+        }
+      </div>
+
       <div>
-        <dt>Норма веса</dt>
+        <dt>
+          Норма веса
+          <span class="hint" data-tip="18.5-25 по ИМТ для 18-64 лет; после 65 - 22-27, это ориентир для пожилых, а не классификация ВОЗ.">?</span>
+        </dt>
         <dd>
           @if (value.normalWeight; as normal) {
             {{ format(normal.minKg) }}–{{ format(normal.maxKg) }} кг
@@ -83,15 +126,19 @@
           }
         </dd>
       </div>
-    </dl>
 
-    @if (chart(); as polyline) {
-      <svg class="chart" viewBox="0 0 100 40" preserveAspectRatio="none" role="img" aria-label="Тренд веса">
-        <polyline [attr.points]="polyline" fill="none" stroke="#2f855a" stroke-width="1.5" />
-      </svg>
-    } @else {
-      <p class="muted">Для графика нужно хотя бы два замера.</p>
-    }
+      <div class="zone">
+        @if (weightBoundaries(); as boundaries) {
+          <app-zone-scale
+            [value]="displayKg()"
+            [boundaries]="boundaries"
+            [labels]="weightZoneLabels"
+          />
+        } @else {
+          <p class="muted small">Нужен рост в профиле, чтобы посчитать границы.</p>
+        }
+      </div>
+    </div>
   </section>
 }
 
@@ -101,11 +148,35 @@
   @if (entries().length === 0) {
     <p class="muted">Замеров пока нет.</p>
   } @else {
+    @if (editError(); as message) {
+      <p class="error">{{ message }}</p>
+    }
+
     <ul class="entries">
       @for (entry of entries(); track entry.id) {
         <li>
-          <span>{{ formatDate(entry.date) }}</span>
-          <strong>{{ format(entry.kg) }} кг</strong>
+          @if (editingId() === entry.id) {
+            <div class="edit-row">
+              <input
+                type="number"
+                min="20"
+                max="500"
+                step="0.1"
+                inputmode="decimal"
+                [value]="editKg() ?? ''"
+                (input)="onEditKg($any($event.target).value)"
+              />
+              <input type="date" [value]="editDate()" (input)="editDate.set($any($event.target).value)" />
+              <button type="button" (click)="saveEdit()" [disabled]="editBusy()">
+                {{ editBusy() ? 'Сохраняю…' : 'Сохранить' }}
+              </button>
+              <button type="button" class="link" (click)="cancelEdit()">Отмена</button>
+            </div>
+          } @else {
+            <span>{{ formatDate(entry.date) }}</span>
+            <strong>{{ format(entry.kg) }} кг</strong>
+            <button type="button" class="link" (click)="startEdit(entry)">Изменить</button>
+          }
         </li>
       }
     </ul>

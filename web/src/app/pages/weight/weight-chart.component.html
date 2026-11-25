@@ -1,0 +1,37 @@
+@if (points().length === 0) {
+  <p class="muted">Для графика нужен хотя бы один замер.</p>
+} @else {
+  <div class="chart-wrap">
+    <svg class="chart" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <polyline
+        [attr.points]="polyline()"
+        fill="none"
+        stroke="#2f855a"
+        stroke-width="1.5"
+        vector-effect="non-scaling-stroke"
+      />
+    </svg>
+
+    @for (point of points(); track point.entry.id) {
+      <button
+        type="button"
+        class="dot"
+        [class.active]="selected() === point.index"
+        [style.left.%]="point.x"
+        [style.top.%]="point.y"
+        [attr.title]="formatDateLong(point.entry.date) + ': ' + formatKg(point.entry.kg) + ' кг'"
+        (click)="toggle(point.index)"
+      ></button>
+    }
+  </div>
+
+  @if (selectedPoint(); as point) {
+    <p class="picked">
+      <strong>{{ formatDateLong(point.entry.date) }}</strong>:
+      {{ formatKg(point.entry.kg) }} кг
+      <span class="muted">({{ deltaLabel(point.deltaKg) }})</span>
+    </p>
+  } @else {
+    <p class="muted small">Нажми на точку, чтобы увидеть вес за эту дату.</p>
+  }
+}

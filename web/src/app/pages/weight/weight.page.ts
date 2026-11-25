@@ -9,12 +9,14 @@ import {
   bmiCategoryTitles,
 } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
+import { WeightChartComponent } from './weight-chart.component';
 import { WeightService } from '../../core/weight.service';
+import { ZoneScaleComponent } from './zone-scale.component';
 
-/** Экран веса: запись замера, тренд, прогноз цели и ИМТ. */
+/** Экран веса: запись замера, тренд, зоны веса и ИМТ, прогноз цели. */
 @Component({
   selector: 'app-weight-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, WeightChartComponent, ZoneScaleComponent],
   templateUrl: './weight.page.html',
   styleUrl: './weight.page.scss',
 })
@@ -30,32 +32,154 @@ export class WeightPage implements OnInit {
   protected readonly bmiTitles = bmiCategoryTitles;
   protected readonly today = new Date().toISOString().slice(0, 10);
 
+  protected readonly zoneColors = ['#60a5fa', '#22c55e', '#f59e0b', '#dc2626'];
+  protected readonly weightZoneLabels = [
+    'Недостаток веса',
+    'Нормальный',
+    'Избыток веса',
+    'Ожирение',
+  ] as const;
+  protected readonly bmiZoneLabels = [
+    'Низкий',
+    'Нормальный',
+    'Высокий',
+    'Очень высокий',
+  ] as const;
+
   protected readonly form = new FormGroup({
     kg: new FormControl<number | null>(null),
     date: new FormControl(this.today),
   });
 
-  /** Полилиния тренда: 100x40, по оси Y - диапазон веса, по X - дни. */
-  protected readonly chart = computed(() => {
-    const points = this.trend()?.points ?? [];
+  /** Текущий вес - самый свежий замер; по нему ставим маркер на шкале. */
+  protected readonly currentKg = computed(() => this.entries()[0]?.kg ?? null);
 
-    if (points.length < 2) {
+  /** Выбранная точка графика: показатели переключаются на этот замер. */
+  protected readonly selectedEntry = signal<WeightEntry | null>(null);
+
+  protected readonly editingId = signal<string | null>(null);
+  protected readonly editKg = signal<number | null>(null);
+  protected readonly editDate = signal('');
+  protected readonly editBusy = signal(false);
+  protected readonly editError = signal<string | null>(null);
+
+  /** Вес, который показываем: выбранный замер или последний. */
+  protected readonly displayKg = computed(() => this.selectedEntry()?.kg ?? this.currentKg());
+
+  protected readonly displayDate = computed(
+    () => this.selectedEntry()?.date ?? this.entries()[0]?.date ?? null,
+  );
+
+  /** ИМТ для показанного веса: при клике по истории считается по тому весу. */
+  protected readonly displayBmi = computed<number | null>(() => {
+    const heightCm = this.trend()?.heightCm;
+    const kg = this.displayKg();
+
+    if (!heightCm || kg === null) {
       return null;
     }
 
-    const values = points.map((point) => point.emaKg);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const span = max - min || 1;
+    return kg / (heightCm / 100) ** 2;
+  });
 
-    return points
-      .map((point, index) => {
-        const x = (index / (points.length - 1)) * 100;
-        const y = 40 - ((point.emaKg - min) / span) * 36 - 2;
+  protected readonly displayBmiCategory = computed<BmiCategory | null>(() => {
+    const bmi = this.displayBmi();
+    const normal = this.trend()?.normalWeight;
 
-        return `${x.toFixed(1)},${y.toFixed(1)}`;
-      })
-      .join(' ');
+    if (bmi === null || !normal) {
+      return null;
+    }
+
+    return bmi < normal.bmiMin
+      ? 'Low'
+      : bmi < normal.bmiMax
+        ? 'Normal'
+        : bmi < 30
+          ? 'High'
+          : 'VeryHigh';
+  });
+
+  protected onPicked(entry: WeightEntry | null): void {
+    this.selectedEntry.set(entry);
+  }
+
+  protected clearSelection(): void {
+    this.selectedEntry.set(null);
+  }
+
+  /** Правка опечатки в истории: вес и дата этого же замера. */
+  protected startEdit(entry: WeightEntry): void {
+    this.editingId.set(entry.id);
+    this.editKg.set(entry.kg);
+    this.editDate.set(entry.date);
+    this.editError.set(null);
+  }
+
+  protected cancelEdit(): void {
+    this.editingId.set(null);
+    this.editError.set(null);
+  }
+
+  protected onEditKg(raw: string): void {
+    const normalized = raw.replace(',', '.').trim();
+
+    if (normalized === '') {
+      this.editKg.set(null);
+      return;
+    }
+
+    const value = Number(normalized);
+
+    this.editKg.set(Number.isNaN(value) ? null : value);
+  }
+
+  protected saveEdit(): void {
+    const id = this.editingId();
+    const kg = this.editKg();
+
+    if (id === null) {
+      return;
+    }
+
+    if (kg === null || kg < 20 || kg > 500) {
+      this.editError.set('Вес должен быть в диапазоне 20-500 кг.');
+      return;
+    }
+
+    this.editBusy.set(true);
+    this.editError.set(null);
+
+    this.weights.update(id, kg, this.editDate()).subscribe({
+      next: () => {
+        this.editBusy.set(false);
+        this.editingId.set(null);
+        // Перезагрузка обновляет и график, и тренд: вес мог поменять ИМТ и скорость.
+        this.load();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.editBusy.set(false);
+        this.editError.set(describeProblem(error));
+      },
+    });
+  }
+
+  protected readonly weightBoundaries = computed<readonly [number, number, number] | null>(() => {
+    const trend = this.trend();
+    const normal = trend?.normalWeight;
+
+    if (!trend || !normal) {
+      return null;
+    }
+
+    return [normal.minKg, normal.maxKg, trend.obeseFromKg ?? normal.maxKg * 1.2];
+  });
+
+  protected readonly bmiBoundaries = computed<readonly [number, number, number] | null>(() => {
+    const normal = this.trend()?.normalWeight;
+
+    return normal === null || normal === undefined
+      ? null
+      : [normal.bmiMin, normal.bmiMax, 30];
   });
 
   ngOnInit(): void {

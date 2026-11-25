@@ -1,16 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DiaryDay, Plan, mealTitles } from '../../core/api.models';
+import { DiaryDay, MealKind, Plan, mealTitles } from '../../core/api.models';
 import { describeProblem } from '../../core/problem';
 import { AddEntryComponent } from './add-entry.component';
 import { DiaryService } from './diary.service';
 
 /**
- * Экран дня: цель на сегодня, записи по приемам и добавление еды.
+ * Экран дня: итоги за день и приемы пищи карточками. Прием раскрывается
+ * кликом: внутри его позиции и форма добавления.
  *
  * День и цель грузятся независимо: без профиля и веса цель не посчитать, но
- * дневник должен открываться - иначе экран выглядит сломанным.
+ * дневник должен открываться.
  */
 @Component({
   selector: 'app-diary-page',
@@ -26,6 +27,7 @@ export class DiaryPage implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly planError = signal<string | null>(null);
   protected readonly needsSetup = signal(false);
+  protected readonly openMeal = signal<MealKind | null>(null);
   protected readonly titles = mealTitles;
 
   protected readonly today = new Date();
@@ -68,6 +70,10 @@ export class DiaryPage implements OnInit {
         }
       },
     });
+  }
+
+  protected toggle(kind: MealKind): void {
+    this.openMeal.set(this.openMeal() === kind ? null : kind);
   }
 
   protected remove(entryId: string): void {

@@ -1,0 +1,51 @@
+.scale-wrap {
+  position: relative;
+  padding: 0.35rem 0;
+}
+
+.scale {
+  display: block;
+  width: 100%;
+  height: 14px;
+}
+
+.marker {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: #111827;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #111827;
+}
+
+/* Подписи стоят по центрам своих отрезков: тот же процент, что у зоны. */
+.labels {
+  position: relative;
+  height: 1.6rem;
+  margin-top: 0.15rem;
+}
+
+.label {
+  position: absolute;
+  top: 0;
+  padding: 0 0.2rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.8;
+
+  &.active {
+    font-weight: 700;
+    opacity: 1;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}

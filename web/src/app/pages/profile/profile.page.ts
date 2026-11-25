@@ -35,6 +35,7 @@ export class ProfilePage implements OnInit {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly saved = signal(false);
+  protected readonly missingGoal = signal(false);
   protected readonly onboarding = signal(false);
   protected readonly currentWeight = signal<WeightEntry | null>(null);
   protected readonly weightInput = signal<number | null>(null);
@@ -223,6 +224,7 @@ export class ProfilePage implements OnInit {
         next: () => {
           this.busy.set(false);
           this.saved.set(true);
+          this.missingGoal.set(value.goal === null);
           this.onboarding.set(false);
         },
         error: (error: HttpErrorResponse) => {

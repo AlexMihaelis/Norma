@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
+using Norma.Api.Data.Seeding;
 using Norma.Api.Features.Account.DeleteAvatar;
 using Norma.Api.Features.Account.UpdateAvatar;
 using Norma.Api.Features.Account.UpdateNickname;
@@ -35,6 +36,7 @@ using Norma.Api.Features.Water.GetWaterDay;
 using Norma.Api.Features.Weight.AddWeight;
 using Norma.Api.Features.Weight.GetWeightTrend;
 using Norma.Api.Features.Weight.ListWeight;
+using Norma.Api.Features.Weight.UpdateWeight;
 using Scalar.AspNetCore;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -117,6 +119,14 @@ public static class ApiHost
             ?? DevelopmentConnectionString;
 
         builder.Services.AddDbContext<NormaDbContext>(options => options.UseNpgsql(connectionString));
+
+        // Стартовый набор продуктов: только Development и по флагу, чтобы не лить
+        // данные в тестовые и продуктовые базы. Повторный запуск ничего не дублирует.
+        if (builder.Environment.IsDevelopment()
+            && builder.Configuration.GetValue<bool>("Database:SeedFoodsOnStartup"))
+        {
+            builder.Services.AddHostedService<FoodSeedHostedService>();
+        }
 
         var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
             ?? new JwtOptions();
@@ -227,6 +237,7 @@ public static class ApiHost
         api.MapDeleteAvatar();
         api.MapAddWeight();
         api.MapListWeight();
+        api.MapUpdateWeight();
         api.MapGetWeightTrend();
         api.MapGetProfile();
         api.MapUpdateProfile();

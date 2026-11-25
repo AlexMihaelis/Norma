@@ -340,6 +340,106 @@ public sealed class WeightTests
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Update_fixes_typo_in_weight_and_date()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "edit@example.com");
+
+        using var add = await SendAsync(
+            app, HttpMethod.Post, "/api/v1/weight", user.Token, new { date = "2026-11-01", kg = 90 });
+        var added = await add.Content.ReadFromJsonAsync<WeightItem>();
+
+        using var update = await SendAsync(
+            app, HttpMethod.Put, $"/api/v1/weight/{added!.Id}", user.Token, new { date = "2026-11-02", kg = 79.5 });
+
+        Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+
+        var updated = await update.Content.ReadFromJsonAsync<WeightItem>();
+
+        Assert.Equal(79.5, updated!.Kg);
+        Assert.Equal(new DateOnly(2026, 11, 2), updated.Date);
+
+        using var list = await SendAsync(app, HttpMethod.Get, "/api/v1/weight", user.Token);
+        var items = await list.Content.ReadFromJsonAsync<WeightListPayload>();
+
+        Assert.NotNull(items);
+        var single = Assert.Single(items.Items);
+        Assert.Equal(79.5, single.Kg);
+    }
+
+    [Fact]
+    public async Task Update_keeps_date_when_not_passed()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "edit-date@example.com");
+
+        using var add = await SendAsync(
+            app, HttpMethod.Post, "/api/v1/weight", user.Token, new { date = "2026-11-01", kg = 80 });
+        var added = await add.Content.ReadFromJsonAsync<WeightItem>();
+
+        using var update = await SendAsync(
+            app, HttpMethod.Put, $"/api/v1/weight/{added!.Id}", user.Token, new { kg = 81 });
+
+        var updated = await update.Content.ReadFromJsonAsync<WeightItem>();
+
+        Assert.Equal(new DateOnly(2026, 11, 1), updated!.Date);
+        Assert.Equal(81, updated.Kg);
+    }
+
+    [Fact]
+    public async Task Update_rejects_other_users_measurement()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var alice = await RegisterAsync(app, "edit-alice@example.com");
+        var bob = await RegisterAsync(app, "edit-bob@example.com");
+
+        using var add = await SendAsync(
+            app, HttpMethod.Post, "/api/v1/weight", alice.Token, new { date = "2026-11-01", kg = 80 });
+        var added = await add.Content.ReadFromJsonAsync<WeightItem>();
+
+        using var update = await SendAsync(
+            app, HttpMethod.Put, $"/api/v1/weight/{added!.Id}", bob.Token, new { kg = 60 });
+
+        Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_rejects_invalid_weight()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "edit-invalid@example.com");
+
+        using var add = await SendAsync(
+            app, HttpMethod.Post, "/api/v1/weight", user.Token, new { date = "2026-11-01", kg = 80 });
+        var added = await add.Content.ReadFromJsonAsync<WeightItem>();
+
+        using var update = await SendAsync(
+            app, HttpMethod.Put, $"/api/v1/weight/{added!.Id}", user.Token, new { kg = 0 });
+
+        Assert.Equal(HttpStatusCode.BadRequest, update.StatusCode);
+    }
+
+    [Fact]
+    public async Task Update_requires_token()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        using var response = await app.Client.PutAsJsonAsync(
+            $"/api/v1/weight/{Guid.NewGuid()}", new { kg = 80 });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private static async Task<HttpResponseMessage> SendAsync(
         ApiApp app, HttpMethod method, string url, string token, object? body = null)
     {

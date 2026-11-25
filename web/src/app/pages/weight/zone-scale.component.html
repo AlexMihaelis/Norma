@@ -1,0 +1,32 @@
+<div class="scale-wrap">
+  <svg class="scale" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+    @for (segment of geometry().segments; track segment.index) {
+      <rect
+        [attr.x]="segment.x"
+        [attr.width]="segment.width"
+        y="2"
+        height="6"
+        [attr.fill]="segment.color"
+      />
+    }
+  </svg>
+
+  <!-- Маркер отдельным элементом: внутри растянутого SVG круг становится овалом. -->
+  @if (geometry().marker !== null) {
+    <span class="marker" [style.left.%]="geometry().marker"></span>
+  }
+</div>
+
+<div class="labels">
+  @for (segment of geometry().segments; track segment.index) {
+    <span
+      class="label"
+      [class.active]="geometry().active === segment.index"
+      [style.color]="segment.color"
+      [style.left.%]="segment.x"
+      [style.width.%]="segment.width"
+    >
+      {{ segment.label }}
+    </span>
+  }
+</div>
