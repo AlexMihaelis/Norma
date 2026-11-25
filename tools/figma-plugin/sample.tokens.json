@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "plugin": "norma-design-export",
+    "version": "1.0.0",
+    "exportedAt": "2026-11-25T10:00:00.000Z",
+    "fileName": "Norma",
+    "fileKey": null,
+    "pageName": "Экраны",
+    "selection": [
+      { "id": "1:2", "name": "День", "type": "FRAME", "width": 390, "height": 844 }
+    ],
+    "nodesVisited": 3,
+    "truncated": false,
+    "truncatedReason": null,
+    "options": { "tree": true, "tokens": true, "usage": true }
+  },
+  "tokens": {
+    "variables": {
+      "note": null,
+      "collections": [
+        {
+          "id": "VariableCollectionId:1:2",
+          "name": "Тема",
+          "modes": [
+            { "id": "1:0", "name": "Светлая" },
+            { "id": "1:1", "name": "Темная" }
+          ],
+          "variables": [
+            {
+              "id": "VariableID:1:10",
+              "name": "color/text/primary",
+              "type": "COLOR",
+              "description": null,
+              "valuesByMode": {
+                "Светлая": { "hex": "#2f855a", "alpha": 1 },
+                "Темная": { "hex": "#48bb78", "alpha": 1 }
+              }
+            },
+            {
+              "id": "VariableID:1:11",
+              "name": "color/text/muted",
+              "type": "COLOR",
+              "description": null,
+              "valuesByMode": {
+                "Светлая": { "hex": "#6b7280", "alpha": 1 },
+                "Темная": { "hex": "#d1d5db", "alpha": 1 }
+              }
+            },
+            {
+              "id": "VariableID:1:12",
+              "name": "color/surface/card",
+              "type": "COLOR",
+              "description": null,
+              "valuesByMode": {
+                "Светлая": {
+                  "alias": { "id": "VariableID:1:13", "name": "color/surface/base" },
+                  "resolved": { "hex": "#ffffff", "alpha": 1 }
+                },
+                "Темная": {
+                  "alias": { "id": "VariableID:1:13", "name": "color/surface/base" },
+                  "resolved": { "hex": "#1f2937", "alpha": 1 }
+                }
+              }
+            },
+            {
+              "id": "VariableID:1:13",
+              "name": "color/surface/base",
+              "type": "COLOR",
+              "description": null,
+              "valuesByMode": {
+                "Светлая": { "hex": "#f8fafc", "alpha": 1 },
+                "Темная": { "hex": "#111827", "alpha": 1 }
+              }
+            },
+            {
+              "id": "VariableID:1:14",
+              "name": "radius/card",
+              "type": "FLOAT",
+              "description": null,
+              "valuesByMode": { "Светлая": 12, "Темная": 12 }
+            },
+            {
+              "id": "VariableID:1:15",
+              "name": "space/unit",
+              "type": "FLOAT",
+              "description": null,
+              "valuesByMode": { "Светлая": 4, "Темная": 4 }
+            }
+          ]
+        }
+      ]
+    },
+    "styles": {
+      "paints": [
+        {
+          "id": "S:1",
+          "name": "surface/card",
+          "paints": [{ "type": "SOLID", "visible": true, "hex": "#ffffff", "alpha": 1 }]
+        }
+      ],
+      "texts": [
+        {
+          "id": "S:2",
+          "name": "title/large",
+          "fontName": { "family": "Inter", "style": "Semi Bold" },
+          "fontSize": 24,
+          "lineHeight": { "value": 32, "unit": "PIXELS" },
+          "letterSpacing": { "value": 0, "unit": "PIXELS" },
+          "paragraphSpacing": 0,
+          "textCase": null
+        }
+      ],
+      "effects": [
+        {
+          "id": "S:3",
+          "name": "shadow/card",
+          "effects": [
+            {
+              "type": "DROP_SHADOW",
+              "visible": true,
+              "radius": 3,
+              "spread": 0,
+              "offset": { "x": 0, "y": 1 },
+              "color": { "hex": "#000000", "alpha": 0.08 }
+            }
+          ]
+        }
+      ],
+      "grids": []
+    }
+  },
+  "nodes": [
+    {
+      "id": "1:2",
+      "type": "FRAME",
+      "name": "День",
+      "visible": true,
+      "size": { "width": 390, "height": 844 },
+      "position": { "x": 0, "y": 0 },
+      "opacity": 1,
+      "clipsContent": true,
+      "fills": [{ "type": "SOLID", "visible": true, "hex": "#f8fafc", "alpha": 1 }],
+      "layout": {
+        "mode": "VERTICAL",
+        "gap": 16,
+        "padding": { "top": 24, "right": 16, "bottom": 24, "left": 16 },
+        "align": { "primary": "MIN", "counter": "CENTER" }
+      },
+      "children": [
+        {
+          "id": "1:3",
+          "type": "TEXT",
+          "name": "Заголовок",
+          "visible": true,
+          "size": { "width": 320, "height": 32 },
+          "position": { "x": 16, "y": 24 },
+          "opacity": 1,
+          "text": {
+            "characters": "Сегодня",
+            "truncated": false,
+            "fontName": { "family": "Inter", "style": "Semi Bold" },
+            "fontSize": 24,
+            "lineHeight": { "value": 32, "unit": "PIXELS" },
+            "textCase": null
+          }
+        },
+        {
+          "id": "1:4",
+          "type": "FRAME",
+          "name": "Карточка цели",
+          "visible": true,
+          "size": { "width": 358, "height": 120 },
+          "position": { "x": 16, "y": 72 },
+          "opacity": 1,
+          "cornerRadius": 12,
+          "fills": [{ "type": "SOLID", "visible": true, "hex": "#ffffff", "alpha": 1 }],
+          "effects": [
+            {
+              "type": "DROP_SHADOW",
+              "visible": true,
+              "radius": 3,
+              "spread": 0,
+              "offset": { "x": 0, "y": 1 },
+              "color": { "hex": "#000000", "alpha": 0.08 }
+            }
+          ],
+          "layout": {
+            "mode": "VERTICAL",
+            "gap": 8,
+            "padding": { "top": 16, "right": 16, "bottom": 16, "left": 16 },
+            "align": { "primary": "MIN", "counter": "MIN" }
+          },
+          "styles": { "fill": { "id": "S:1", "name": "surface/card" } }
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "colors": [
+      { "hex": "#ffffff", "alpha": 1, "count": 2, "fill": 2, "stroke": 0, "effect": 0, "text": 0, "variable": null },
+      { "hex": "#f8fafc", "alpha": 1, "count": 1, "fill": 1, "stroke": 0, "effect": 0, "text": 0, "variable": null },
+      { "hex": "#000000", "alpha": 0.08, "count": 1, "fill": 0, "stroke": 0, "effect": 1, "text": 0, "variable": null }
+    ],
+    "typography": [
+      {
+        "family": "Inter",
+        "style": "Semi Bold",
+        "size": 24,
+        "lineHeight": 32,
+        "count": 2
+      }
+    ],
+    "radii": [{ "value": 12, "count": 1 }],
+    "spacing": [
+      { "value": 16, "count": 6 },
+      { "value": 24, "count": 2 },
+      { "value": 8, "count": 1 },
+      { "value": 4, "count": 1 }
+    ]
+  }
+}

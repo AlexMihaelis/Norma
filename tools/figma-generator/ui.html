@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <title>Norma · генератор макетов</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 14px;
+        font: 12px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: var(--figma-color-text, #111827);
+        background: var(--figma-color-bg, #ffffff);
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0 0 12px;
+        color: var(--figma-color-text-secondary, #6b7280);
+      }
+
+      ul {
+        margin: 0 0 14px;
+        padding-left: 18px;
+        color: var(--figma-color-text-secondary, #6b7280);
+      }
+
+      li {
+        margin-bottom: 4px;
+      }
+
+      button {
+        width: 100%;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 600;
+        color: #ffffff;
+        background: #2f855a;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      .status {
+        margin-top: 12px;
+        min-height: 18px;
+        color: var(--figma-color-text-secondary, #6b7280);
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
+      .status.ok {
+        color: #15803d;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Норма · генератор макетов</h1>
+    <p>Создаёт страницу «Норма · макеты»: шесть фреймов и дизайн-систему.</p>
+
+    <ul>
+      <li>переменные: цвета, радиусы, отступы;</li>
+      <li>текстовые стили: заголовки, текст, подписи;</li>
+      <li>фреймы: Главная, Дневник, Вес, Статистика, Профиль, Форма замера.</li>
+    </ul>
+
+    <button id="run">Создать макеты</button>
+    <div id="status" class="status">Готов к запуску.</div>
+
+    <script>
+      const runButton = document.getElementById('run');
+      const status = document.getElementById('status');
+
+      function setStatus(text, kind) {
+        status.textContent = text;
+        status.className = 'status' + (kind ? ' ' + kind : '');
+      }
+
+      runButton.addEventListener('click', () => {
+        runButton.disabled = true;
+        setStatus('Собираю макеты… Это займёт несколько секунд.');
+        parent.postMessage({ pluginMessage: { type: 'generate' } }, '*');
+      });
+
+      window.onmessage = (event) => {
+        const message = event.data && event.data.pluginMessage;
+        if (!message) return;
+
+        if (message.type === 'done') {
+          runButton.disabled = false;
+          const result = message.result || {};
+          setStatus(
+            'Готово: ' +
+              (result.screens || 0) +
+              ' фреймов, ' +
+              (result.variables || 0) +
+              ' переменных, ' +
+              (result.textStyles || 0) +
+              ' текстовых стилей.',
+            'ok',
+          );
+          return;
+        }
+
+        if (message.type === 'error') {
+          runButton.disabled = false;
+          setStatus(message.message || 'Не получилось собрать макеты.', 'error');
+        }
+      };
+    </script>
+  </body>
+</html>
