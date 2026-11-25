@@ -261,6 +261,90 @@
   background: var(--color-surface);
 }
 
+/* Модальное окно нового замера: затемнение и карточка по центру. */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-24);
+  background: color-mix(in srgb, var(--color-overlay) 45%, transparent);
+}
+
+.modal {
+  width: clamp(320px, 30vw, 420px);
+  max-width: 100%;
+  background: var(--color-surface);
+  border-radius: var(--radius-modal);
+  box-shadow: 0 24px 64px rgb(15 23 42 / 28%);
+  padding: var(--space-24);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+
+  h2 {
+    margin: 0;
+    font-size: clamp(16px, 1.25vw, 20px);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.modal-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-track);
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.modal-body {
+  display: grid;
+  gap: var(--space-12);
+}
+
+.modal-body select {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--space-8);
+  font: inherit;
+  background: var(--color-surface);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  margin-top: var(--space-20);
+}
+
+.ghost-button {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  &:hover {
+    background: var(--color-track);
+  }
+}
+
 /* История веса: строка дата - вес - изменение - изменить. */
 .history {
   list-style: none;

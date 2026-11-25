@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { catchError, forkJoin, of } from 'rxjs';
 import {
@@ -246,8 +246,20 @@ export class WeightPage implements OnInit {
   }
 
   protected openBody(): void {
-    this.bodyOpen.update((open) => !open);
+    this.bodyOpen.set(true);
     this.bodyError.set(null);
+  }
+
+  protected closeBody(): void {
+    this.bodyOpen.set(false);
+    this.bodyError.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    if (this.bodyOpen()) {
+      this.closeBody();
+    }
   }
 
   protected onBodyCm(raw: string): void {
