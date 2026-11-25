@@ -196,9 +196,7 @@
       </h3>
 
       @if (weightBoundaries(); as boundaries) {
-        <p class="zone-values">
-          {{ format(currentKg()) }} кг · норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг
-        </p>
+        <p class="zone-values">{{ format(currentKg()) }} кг</p>
         <app-zone-scale [value]="currentKg()" [boundaries]="boundaries" [labels]="weightZoneLabels" />
         <p class="muted small">
           Норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг; ожирение от
