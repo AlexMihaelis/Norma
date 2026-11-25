@@ -63,31 +63,36 @@
   </div>
 
   <div class="nutrition-cells">
-    <div class="cell">
-      <span class="cell-label">Цель</span>
-      <span class="cell-value">{{ formatNumber(plan()?.targetKcal) }} ккал</span>
+    <div class="cells-row goal-row">
+      <div class="cell">
+        <span class="cell-label">Цель</span>
+        <span class="cell-value">{{ formatNumber(plan()?.targetKcal) }} ккал</span>
+      </div>
+      <div class="cell">
+        <span class="cell-label">Осталось</span>
+        <span class="cell-value">{{ formatNumber(remainingKcal()) }} ккал</span>
+      </div>
     </div>
-    <div class="cell">
-      <span class="cell-label">Осталось</span>
-      <span class="cell-value">{{ formatNumber(remainingKcal()) }} ккал</span>
-    </div>
-    <div class="cell">
-      <span class="cell-label"><span class="swatch protein"></span>Белки</span>
-      <span class="cell-value">
-        {{ formatNumber(remainingMacros()?.protein) }} / {{ formatNumber(plan()?.macros?.proteinG) }} г
-      </span>
-    </div>
-    <div class="cell">
-      <span class="cell-label"><span class="swatch fat"></span>Жиры</span>
-      <span class="cell-value">
-        {{ formatNumber(remainingMacros()?.fat) }} / {{ formatNumber(plan()?.macros?.fatG) }} г
-      </span>
-    </div>
-    <div class="cell">
-      <span class="cell-label"><span class="swatch carbs"></span>Углеводы</span>
-      <span class="cell-value">
-        {{ formatNumber(remainingMacros()?.carbs) }} / {{ formatNumber(plan()?.macros?.carbsG) }} г
-      </span>
+
+    <div class="cells-row macros-row">
+      <div class="cell">
+        <span class="cell-label"><span class="swatch protein"></span>Белки</span>
+        <span class="cell-value">
+          {{ formatNumber(remainingMacros()?.protein) }} / {{ formatNumber(plan()?.macros?.proteinG) }} г
+        </span>
+      </div>
+      <div class="cell">
+        <span class="cell-label"><span class="swatch fat"></span>Жиры</span>
+        <span class="cell-value">
+          {{ formatNumber(remainingMacros()?.fat) }} / {{ formatNumber(plan()?.macros?.fatG) }} г
+        </span>
+      </div>
+      <div class="cell">
+        <span class="cell-label"><span class="swatch carbs"></span>Углеводы</span>
+        <span class="cell-value">
+          {{ formatNumber(remainingMacros()?.carbs) }} / {{ formatNumber(plan()?.macros?.carbsG) }} г
+        </span>
+      </div>
     </div>
   </div>
 </section>
