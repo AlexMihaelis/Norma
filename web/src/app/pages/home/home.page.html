@@ -1,0 +1,179 @@
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+<header class="greeting">
+  <h1>
+    Добрый день@if (account.displayName(); as name) {, {{ name }}}
+  </h1>
+  <span class="greeting-date">{{ dateLabel }}</span>
+</header>
+
+<section class="card weight-card">
+  <div class="weight-main">
+    <span class="card-label">Вес</span>
+
+    <p class="weight-value">
+      <span class="value">{{ formatKg(currentKg()) }}</span>
+      <span class="unit">кг</span>
+      @if (goalKg(); as goal) {
+        <span class="goal">цель {{ formatKg(goal) }} кг</span>
+      }
+    </p>
+
+    @if (weightDelta(); as delta) {
+      <span class="delta" [class.up]="delta.value >= 0">{{ formatDelta(delta.value, delta.label) }}</span>
+    }
+
+    <a class="weight-button" routerLink="/weight">Внести текущий вес</a>
+  </div>
+
+  <div class="weight-chart">
+    <span class="chart-caption">14 дней</span>
+
+    <svg class="sparkline" viewBox="0 0 396 148" aria-hidden="true">
+      <line x1="0" y1="37" x2="396" y2="37" class="grid" />
+      <line x1="0" y1="74" x2="396" y2="74" class="grid" />
+      <line x1="0" y1="111" x2="396" y2="111" class="grid" />
+
+      @if (sparkline().area) {
+        <path [attr.d]="sparkline().area" class="area" />
+      }
+
+      @if (sparkline().polyline) {
+        <polyline [attr.points]="sparkline().polyline" class="line" />
+      }
+
+      @for (point of sparkline().points; track point.id) {
+        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3" class="dot" />
+      }
+    </svg>
+
+    <span class="chart-today">сегодня {{ formatKg(currentKg()) }} кг</span>
+  </div>
+</section>
+
+<section class="card nutrition-card">
+  <span class="card-label">Питание за день</span>
+
+  @if (plan()?.targetKcal; as target) {
+    <span class="nutrition-target">цель {{ formatNumber(target) }} ккал</span>
+  }
+
+  <div class="nutrition-body">
+    <div class="nutrition-summary">
+      <div class="ring">
+        <svg viewBox="0 0 108 108" aria-hidden="true">
+          <circle class="ring-track" cx="54" cy="54" [attr.r]="46" />
+          @for (segment of ringSegments(); track segment.color) {
+            <circle
+              class="ring-segment"
+              cx="54"
+              cy="54"
+              [attr.r]="46"
+              [attr.stroke]="segment.color"
+              [attr.stroke-dasharray]="segment.dash"
+              [attr.stroke-dashoffset]="segment.offset"
+              transform="rotate(-90 54 54)"
+            />
+          }
+        </svg>
+
+        <div class="ring-center">
+          <strong>{{ formatNumber(eaten().kcal) }}</strong>
+          <span>ккал</span>
+        </div>
+      </div>
+
+      <ul class="legend">
+        <li>
+          <span class="dot protein"></span>
+          <span class="legend-label">Белки</span>
+          <span class="legend-value">{{ legendValue(eaten().protein, plan()?.macros?.proteinG) }}</span>
+        </li>
+        <li>
+          <span class="dot fat"></span>
+          <span class="legend-label">Жиры</span>
+          <span class="legend-value">{{ legendValue(eaten().fat, plan()?.macros?.fatG) }}</span>
+        </li>
+        <li>
+          <span class="dot carbs"></span>
+          <span class="legend-label">Углеводы</span>
+          <span class="legend-value">{{ legendValue(eaten().carbs, plan()?.macros?.carbsG) }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="nutrition-actions">
+      <a class="primary-button" routerLink="/diary">+ Добавить продукт</a>
+
+      @let remaining = remainingKcal();
+      @if (remaining !== null) {
+        <span class="remaining">
+          {{ remaining >= 0 ? 'осталось ' : 'перебор ' }}{{ formatNumber(abs(remaining)) }} ккал
+        </span>
+      }
+
+      @if (remainingMacros(); as macros) {
+        <span class="remaining-macros">
+          белки {{ macros.protein }} г · жиры {{ macros.fat }} г · углеводы {{ macros.carbs }} г
+        </span>
+      }
+    </div>
+  </div>
+</section>
+
+<div class="cards-row">
+  <section class="card water-card">
+    <div class="water-head">
+      <span class="card-label">Вода</span>
+
+      <button
+        type="button"
+        class="plus-button"
+        [disabled]="waterBusy()"
+        (click)="addWaterGlass()"
+        title="Добавить 250 мл"
+      >
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+
+    <p class="water-value">
+      <span class="value">{{ formatNumber(water()?.drunkMl) }}</span>
+      @if (water()?.normMl; as norm) {
+        <span class="unit">из {{ formatNumber(norm) }} мл</span>
+      }
+    </p>
+
+    <div class="water-track">
+      <span [style.width.%]="waterPercent()"></span>
+    </div>
+
+    @if (water()?.normMl) {
+      <span class="water-remaining">
+        осталось {{ formatNumber(water()?.remainingMl ?? 0) }} мл
+      </span>
+    } @else {
+      <span class="water-remaining">{{ water()?.normHint }}</span>
+    }
+  </section>
+
+  <section class="card activity-card">
+    <span class="card-label">Активность</span>
+
+    <p class="activity-value">
+      <span class="value">{{ formatNumber(activity()?.totalKcal) }}</span>
+      <span class="unit">ккал примерно</span>
+    </p>
+
+    @if (firstActivity(); as record) {
+      <span class="activity-entry">
+        {{ activityTitles[record.kind] }} {{ record.minutes }} мин
+      </span>
+    } @else {
+      <span class="activity-entry muted">Пока нет записей за день</span>
+    }
+  </section>
+</div>

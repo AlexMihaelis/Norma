@@ -1,3 +1,5 @@
+@use 'styles/tokens';
+
 :root {
   color-scheme: light;
 }
@@ -19,52 +21,130 @@ body {
   line-height: 1.5;
 }
 
+/*
+ * Контейнер как в макете (720 при 1440), но тянется за монитором:
+ * на большом экране чуть шире, на маленьком - уже, на мобильном - во всю ширину.
+ */
 .page {
-  max-width: 720px;
+  width: clamp(680px, 50vw, 1080px);
+  max-width: calc(100% - 2 * var(--space-16));
   margin: 0 auto;
-  padding: 1.5rem;
+  padding: clamp(var(--space-16), 1.7vw, var(--space-32));
 }
 
 .card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--space-24);
   box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
 }
 
+/* Шапка из макета «Главная»: темная полоса 64 px, логотип-знак, навигация. */
 .topbar {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: #111827;
-  color: #f9fafb;
+  height: 64px;
+  padding: 0 var(--space-24);
+  background: var(--color-text);
+  color: var(--color-text-inverse);
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 28px; /* координаты из макета: 28, ближайшего токена нет */
+    margin-left: 155px; /* координаты из макета: навигация начинается на x=280 */
+    height: 100%;
+  }
 
   nav a {
-    color: #d1d5db;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--color-text-muted);
     text-decoration: none;
-    margin-right: 1rem;
 
     &.active {
-      color: #fff;
-      font-weight: 600;
+      color: var(--color-text-inverse);
+      font-weight: 700;
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 6px;
+        height: 2px;
+        border-radius: 1px;
+        background: var(--color-accent);
+      }
     }
   }
 }
 
 .brand {
-  color: #f9fafb;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  color: var(--color-text-inverse);
   text-decoration: none;
+}
+
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-field);
+  background: var(--color-accent);
+  font-weight: 700;
+  font-size: 19px;
+
+  /* Листок из макета: белый, лежит на верхнем правом углу знака и выступает за него. */
+  &::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -6px;
+    width: 15px;
+    height: 15px;
+    background: var(--color-text-inverse);
+    border-radius: 2px 100% 2px 100%;
+    transform: rotate(-18deg);
+    box-shadow: inset -2px -2px 0 0 rgb(47 133 90 / 35%);
+  }
+}
+
+.brand-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.topbar-name {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-right: var(--space-8);
+}
+
+.topbar-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .spacer {
   flex: 1;
-}
-
-.account {
-  color: #9ca3af;
-  font-size: 0.9rem;
 }
 
 button {
@@ -121,12 +201,69 @@ label {
   border-radius: 8px;
 }
 
-.account {
+.account-block {
+  position: relative;
+}
+
+.account-button {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #e5e7eb;
-  text-decoration: none;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  border: none;
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-text-inverse);
+
+  &:hover {
+    background: rgb(255 255 255 / 8%);
+  }
+}
+
+.account-chevron {
+  transition: transform 0.15s ease;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+.account-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-8));
+  min-width: 168px;
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  box-shadow: 0 8px 24px rgb(15 23 42 / 16%);
+  z-index: 50;
+
+  a,
+  .menu-item {
+    display: block;
+    width: 100%;
+    padding: var(--space-8) var(--space-12);
+    border: none;
+    border-radius: var(--space-8);
+    background: none;
+    color: var(--color-text);
+    font-size: 14px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--color-track);
+    }
+  }
+
+  .menu-item {
+    color: var(--color-text);
+  }
 }
 
 .avatar {
@@ -150,11 +287,44 @@ label {
 
 .account-name {
   font-size: 0.9rem;
-  color: #d1d5db;
+  color: var(--color-text-muted);
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* На средних экранах навигация прижимается ближе к логотипу. */
+@media (max-width: 1180px) {
+  .topbar nav {
+    margin-left: var(--space-24);
+    gap: var(--space-16);
+  }
+}
+
+@media (max-width: 860px) {
+  .topbar {
+    padding: 0 var(--space-16);
+  }
+
+  .topbar nav {
+    margin-left: var(--space-16);
+    gap: var(--space-12);
+
+    a {
+      font-size: 13px;
+    }
+  }
+
+  .account-name {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar nav {
+    display: none;
+  }
 }
 
 .muted {
@@ -214,5 +384,44 @@ a {
   &:focus::after {
     opacity: 1;
     visibility: visible;
+  }
+}
+
+/* Шапка тоже тянется: высота и кегли растут вместе с шириной экрана. */
+.topbar {
+  height: clamp(56px, 4.44vw, 72px);
+}
+
+.brand-mark {
+  width: clamp(28px, 2.22vw, 38px);
+  height: clamp(28px, 2.22vw, 38px);
+  font-size: clamp(16px, 1.3vw, 23px);
+}
+
+.brand-name {
+  font-size: clamp(16px, 1.25vw, 22px);
+}
+
+.topbar nav a {
+  font-size: clamp(12px, 0.97vw, 16px);
+}
+
+.account-name {
+  font-size: clamp(12px, 0.97vw, 16px);
+}
+
+.avatar {
+  width: clamp(28px, 2.22vw, 36px);
+  height: clamp(28px, 2.22vw, 36px);
+}
+
+.avatar.initials {
+  font-size: clamp(11px, 0.8vw, 14px);
+}
+
+.account-menu {
+  a,
+  .menu-item {
+    font-size: clamp(13px, 0.97vw, 16px);
   }
 }

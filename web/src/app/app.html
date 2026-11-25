@@ -1,9 +1,12 @@
 <header class="topbar">
-  <a class="brand" routerLink="/">Норма</a>
+  <a class="brand" routerLink="/">
+    <span class="brand-mark">N</span>
+    <span class="brand-name">Norma</span>
+  </a>
 
   @if (auth.signedIn()) {
     <nav>
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Дневник</a>
+      <a routerLink="/diary" routerLinkActive="active">Дневник</a>
       <a routerLink="/weight" routerLinkActive="active">Вес</a>
       <a routerLink="/stats" routerLinkActive="active">Статистика</a>
       <a routerLink="/profile" routerLinkActive="active">Профиль</a>
@@ -11,16 +14,38 @@
 
     <span class="spacer"></span>
 
-    <a class="account" routerLink="/profile" title="Профиль">
-      @if (account.avatarDataUrl(); as image) {
-        <img class="avatar" [src]="image" alt="Аватар" />
-      } @else {
-        <span class="avatar initials">{{ account.initials() }}</span>
-      }
-      <span class="account-name">{{ account.displayName() }}</span>
-    </a>
+    <div class="account-block">
+      <button
+        type="button"
+        class="account-button"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="toggleMenu($event)"
+      >
+        @if (account.avatarDataUrl(); as image) {
+          <img class="avatar" [src]="image" alt="Аватар" />
+        } @else {
+          <span class="avatar initials">{{ account.initials() }}</span>
+        }
+        <span class="account-name">{{ account.displayName() }}</span>
+        <svg
+          class="account-chevron"
+          [class.open]="menuOpen()"
+          viewBox="0 0 12 8"
+          width="12"
+          height="8"
+          aria-hidden="true"
+        >
+          <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </button>
 
-    <button type="button" class="ghost" (click)="signOut()">Выйти</button>
+      @if (menuOpen()) {
+        <div class="account-menu" (click)="$event.stopPropagation()">
+          <a routerLink="/profile" (click)="closeMenu()">Профиль</a>
+          <button type="button" class="menu-item" (click)="signOut()">Выйти</button>
+        </div>
+      }
+    </div>
   }
 </header>
 

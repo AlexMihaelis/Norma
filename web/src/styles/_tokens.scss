@@ -1,0 +1,258 @@
+// Файл сгенерирован из экспорта Figma: design/figma-untitled-2026-11-25.json
+// Макет: «Untitled», узлов: 502, выгружен 2026-11-25T13:08:48.199Z
+// Руками не править: перегенерируй плагином и запусти
+//   node tools/figma-plugin/to-scss.mjs <экспорт.json> web/src/styles/_tokens.scss
+//
+// Подключение в web/src/styles.scss первой строкой (до остальных правил):
+//   @use 'styles/tokens';
+
+:root {
+  /* Цвета из переменных Figma */
+  --color-bg: #f8fafc; // Norma / color/bg
+  --color-surface: #ffffff; // Norma / color/surface
+  --color-border: #e5e7eb; // Norma / color/border
+  --color-text: #111827; // Norma / color/text
+  --color-text-muted: #6b7280; // Norma / color/text-muted
+  --color-text-inverse: #ffffff; // Norma / color/text-inverse
+  --color-accent: #2f855a; // Norma / color/accent
+  --color-accent-soft: #e6f4ec; // Norma / color/accent-soft
+  --color-accent-border: #cde8d9; // Norma / color/accent-border
+  --color-track: #f0f2f5; // Norma / color/track
+  --color-water: #2563eb; // Norma / color/water
+  --color-water-soft: #e8effd; // Norma / color/water-soft
+  --color-protein: #8ecfae; // Norma / color/protein
+  --color-fat-pastel: #f0c191; // Norma / color/fat-pastel
+  --color-carbs-pastel: #a3bde8; // Norma / color/carbs-pastel
+  --color-overlay: #0f172a; // Norma / color/overlay
+
+  /* Числа, радиусы и отступы */
+  --radius-card: 12px; // radius/card
+  --radius-field: 10px; // radius/field
+  --radius-button: 10px; // radius/button
+  --radius-modal: 16px; // radius/modal
+  --radius-chip: 13px; // radius/chip
+  --space-4: 4px; // space/4
+  --space-8: 8px; // space/8
+  --space-12: 12px; // space/12
+  --space-16: 16px; // space/16
+  --space-20: 20px; // space/20
+  --space-24: 24px; // space/24
+  --space-32: 32px; // space/32
+}
+
+$typography: (
+  'inter-400-13': (
+    family: 'Inter',
+    weight: 400,
+    size: 13px,
+    usage: 75,
+  ),
+  'inter-400-12': (
+    family: 'Inter',
+    weight: 400,
+    size: 12px,
+    usage: 75,
+  ),
+  'inter-400-14': (
+    family: 'Inter',
+    weight: 400,
+    size: 14px,
+    usage: 40,
+  ),
+  'inter-400-11': (
+    family: 'Inter',
+    weight: 400,
+    size: 11px,
+    usage: 34,
+  ),
+  'inter-400-10': (
+    family: 'Inter',
+    weight: 400,
+    size: 10px,
+    usage: 19,
+  ),
+  'inter-700-14': (
+    family: 'Inter',
+    weight: 700,
+    size: 14px,
+    usage: 15,
+  ),
+  'inter-700-15': (
+    family: 'Inter',
+    weight: 700,
+    size: 15px,
+    usage: 13,
+  ),
+  'inter-700-9': (
+    family: 'Inter',
+    weight: 700,
+    size: 9px,
+    usage: 12,
+  ),
+  'inter-700-13': (
+    family: 'Inter',
+    weight: 700,
+    size: 13px,
+    usage: 8,
+  ),
+  'inter-700-20': (
+    family: 'Inter',
+    weight: 700,
+    size: 20px,
+    usage: 7,
+  ),
+  'inter-700-22': (
+    family: 'Inter',
+    weight: 700,
+    size: 22px,
+    usage: 7,
+  ),
+  'inter-700-18': (
+    family: 'Inter',
+    weight: 700,
+    size: 18px,
+    usage: 6,
+  ),
+  'inter-700-19': (
+    family: 'Inter',
+    weight: 700,
+    size: 19px,
+    usage: 5,
+  ),
+  'inter-700-28': (
+    family: 'Inter',
+    weight: 700,
+    size: 28px,
+    usage: 4,
+  ),
+  'inter-700-26': (
+    family: 'Inter',
+    weight: 700,
+    size: 26px,
+    usage: 3,
+  ),
+  'inter-700-12': (
+    family: 'Inter',
+    weight: 700,
+    size: 12px,
+    usage: 2,
+  ),
+  'inter-700-34': (
+    family: 'Inter',
+    weight: 700,
+    size: 34px,
+    usage: 1,
+  ),
+  'inter-400-16': (
+    family: 'Inter',
+    weight: 400,
+    size: 16px,
+    usage: 1,
+  ),
+  'inter-700-11': (
+    family: 'Inter',
+    weight: 700,
+    size: 11px,
+    usage: 1,
+  ),
+  'inter-400-20': (
+    family: 'Inter',
+    weight: 400,
+    size: 20px,
+    usage: 1,
+  ),
+);
+
+$text-styles: (
+  'caption': (
+    family: 'Inter',
+    weight: 400,
+    size: 11px,
+    line-height: 15px,
+    letter-spacing: 0px,
+  ),
+  'captionbold': (
+    family: 'Inter',
+    weight: 700,
+    size: 11px,
+    line-height: 15px,
+    letter-spacing: 0px,
+  ),
+  'micro': (
+    family: 'Inter',
+    weight: 400,
+    size: 10px,
+    line-height: 14px,
+    letter-spacing: 0px,
+  ),
+  'heading-h1': (
+    family: 'Inter',
+    weight: 700,
+    size: 28px,
+    line-height: 36px,
+    letter-spacing: 0px,
+  ),
+  'heading-h2': (
+    family: 'Inter',
+    weight: 700,
+    size: 26px,
+    line-height: 34px,
+    letter-spacing: 0px,
+  ),
+  'heading-h3': (
+    family: 'Inter',
+    weight: 700,
+    size: 20px,
+    line-height: 28px,
+    letter-spacing: 0px,
+  ),
+  'heading-h4': (
+    family: 'Inter',
+    weight: 700,
+    size: 18px,
+    line-height: 26px,
+    letter-spacing: 0px,
+  ),
+  'heading-h5': (
+    family: 'Inter',
+    weight: 700,
+    size: 15px,
+    line-height: 22px,
+    letter-spacing: 0px,
+  ),
+  'body-large': (
+    family: 'Inter',
+    weight: 400,
+    size: 14px,
+    line-height: 20px,
+    letter-spacing: 0px,
+  ),
+  'body-medium': (
+    family: 'Inter',
+    weight: 400,
+    size: 13px,
+    line-height: 18px,
+    letter-spacing: 0px,
+  ),
+  'body-mediumbold': (
+    family: 'Inter',
+    weight: 700,
+    size: 13px,
+    line-height: 18px,
+    letter-spacing: 0px,
+  ),
+  'body-small': (
+    family: 'Inter',
+    weight: 400,
+    size: 12px,
+    line-height: 16px,
+    letter-spacing: 0px,
+  ),
+  'body-smallbold': (
+    family: 'Inter',
+    weight: 700,
+    size: 12px,
+    line-height: 16px,
+    letter-spacing: 0px,
+  ),
+);

@@ -132,6 +132,58 @@ export const goalTitles: Record<Goal, string> = {
   Gain: 'Набор массы',
 };
 
+export const activityKindTitles: Record<ActivityKind, string> = {
+  Walking: 'Ходьба',
+  Running: 'Бег',
+  Cycling: 'Велосипед',
+  Swimming: 'Плавание',
+  StrengthTraining: 'Силовая',
+  Yoga: 'Йога',
+  Dancing: 'Танцы',
+  Hiking: 'Поход',
+  RowingMachine: 'Гребной тренажер',
+  DownhillSkiing: 'Горные лыжи',
+};
+
+export type ActivityKind =
+  | 'Walking'
+  | 'Running'
+  | 'Cycling'
+  | 'Swimming'
+  | 'StrengthTraining'
+  | 'Yoga'
+  | 'Dancing'
+  | 'Hiking'
+  | 'RowingMachine'
+  | 'DownhillSkiing';
+
+export interface ActivityRecord {
+  id: string;
+  date: string;
+  kind: ActivityKind;
+  minutes: number;
+  kcal: number;
+}
+
+export interface ActivityDay {
+  date: string;
+  items: ActivityRecord[];
+  totalKcal: number;
+}
+
+export interface WaterDay {
+  date: string;
+  drunkMl: number;
+  normMl: number | null;
+  baseMl: number | null;
+  activityBonusMl: number | null;
+  remainingMl: number | null;
+  clampedToMin: boolean;
+  clampedToMax: boolean;
+  normHint: string | null;
+  disclaimer: string;
+}
+
 export interface WeightEntry {
   id: string;
   date: string;
