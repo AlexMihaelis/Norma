@@ -9,15 +9,16 @@
 <section class="card chart-card">
   <div class="card-head">
     <h2>Динамика веса</h2>
-    <span class="card-meta">
-      30 дней ·
-      <button type="button" class="link head-link" (click)="toggleWeightForm()">
-        {{ weightFormOpen() ? 'скрыть' : '+ внести вес' }}
-      </button>
-    </span>
+    <span class="card-meta">30 дней</span>
   </div>
 
   <app-weight-chart [entries]="entries()" (picked)="onPicked($event)" />
+
+  <div class="chart-actions">
+    <button type="button" class="outline-button" (click)="toggleWeightForm()">
+      {{ weightFormOpen() ? 'Скрыть форму' : '+ Внести вес' }}
+    </button>
+  </div>
 
   @if (weightFormOpen()) {
     <div class="inline-form">
