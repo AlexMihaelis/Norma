@@ -8,6 +8,7 @@ public sealed record StatsDayResponse(
     double Fat,
     double Carbs,
     int Entries,
+    double? WeightKg,
     int ActivityKcal,
     int? TargetKcal,
     int? DiffKcal);

@@ -290,6 +290,7 @@ export interface StatsDay {
   fat: number;
   carbs: number;
   entries: number;
+  weightKg: number | null;
   activityKcal: number;
   targetKcal: number | null;
   diffKcal: number | null;

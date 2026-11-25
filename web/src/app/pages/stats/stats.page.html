@@ -2,117 +2,96 @@
   <p class="error">{{ message }}</p>
 }
 
-<section class="card">
-  <div class="head">
-    <h1>Статистика</h1>
-    <div class="periods">
-      @for (option of periods; track option.days) {
-        <button
-          type="button"
-          class="period"
-          [class.active]="period() === option.days"
-          (click)="setPeriod(option.days)"
-        >
-          {{ option.title }}
-        </button>
+<header class="page-head">
+  <h1>Статистика</h1>
+
+  <div class="periods">
+    @for (option of periods; track option.days) {
+      <button
+        type="button"
+        class="period"
+        [class.active]="period() === option.days"
+        (click)="setPeriod(option.days)"
+      >
+        {{ option.title }}
+      </button>
+    }
+  </div>
+</header>
+
+@if (data(); as value) {
+  <section class="card summary-card">
+    <div class="summary-grid">
+      @for (item of summary(); track item.label) {
+        <div class="summary-cell">
+          <span class="summary-label">{{ item.label }}</span>
+          <span class="summary-value">
+            {{ formatNumber(item.value) }}@if (item.unit !== 'ккал') { г }
+          </span>
+          @if (item.target !== null) {
+            <span class="summary-note">
+              из {{ formatNumber(item.target) }}@if (item.unit !== 'ккал') { г }
+            </span>
+          }
+        </div>
       }
     </div>
-  </div>
+  </section>
 
-  @if (data(); as value) {
-    <p class="muted">
-      {{ formatDateLong(value.from) }} — {{ formatDateLong(value.to) }} · дней с записями:
-      <strong>{{ value.averages.daysWithEntries }}</strong>
-    </p>
-
-    <div class="summary">
-      <div>
-        <span class="label">Средние ккал</span>
-        <strong>{{ format(value.averages.kcal) }}</strong>
-        @if (value.averages.targetKcal !== null) {
-          <span class="muted">цель {{ format(value.averages.targetKcal) }}</span>
-        }
-      </div>
-      <div>
-        <span class="label">Белок</span>
-        <strong>{{ format(value.averages.protein) }} г</strong>
-      </div>
-      <div>
-        <span class="label">Жиры</span>
-        <strong>{{ format(value.averages.fat) }} г</strong>
-      </div>
-      <div>
-        <span class="label">Углеводы</span>
-        <strong>{{ format(value.averages.carbs) }} г</strong>
-      </div>
-      <div>
-        <span class="label">Активность</span>
-        <strong>{{ format(value.averages.activityKcal) }} ккал</strong>
-      </div>
+  <section class="card bars-card">
+    <div class="card-head">
+      <h2>Калории по дням</h2>
+      @if (value.averages.targetKcal; as target) {
+        <span class="card-meta">цель {{ formatNumber(target) }}</span>
+      }
     </div>
 
-    @if (value.deviation; as deviation) {
-      <p class="deviation" [class.over]="deviation.diffKcal > 0">
-        {{ deviationText(deviation) }}
-      </p>
-    }
-
-    @if (value.targetHint) {
-      <p class="hint">{{ value.targetHint }}</p>
-    }
-
-    <p class="note">{{ value.targetNote }}</p>
-
-    @if (value.days.length > 0) {
-      <h2>Дни</h2>
-
-      <div class="bars">
-        @for (day of value.days; track day.date) {
-          <div class="bar-cell" [title]="formatDate(day.date) + ': ' + day.kcal + ' ккал'">
-            <div class="bar-track">
-              <div
-                class="bar"
-                [class.over]="isOverTarget(day)"
-                [style.height.%]="barHeight(day.kcal)"
-              ></div>
-            </div>
-            <span class="bar-date">{{ formatDate(day.date) }}</span>
+    <div class="bars">
+      @for (day of barDays(); track day.date) {
+        <div class="bar-col">
+          <span class="bar-value">{{ formatNumber(day.kcal) }}</span>
+          <div class="bar-track">
+            <span
+              class="bar"
+              [class.over]="isOverTarget(day)"
+              [style.height.%]="barHeight(day.kcal)"
+            ></span>
           </div>
-        }
-      </div>
+          <span class="bar-day">{{ weekday(day.date) }}</span>
+        </div>
+      }
+    </div>
+  </section>
 
+  <section class="card days-card">
+    <div class="card-head">
+      <h2>Дни</h2>
+      <span class="card-meta">дней с записями: {{ value.averages.daysWithEntries }}</span>
+    </div>
+
+    @if (days().length === 0) {
+      <p class="muted">За этот период записей нет.</p>
+    } @else {
       <table class="days">
         <thead>
           <tr>
             <th>Дата</th>
-            <th>Ккал</th>
-            <th>Б</th>
-            <th>Ж</th>
-            <th>У</th>
-            <th>Активность</th>
-            <th>Цель</th>
-            <th>Отклонение</th>
+            <th>Вес</th>
+            <th>Калории</th>
+            <th>БЖУ</th>
           </tr>
         </thead>
         <tbody>
-          @for (day of value.days; track day.date) {
+          @for (day of days(); track day.date) {
             <tr>
               <td>{{ formatDate(day.date) }}</td>
-              <td>{{ day.kcal }}</td>
-              <td>{{ format(day.protein, 1) }}</td>
-              <td>{{ format(day.fat, 1) }}</td>
-              <td>{{ format(day.carbs, 1) }}</td>
-              <td>{{ day.activityKcal }}</td>
-              <td>{{ format(day.targetKcal) }}</td>
-              <td [class.over]="isOverTarget(day)">
-                {{ day.diffKcal === null ? '—' : (day.diffKcal > 0 ? '+' : '') + day.diffKcal }}
-              </td>
+              <td>{{ day.weightKg === null ? '—' : format(day.weightKg, 1) }}</td>
+              <td>{{ formatNumber(day.kcal) }}</td>
+              <td class="bju">{{ bju(day) }}</td>
             </tr>
           }
         </tbody>
       </table>
-    } @else {
-      <p class="muted">За выбранный период записей нет.</p>
     }
-  }
-</section>
+  </section>
+}

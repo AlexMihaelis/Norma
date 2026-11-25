@@ -152,6 +152,7 @@ public static class GetStatsEndpoint
                 Math.Round(day.Fat, 1, MidpointRounding.AwayFromZero),
                 Math.Round(day.Carbs, 1, MidpointRounding.AwayFromZero),
                 day.Entries,
+                weightKg,
                 activityKcalByDay.GetValueOrDefault(day.Date),
                 targetKcal,
                 targetKcal is null ? null : kcal - targetKcal));
