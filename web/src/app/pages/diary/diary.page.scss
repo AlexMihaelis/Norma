@@ -121,17 +121,24 @@
   min-width: 0;
 }
 
+/* Ячейки идут вплотную друг к другу, а не растягиваются на всю ширину. */
 .cells-row {
-  display: grid;
-  gap: var(--space-8) var(--space-16);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: clamp(var(--space-12), 1.4vw, var(--space-24));
 }
 
-.goal-row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.cell {
+  min-width: 0;
 }
 
-.macros-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.goal-row .cell {
+  min-width: 92px;
+}
+
+.macros-row .cell {
+  min-width: 104px;
 }
 
 .cell {
