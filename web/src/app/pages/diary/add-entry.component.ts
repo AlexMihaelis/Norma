@@ -35,6 +35,17 @@ export class AddEntryComponent implements OnInit {
   protected readonly busy = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  /** Форма своего продукта, если в каталоге ничего не нашлось. */
+  protected readonly showCreate = signal(false);
+  protected readonly newName = signal('');
+  protected readonly newUnit = signal<'Gram' | 'Milliliter'>('Gram');
+  protected readonly newKcal = signal(0);
+  protected readonly newProtein = signal(0);
+  protected readonly newFat = signal(0);
+  protected readonly newCarbs = signal(0);
+  protected readonly createBusy = signal(false);
+  protected readonly createError = signal<string | null>(null);
+
   private readonly queries = new Subject<string>();
 
   ngOnInit(): void {
@@ -82,6 +93,77 @@ export class AddEntryComponent implements OnInit {
 
   protected clearSelection(): void {
     this.selected.set(null);
+  }
+
+  protected toggleCreate(): void {
+    this.showCreate.update((open) => !open);
+    this.createError.set(null);
+  }
+
+  protected onNewName(raw: string): void {
+    this.newName.set(raw);
+  }
+
+  protected onNewUnit(raw: string): void {
+    this.newUnit.set(raw === 'Milliliter' ? 'Milliliter' : 'Gram');
+  }
+
+  protected onNewNumber(field: 'kcal' | 'protein' | 'fat' | 'carbs', raw: string): void {
+    const normalized = raw.replace(',', '.').trim();
+    const parsed = normalized === '' ? 0 : Number(normalized);
+    const value = Number.isNaN(parsed) ? 0 : parsed;
+
+    switch (field) {
+      case 'kcal':
+        this.newKcal.set(value);
+        break;
+      case 'protein':
+        this.newProtein.set(value);
+        break;
+      case 'fat':
+        this.newFat.set(value);
+        break;
+      case 'carbs':
+        this.newCarbs.set(value);
+        break;
+    }
+  }
+
+  protected createFood(): void {
+    const name = this.newName().trim();
+
+    if (name.length < 2) {
+      this.createError.set('Название продукта должно быть от 2 символов.');
+      return;
+    }
+
+    this.createBusy.set(true);
+    this.createError.set(null);
+
+    this.diary
+      .createFood({
+        name,
+        state: 'Unknown',
+        baseUnit: this.newUnit(),
+        kcalPer100: this.newKcal(),
+        proteinPer100: this.newProtein(),
+        fatPer100: this.newFat(),
+        carbsPer100: this.newCarbs(),
+      })
+      .subscribe({
+        next: (food) => {
+          this.createBusy.set(false);
+          this.showCreate.set(false);
+          this.newName.set('');
+          this.createError.set(null);
+          this.pick(food);
+          this.quantity.set(100);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.createBusy.set(false);
+          this.createError.set(describeProblem(error));
+        },
+      });
   }
 
   protected unitLabel(): string {

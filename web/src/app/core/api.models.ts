@@ -72,6 +72,17 @@ export interface FoodSummary {
   carbsPer100g: number;
 }
 
+/** Тело своего продукта: КБЖУ на 100 г или 100 мл. */
+export interface CreateFoodRequest {
+  name: string;
+  state: string;
+  baseUnit: 'Gram' | 'Milliliter';
+  kcalPer100: number;
+  proteinPer100: number;
+  fatPer100: number;
+  carbsPer100: number;
+}
+
 export interface FoodSearchResponse {
   items: FoodSummary[];
 }
