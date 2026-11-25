@@ -116,31 +116,25 @@
       }
 
       <div class="modal-body">
-        <label>
-          Что измеряем
-          <select [value]="bodyKind()" (change)="bodyKind.set($any($event.target).value)">
-            @for (kind of bodyKinds; track kind) {
-              <option [value]="kind">{{ bodyTitles[kind] }}</option>
-            }
-          </select>
-        </label>
+        @for (kind of bodyKinds; track kind) {
+          @let existing = bodyFor(kind);
+          <label class="modal-field">
+            <span>{{ bodyTitles[kind] }}</span>
+            <input
+              type="number"
+              min="20"
+              max="300"
+              step="0.1"
+              inputmode="decimal"
+              [placeholder]="existing ? format(existing.cm, 0) : '—'"
+              [value]="bodyValues()[kind] ?? ''"
+              (input)="onBodyValue(kind, $any($event.target).value)"
+            />
+          </label>
+        }
 
-        <label>
-          Обхват, см
-          <input
-            type="number"
-            min="20"
-            max="300"
-            step="0.1"
-            inputmode="decimal"
-            placeholder="например, 71,5"
-            [value]="bodyCm() ?? ''"
-            (input)="onBodyCm($any($event.target).value)"
-          />
-        </label>
-
-        <label>
-          Дата
+        <label class="modal-field">
+          <span>Дата</span>
           <input type="date" [value]="bodyDate()" (input)="bodyDate.set($any($event.target).value)" />
         </label>
       </div>

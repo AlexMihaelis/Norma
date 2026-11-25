@@ -315,7 +315,24 @@
 
 .modal-body {
   display: grid;
+  gap: var(--space-8);
+}
+
+/* Строка замера: подпись слева, поле справа. */
+.modal-field {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  align-items: center;
   gap: var(--space-12);
+
+  span {
+    font-size: clamp(11px, 0.9vw, 15px);
+    color: var(--color-text-muted);
+  }
+
+  input {
+    margin-top: 0;
+  }
 }
 
 .modal-body select {

@@ -63,8 +63,14 @@ export class WeightPage implements OnInit {
   ];
 
   protected readonly bodyOpen = signal(false);
-  protected readonly bodyKind = signal<BodyMeasurementKind>('Waist');
-  protected readonly bodyCm = signal<number | null>(null);
+  protected readonly bodyValues = signal<Record<BodyMeasurementKind, number | null>>({
+    Chest: null,
+    Waist: null,
+    Hips: null,
+    Thigh: null,
+    Shoulder: null,
+    Calf: null,
+  });
   protected readonly bodyDate = signal(this.today);
   protected readonly bodyBusy = signal(false);
   protected readonly bodyError = signal<string | null>(null);
@@ -246,6 +252,8 @@ export class WeightPage implements OnInit {
   }
 
   protected openBody(): void {
+    // Поля пустые, а прежние значения показываем подсказкой в placeholder.
+    this.bodyValues.set({ Chest: null, Waist: null, Hips: null, Thigh: null, Shoulder: null, Calf: null });
     this.bodyOpen.set(true);
     this.bodyError.set(null);
   }
@@ -262,29 +270,44 @@ export class WeightPage implements OnInit {
     }
   }
 
-  protected onBodyCm(raw: string): void {
+  protected onBodyValue(kind: BodyMeasurementKind, raw: string): void {
     const normalized = raw.replace(',', '.').trim();
     const value = Number(normalized);
+    const safe = normalized === '' || Number.isNaN(value) ? null : value;
 
-    this.bodyCm.set(normalized === '' || Number.isNaN(value) ? null : value);
+    this.bodyValues.update((values) => ({ ...values, [kind]: safe }));
   }
 
+  /** Отправляет только заполненные строки - незаполненные не трогаем. */
   protected saveBody(): void {
-    const cm = this.bodyCm();
+    const values = this.bodyValues();
+    const filled = this.bodyKinds.filter((kind) => values[kind] !== null);
 
-    if (cm === null || cm < 20 || cm > 300) {
-      this.bodyError.set('Обхват должен быть в диапазоне 20-300 см.');
+    if (filled.length === 0) {
+      this.bodyError.set('Заполни хотя бы один обхват.');
+      return;
+    }
+
+    const invalid = filled.find((kind) => {
+      const cm = values[kind];
+
+      return cm === null || cm < 20 || cm > 300;
+    });
+
+    if (invalid !== undefined) {
+      this.bodyError.set(`«${this.bodyTitles[invalid]}»: обхват должен быть 20-300 см.`);
       return;
     }
 
     this.bodyBusy.set(true);
     this.bodyError.set(null);
 
-    this.weights.addBodyMeasurement(this.bodyKind(), cm, this.bodyDate()).subscribe({
+    forkJoin(
+      filled.map((kind) => this.weights.addBodyMeasurement(kind, values[kind]!, this.bodyDate())),
+    ).subscribe({
       next: () => {
         this.bodyBusy.set(false);
         this.bodyOpen.set(false);
-        this.bodyCm.set(null);
         this.load();
       },
       error: (error: HttpErrorResponse) => {
