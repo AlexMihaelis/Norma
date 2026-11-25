@@ -13,31 +13,6 @@
   </div>
 
   <app-weight-chart [entries]="entries()" (picked)="onPicked($event)" />
-
-  <div class="chart-actions">
-    <button type="button" class="outline-button" (click)="toggleWeightForm()">
-      {{ weightFormOpen() ? 'Скрыть форму' : '+ Внести вес' }}
-    </button>
-  </div>
-
-  @if (weightFormOpen()) {
-    <div class="inline-form">
-      @if (saved()) {
-        <p class="ok">Замер сохранён.</p>
-      }
-      <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
-        <label>
-          Вес, кг
-          <input type="number" min="20" max="500" step="0.1" formControlName="kg" placeholder="72,4" />
-        </label>
-        <label>
-          Дата
-          <input type="date" formControlName="date" />
-        </label>
-        <button type="submit" [disabled]="busy()">{{ busy() ? 'Сохраняю…' : 'Записать' }}</button>
-      </form>
-    </div>
-  }
 </section>
 
 <section class="card totals-card">
@@ -71,6 +46,31 @@
       }
     </span>
   </div>
+
+  <div class="totals-actions">
+    <button type="button" class="outline-button" (click)="toggleWeightForm()">
+      {{ weightFormOpen() ? 'Скрыть форму' : '+ Внести вес' }}
+    </button>
+  </div>
+
+  @if (weightFormOpen()) {
+    <div class="inline-form totals-form">
+      @if (saved()) {
+        <p class="ok">Замер сохранён.</p>
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
+        <label>
+          Вес, кг
+          <input type="number" min="20" max="500" step="0.1" formControlName="kg" placeholder="72,4" />
+        </label>
+        <label>
+          Дата
+          <input type="date" formControlName="date" />
+        </label>
+        <button type="submit" [disabled]="busy()">{{ busy() ? 'Сохраняю…' : 'Записать' }}</button>
+      </form>
+    </div>
+  }
 </section>
 
 <section class="card body-card">

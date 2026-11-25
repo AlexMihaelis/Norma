@@ -78,10 +78,15 @@
 }
 
 /* Кнопка «Внести вес» такая же, как «Внести замер» в блоке обхватов. */
-.chart-actions {
+.totals-actions {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-8);
+}
+
+.totals-form {
+  grid-column: 1 / -1;
+  margin-top: 0;
 }
 
 .inline-form {
