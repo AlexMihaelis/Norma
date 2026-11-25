@@ -1,7 +1,8 @@
 :host {
   display: flex;
   flex-direction: column;
-  /* Пастельного красного нет в токенах Figma: локальный нейтральный красный. */
+  /* Пастельных синего и красного нет в токенах Figma: локальные нейтральные. */
+  --color-zone-blue: #8ca6d2;
   --color-zone-red: #d4928d;
 }
 
