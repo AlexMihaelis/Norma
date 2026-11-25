@@ -4,9 +4,11 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   AddDiaryEntryRequest,
+  CreateFoodRequest,
   DiaryDay,
   DiaryEntry,
   FoodSearchResponse,
+  FoodSummary,
   Plan,
 } from '../../core/api.models';
 
@@ -31,6 +33,11 @@ export class DiaryService {
 
   add(request: AddDiaryEntryRequest): Observable<DiaryEntry> {
     return this.http.post<DiaryEntry>(`${environment.apiUrl}/diary`, request);
+  }
+
+  /** Свой продукт: попадает в общий каталог и сразу доступен поиску. */
+  createFood(request: CreateFoodRequest): Observable<FoodSummary> {
+    return this.http.post<FoodSummary>(`${environment.apiUrl}/foods`, request);
   }
 
   remove(entryId: string): Observable<void> {

@@ -1,17 +1,31 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DiaryDay, MealKind, Plan, mealTitles } from '../../core/api.models';
+import { toLocalIso } from '../../core/date';
 import { describeProblem } from '../../core/problem';
 import { AddEntryComponent } from './add-entry.component';
 import { DiaryService } from './diary.service';
 
+interface RingSegment {
+  color: string;
+  dash: string;
+  offset: number;
+}
+
+interface CalendarDay {
+  iso: string;
+  number: number;
+  inMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+  isFuture: boolean;
+}
+
 /**
- * Экран дня: итоги за день и приемы пищи карточками. Прием раскрывается
- * кликом: внутри его позиции и форма добавления.
- *
- * День и цель грузятся независимо: без профиля и веса цель не посчитать, но
- * дневник должен открываться.
+ * Экран дня: кольцо КБЖУ, шесть приемов и стрелки по датам. День и цель
+ * грузятся независимо: без профиля и веса цель не посчитать, но дневник
+ * должен открываться.
  */
 @Component({
   selector: 'app-diary-page',
@@ -30,12 +44,115 @@ export class DiaryPage implements OnInit {
   protected readonly openMeal = signal<MealKind | null>(null);
   protected readonly titles = mealTitles;
 
-  protected readonly today = new Date();
-  protected readonly dateIso = this.today.toISOString().slice(0, 10);
-  protected readonly dateLabel = this.today.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    weekday: 'long',
+  /** Выбранная дата: по умолчанию сегодня, стрелки ходят в прошлое. */
+  protected readonly selected = signal<Date>(this.startOfToday());
+  protected readonly dateIso = computed(() => toLocalIso(this.selected()));
+  protected readonly dateLabel = computed(() => this.formatDateLabel(this.selected()));
+  protected readonly isToday = computed(() => this.dateIso() === toLocalIso(this.startOfToday()));
+
+  /** Верхняя граница календаря: будущие дни выбирать незачем. */
+  protected readonly maxDateIso = toLocalIso(this.startOfToday());
+
+  /** Календарь: открыт/закрыт и какой месяц показан. */
+  protected readonly calendarOpen = signal(false);
+  protected readonly viewMonth = signal<Date>(this.firstOfMonth(this.startOfToday()));
+
+  protected readonly monthLabel = computed(() => {
+    const date = this.viewMonth();
+    const month = date.toLocaleDateString('ru-RU', { month: 'long' });
+
+    return `${month.charAt(0).toUpperCase()}${month.slice(1)} ${date.getFullYear()}`;
+  });
+
+  protected readonly isCurrentMonth = computed(
+    () => this.viewMonth().getTime() >= this.firstOfMonth(this.startOfToday()).getTime(),
+  );
+
+  /** Сетка 6 недель с понедельника, чтобы месяцы не прыгали по высоте. */
+  protected readonly calendarDays = computed<CalendarDay[]>(() => {
+    const first = this.viewMonth();
+    const offset = (first.getDay() + 6) % 7;
+    const start = new Date(first);
+
+    start.setDate(start.getDate() - offset);
+
+    const todayIso = toLocalIso(this.startOfToday());
+    const selectedIso = this.dateIso();
+    const days: CalendarDay[] = [];
+
+    for (let index = 0; index < 42; index += 1) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + index);
+
+      const iso = toLocalIso(date);
+
+      days.push({
+        iso,
+        number: date.getDate(),
+        inMonth: date.getMonth() === first.getMonth(),
+        isToday: iso === todayIso,
+        isSelected: iso === selectedIso,
+        isFuture: iso > todayIso,
+      });
+    }
+
+    return days;
+  });
+
+  private readonly ringRadius = 46;
+  private readonly ringLength = 2 * Math.PI * 46;
+
+  protected readonly eaten = computed(() => this.day()?.totals.kcal ?? 0);
+
+  protected readonly remainingKcal = computed(() => {
+    const target = this.plan()?.targetKcal;
+
+    return target === null || target === undefined ? null : Math.round(target - this.eaten());
+  });
+
+  protected readonly remainingMacros = computed(() => {
+    const macros = this.plan()?.macros;
+    const totals = this.day()?.totals;
+
+    if (!macros || !totals) {
+      return null;
+    }
+
+    return {
+      protein: Math.max(0, Math.round(macros.proteinG - totals.protein)),
+      fat: Math.max(0, Math.round(macros.fatG - totals.fat)),
+      carbs: Math.max(0, Math.round(macros.carbsG - totals.carbs)),
+    };
+  });
+
+  protected readonly ringSegments = computed<RingSegment[]>(() => {
+    const macros = this.plan()?.macros;
+    const totals = this.day()?.totals;
+
+    if (!macros || !totals) {
+      return [];
+    }
+
+    const shares = [
+      { color: 'var(--color-protein)', value: this.share(totals.protein, macros.proteinG) },
+      { color: 'var(--color-fat-pastel)', value: this.share(totals.fat, macros.fatG) },
+      { color: 'var(--color-carbs-pastel)', value: this.share(totals.carbs, macros.carbsG) },
+    ];
+
+    let sent = 0;
+
+    return shares.map((share) => {
+      const length = share.value * this.ringLength;
+      const segment = {
+        color: share.color,
+        dash: `${length.toFixed(2)} ${(this.ringLength - length).toFixed(2)}`,
+        offset: -sent,
+      };
+
+      sent += length;
+
+      return segment;
+    });
   });
 
   ngOnInit(): void {
@@ -45,7 +162,7 @@ export class DiaryPage implements OnInit {
   protected load(): void {
     this.error.set(null);
 
-    this.diary.day(this.dateIso).subscribe({
+    this.diary.day(this.dateIso()).subscribe({
       next: (day) => this.day.set(day),
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
     });
@@ -72,6 +189,83 @@ export class DiaryPage implements OnInit {
     });
   }
 
+  protected previousDay(): void {
+    const date = new Date(this.selected());
+    date.setDate(date.getDate() - 1);
+    this.selected.set(date);
+    this.load();
+  }
+
+  /** Клик по дате открывает календарь: за неделю-две так быстрее, чем стрелками. */
+  protected toggleCalendar(event: MouseEvent): void {
+    event.stopPropagation();
+    this.viewMonth.set(this.firstOfMonth(this.selected()));
+    this.calendarOpen.update((open) => !open);
+  }
+
+  @HostListener('document:click')
+  protected closeCalendar(): void {
+    this.calendarOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected closeCalendarOnEscape(): void {
+    this.calendarOpen.set(false);
+  }
+
+  protected previousMonth(): void {
+    const date = new Date(this.viewMonth());
+    date.setMonth(date.getMonth() - 1);
+    this.viewMonth.set(date);
+  }
+
+  protected nextMonth(): void {
+    if (this.isCurrentMonth()) {
+      return;
+    }
+
+    const date = new Date(this.viewMonth());
+    date.setMonth(date.getMonth() + 1);
+    this.viewMonth.set(date);
+  }
+
+  protected pickDay(day: CalendarDay, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (day.isFuture) {
+      return;
+    }
+
+    const [year, month, date] = day.iso.split('-').map(Number);
+
+    this.selected.set(new Date(year, month - 1, date));
+    this.calendarOpen.set(false);
+    this.load();
+  }
+
+  protected pickToday(event: MouseEvent): void {
+    event.stopPropagation();
+    this.selected.set(this.startOfToday());
+    this.calendarOpen.set(false);
+    this.load();
+  }
+
+  protected nextDay(): void {
+    if (this.isToday()) {
+      return;
+    }
+
+    const date = new Date(this.selected());
+    date.setDate(date.getDate() + 1);
+    this.selected.set(date);
+    this.load();
+  }
+
+  protected today(): void {
+    this.selected.set(this.startOfToday());
+    this.load();
+  }
+
   protected toggle(kind: MealKind): void {
     this.openMeal.set(this.openMeal() === kind ? null : kind);
   }
@@ -87,14 +281,33 @@ export class DiaryPage implements OnInit {
     return unit === 'Milliliter' ? 'мл' : 'г';
   }
 
-  protected progressPercent(): number {
-    const target = this.plan()?.targetKcal;
-    const eaten = this.day()?.totals.kcal ?? 0;
+  protected formatNumber(value: number | null | undefined): string {
+    return value === null || value === undefined ? '—' : value.toLocaleString('ru-RU');
+  }
 
-    if (!target || target <= 0) {
+  /** «Среда, 25 ноября»: день недели в макете с большой буквы. */
+  private formatDateLabel(date: Date): string {
+    const weekday = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+    const rest = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+
+    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${rest}`;
+  }
+
+  private startOfToday(): Date {
+    const now = new Date();
+
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }
+
+  private firstOfMonth(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  }
+
+  private share(value: number, target: number): number {
+    if (target <= 0) {
       return 0;
     }
 
-    return Math.min(100, Math.round((eaten / target) * 100));
+    return Math.min(1, value / target);
   }
 }

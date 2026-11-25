@@ -1,123 +1,477 @@
-.day {
-  margin-bottom: 1.25rem;
-}
+.day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-16);
+  margin: 0 0 var(--space-8);
 
-.eaten {
-  font-size: 1.1rem;
-}
-
-.bar {
-  height: 8px;
-  border-radius: 999px;
-  background: #e5e7eb;
-  overflow: hidden;
-  margin: 0.5rem 0 0;
-
-  span {
-    display: block;
-    height: 100%;
-    background: #2f855a;
-    transition: width 0.3s ease;
+  h1 {
+    margin: 0;
+    font-size: clamp(22px, 1.95vw, 32px);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text);
   }
 }
 
-.meal {
+.date-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Дата выглядит кнопкой: рамка, иконка календаря и стрелка вниз. */
+.date-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: clamp(var(--space-4), 0.5vw, var(--space-8)) clamp(var(--space-8), 0.9vw, var(--space-12));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: clamp(12px, 0.97vw, 17px);
+
+  &:hover {
+    background: var(--color-track);
+  }
+}
+
+.date-icon {
+  color: var(--color-accent);
+  flex: 0 0 auto;
+}
+
+/* Календарь: крупная сетка 7 x 6, сегодня и выбранный день подсвечены. */
+.calendar {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-8));
+  width: clamp(280px, 22vw, 340px);
+  padding: var(--space-16);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 16%);
+  z-index: 40;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.cal-month {
+  font-size: clamp(13px, 1vw, 16px);
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: capitalize;
+}
+
+.cal-nav {
+  width: 28px;
+  height: 28px;
   padding: 0;
-  margin-bottom: 0.75rem;
-  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover:not(:disabled) {
+    background: var(--color-track);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.cal-weekdays,
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.cal-weekdays {
+  margin-bottom: var(--space-4);
+
+  span {
+    font-size: clamp(10px, 0.76vw, 12px);
+    color: var(--color-text-muted);
+  }
+}
+
+.cal-day {
+  aspect-ratio: 1;
+  min-height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--space-8);
+  background: none;
+  color: var(--color-text);
+  font-size: clamp(12px, 0.9vw, 14px);
+
+  &:hover:not(:disabled) {
+    background: var(--color-track);
+  }
+
+  /* Дни соседних месяцев приглушены, но выбирать их можно. */
+  &.out {
+    color: var(--color-text-muted);
+    opacity: 0.55;
+  }
+
+  &.today {
+    box-shadow: inset 0 0 0 1px var(--color-accent);
+    color: var(--color-accent);
+    font-weight: 700;
+  }
+
+  &.selected {
+    background: var(--color-accent);
+    color: var(--color-text-inverse);
+    font-weight: 700;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.cal-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-12);
+}
+
+.cal-today {
+  padding: var(--space-4) var(--space-12);
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: clamp(11px, 0.9vw, 14px);
+  text-decoration: underline;
+}
+
+/* Стрелки по датам: показывают прошлые дни с их рационом. */
+.day-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.day-arrow {
+  width: clamp(28px, 2.2vw, 34px);
+  height: clamp(28px, 2.2vw, 34px);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: clamp(16px, 1.4vw, 20px);
+  line-height: 1;
+
+  &:hover:not(:disabled) {
+    background: var(--color-track);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+.day-today {
+  padding: 0 var(--space-8);
+  height: clamp(28px, 2.2vw, 34px);
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: clamp(11px, 0.83vw, 14px);
+  text-decoration: underline;
+}
+
+/* Кольцо КБЖУ над приемами: как на главной, но компактнее. */
+.nutrition {
+  display: flex;
+  align-items: center;
+  gap: clamp(var(--space-16), 2vw, var(--space-32));
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: clamp(var(--space-16), 1.4vw, var(--space-24));
+  margin-bottom: var(--space-16);
+}
+
+.ring {
+  position: relative;
+  width: clamp(88px, 7.5vw, 112px);
+  height: clamp(88px, 7.5vw, 112px);
+  flex: 0 0 auto;
+}
+
+.ring svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--color-track);
+  stroke-width: 12;
+}
+
+.ring-segment {
+  fill: none;
+  stroke-width: 12;
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  strong {
+    font-size: clamp(16px, 1.4vw, 24px);
+    line-height: 1.2;
+    color: var(--color-text);
+  }
+
+  span {
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-text-muted);
+  }
+}
+
+/* Верхняя строка: цель и остаток; вторая: три макроса с цветными маркерами. */
+.nutrition-cells {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Ячейки идут вплотную друг к другу, а не растягиваются на всю ширину. */
+.cells-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: clamp(var(--space-12), 1.4vw, var(--space-24));
+}
+
+.cell {
+  min-width: 0;
+}
+
+.goal-row .cell {
+  min-width: 92px;
+}
+
+.macros-row .cell {
+  min-width: 104px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cell-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: clamp(10px, 0.78vw, 13px);
+  color: var(--color-text-muted);
+}
+
+/* Маркеры цветов кольца: тот же цвет, что у сегмента КБЖУ. */
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+
+  &.protein {
+    background: var(--color-protein);
+  }
+
+  &.fat {
+    background: var(--color-fat-pastel);
+  }
+
+  &.carbs {
+    background: var(--color-carbs-pastel);
+  }
+}
+
+.cell-value {
+  font-size: clamp(12px, 0.97vw, 16px);
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+/* Сводка дня: в макете ее нет, но цель и остаток нужны - оставила одной строкой. */
+.day-plan {
+  margin: 0 0 var(--space-16);
+  font-size: clamp(11px, 0.9vw, 15px);
+  color: var(--color-text-muted);
+}
+
+.meal {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: clamp(var(--space-12), 1vw, var(--space-20));
+  margin-bottom: var(--space-12);
 }
 
 .meal-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  background: none;
-  border: none;
-  color: #111827;
-  padding: 1rem 1.25rem;
-  text-align: left;
-  font: inherit;
-
-  &:hover {
-    background: #f8fafc;
-  }
+  gap: var(--space-12);
 }
 
 .meal-title {
+  font-size: clamp(13px, 1.04vw, 17px);
   font-weight: 700;
+  color: var(--color-text);
 }
 
-.meal-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-  color: #374151;
+.meal-total {
+  margin-left: auto;
+  font-size: clamp(11px, 0.9vw, 15px);
+  color: var(--color-text-muted);
 }
 
-.chevron {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  background: #f3f4f6;
-  color: #374151;
-  font-weight: 700;
-}
-
-.meal-body {
-  padding: 0 1.25rem 1.25rem;
-  border-top: 1px solid #f1f5f9;
-}
-
-.items {
-  list-style: none;
+.plus {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   padding: 0;
-  margin: 0.75rem 0 0.5rem;
-
-  li {
-    display: flex;
-    flex-direction: column;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f5f9;
-  }
-}
-
-.item-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.remove {
-  background: none;
   border: none;
-  color: #b91c1c;
-  padding: 0.15rem 0.35rem;
-  font-size: 0.85rem;
+  border-radius: 50%;
+  background: var(--color-accent);
+  position: relative;
 
   &:hover {
-    text-decoration: underline;
+    background: var(--color-accent);
+    filter: brightness(1.06);
   }
+
+  span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 2px;
+    background: var(--color-text-inverse);
+    transform: translate(-50%, -50%);
+
+    &:last-child {
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+  }
+
+  &.open span:last-child {
+    transform: translate(-50%, -50%);
+  }
+}
+
+.meal-rows {
+  margin-top: var(--space-12);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.meal-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 84px 24px;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.row-name {
+  font-size: clamp(12px, 0.97vw, 16px);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-qty,
+.row-kcal {
+  font-size: clamp(11px, 0.9vw, 15px);
+  color: var(--color-text-muted);
+}
+
+.row-kcal {
+  text-align: right;
+}
+
+.row-remove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-field);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 18px;
+  line-height: 1;
+
+  &:hover {
+    background: var(--color-track);
+    color: var(--color-text);
+  }
+}
+
+.meal-form {
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
 }
 
 .setup {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-16);
 
   ol {
-    margin: 0.5rem 0 0;
-    padding-left: 1.25rem;
+    margin: var(--space-8) 0 0;
+    padding-left: var(--space-20);
     display: grid;
-    gap: 0.35rem;
+    gap: var(--space-4);
   }
 
   a {
-    color: #2f855a;
+    color: var(--color-accent);
     font-weight: 600;
+  }
+}
+
+@media (max-width: 640px) {
+  .meal-row {
+    grid-template-columns: minmax(0, 1fr) auto 24px;
+
+    .row-qty {
+      display: none;
+    }
+  }
+
+  .day-head {
+    flex-direction: column;
+    gap: var(--space-4);
   }
 }

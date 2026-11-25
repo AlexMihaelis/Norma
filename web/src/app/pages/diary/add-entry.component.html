@@ -29,8 +29,100 @@
     </ul>
   } @else if (searched()) {
     <p class="muted small">
-      Ничего не найдено. Попробуй другое слово - в каталоге ~70 базовых продуктов.
+      Ничего не найдено. Попробуй другое слово или создай свой продукт ниже.
     </p>
+  }
+</div>
+
+<div class="create-block">
+  <button type="button" class="link" (click)="toggleCreate()">
+    {{ showCreate() ? 'Скрыть форму' : 'Нет нужного продукта? Создать свой' }}
+  </button>
+
+  @if (showCreate()) {
+    <div class="create-form">
+      @if (createError(); as message) {
+        <p class="error">{{ message }}</p>
+      }
+
+      <div class="create-row">
+        <label>
+          Название
+          <input
+            maxlength="100"
+            placeholder="например, творожная запеканка"
+            [value]="newName()"
+            (input)="onNewName($any($event.target).value)"
+          />
+        </label>
+
+        <label>
+          Единица
+          <select [value]="newUnit()" (change)="onNewUnit($any($event.target).value)">
+            <option value="Gram">граммы</option>
+            <option value="Milliliter">миллилитры</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="create-macros">
+        <label>
+          Ккал / 100
+          <input
+            type="number"
+            min="0"
+            max="950"
+            step="0.1"
+            inputmode="decimal"
+            [value]="newKcal()"
+            (input)="onNewNumber('kcal', $any($event.target).value)"
+          />
+        </label>
+        <label>
+          Белки / 100
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            inputmode="decimal"
+            [value]="newProtein()"
+            (input)="onNewNumber('protein', $any($event.target).value)"
+          />
+        </label>
+        <label>
+          Жиры / 100
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            inputmode="decimal"
+            [value]="newFat()"
+            (input)="onNewNumber('fat', $any($event.target).value)"
+          />
+        </label>
+        <label>
+          Углеводы / 100
+          <input
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            inputmode="decimal"
+            [value]="newCarbs()"
+            (input)="onNewNumber('carbs', $any($event.target).value)"
+          />
+        </label>
+      </div>
+
+      <div class="create-actions">
+        <button type="button" (click)="createFood()" [disabled]="createBusy()">
+          {{ createBusy() ? 'Создаю…' : 'Создать и выбрать' }}
+        </button>
+        <span class="muted small">Значения на 100 г или 100 мл. Продукт попадет в общий каталог.</span>
+      </div>
+    </div>
   }
 </div>
 
