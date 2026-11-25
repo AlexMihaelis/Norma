@@ -1,0 +1,472 @@
+@use 'sass:map';
+@use '../../../styles/tokens' as tokens;
+
+/* Типографика берется из текстовых стилей Figma, а не из чисел «на глаз». */
+@mixin text-style($name) {
+  $style: map.get(tokens.$text-styles, $name);
+  font-family: map.get($style, family), system-ui, sans-serif;
+  font-weight: map.get($style, weight);
+  font-size: map.get($style, size);
+  line-height: map.get($style, line-height);
+  letter-spacing: map.get($style, letter-spacing);
+}
+
+:host {
+  display: block;
+}
+
+.greeting {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-16);
+  margin: 0 0 var(--space-16);
+
+  h1 {
+    @include text-style('heading-h2');
+    margin: 0;
+    color: var(--color-text);
+  }
+}
+
+.greeting-date {
+  @include text-style('body-large');
+  color: var(--color-text-muted);
+}
+
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  position: relative;
+  /* В макете карточки без тени: тень из общего .card снимаем. */
+  box-shadow: none;
+}
+
+.card-label {
+  @include text-style('body-medium');
+  color: var(--color-text-muted);
+}
+
+/* Вес: карточка тянется по ширине, график занимает правую часть и не жмется. */
+.weight-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 42%);
+  column-gap: var(--space-24);
+  padding: var(--space-24);
+  min-height: 220px;
+  margin-bottom: var(--space-20);
+}
+
+.weight-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.weight-value {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+
+  .value {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 41px;
+    color: var(--color-text);
+  }
+
+  .unit {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 19px;
+    color: var(--color-text-muted);
+  }
+
+  .goal {
+    @include text-style('body-medium');
+    margin-left: var(--space-4);
+    color: var(--color-text-muted);
+  }
+}
+
+.delta {
+  @include text-style('body-smallbold');
+  color: var(--color-accent);
+  margin-top: var(--space-8);
+}
+
+.weight-button {
+  @include text-style('body-mediumbold');
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 208px;
+  height: 38px;
+  padding: 0 var(--space-16);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  /* В макете у кнопки только белая заливка, граница не задана: взяла --color-border. */
+  border: 1px solid var(--color-border);
+  color: var(--color-accent);
+  text-decoration: none;
+  margin-top: auto;
+}
+
+.weight-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 0;
+}
+
+.chart-caption {
+  @include text-style('caption');
+  color: var(--color-text-muted);
+}
+
+.sparkline {
+  width: 100%;
+  height: 148px;
+  margin-top: var(--space-8);
+
+  .grid {
+    stroke: var(--color-track);
+    stroke-width: 1;
+  }
+
+  .line {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 2;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .dot {
+    fill: var(--color-accent);
+  }
+}
+
+.chart-today {
+  @include text-style('caption');
+  color: var(--color-text-muted);
+  margin-top: auto;
+}
+
+/* Питание: кольцо с легендой слева, действия справа. */
+.nutrition-card {
+  padding: var(--space-24);
+  min-height: 220px;
+  margin-bottom: var(--space-20);
+}
+
+.nutrition-target {
+  @include text-style('body-small');
+  color: var(--color-text-muted);
+  position: absolute;
+  top: var(--space-24);
+  right: var(--space-24);
+}
+
+.nutrition-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 292px);
+  column-gap: var(--space-24);
+  margin-top: var(--space-12);
+}
+
+/* Кольцо стоит с отступом 16 от полей карточки, легенда - через 30 после него. */
+.nutrition-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 30px; /* координаты из макета: 30, ближайшего токена нет */
+  padding-left: var(--space-16);
+  min-width: 0;
+}
+
+.ring {
+  position: relative;
+  width: 108px;
+  height: 108px;
+  flex: 0 0 auto;
+}
+
+.ring svg {
+  width: 108px;
+  height: 108px;
+  display: block;
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--color-track);
+  stroke-width: 12;
+}
+
+.ring-segment {
+  fill: none;
+  stroke-width: 12;
+}
+
+.ring-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  strong {
+    @include text-style('heading-h3');
+    color: var(--color-text);
+  }
+
+  span {
+    @include text-style('caption');
+    color: var(--color-text-muted);
+  }
+}
+
+.legend {
+  list-style: none;
+  margin: var(--space-12) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-12);
+  flex: 1;
+  min-width: 0;
+
+  li {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+
+  &.protein {
+    background: var(--color-protein);
+  }
+
+  &.fat {
+    background: var(--color-fat-pastel);
+  }
+
+  &.carbs {
+    background: var(--color-carbs-pastel);
+  }
+}
+
+.legend-label {
+  @include text-style('body-medium');
+  color: var(--color-text);
+}
+
+.legend-value {
+  @include text-style('body-mediumbold');
+  color: var(--color-text);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.nutrition-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.primary-button {
+  @include text-style('body-large');
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 292px;
+  height: 42px;
+  border-radius: var(--radius-button);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.remaining {
+  @include text-style('body-small');
+  color: var(--color-text-muted);
+  margin-top: var(--space-8);
+}
+
+.remaining-macros {
+  @include text-style('body-small');
+  color: var(--color-text-muted);
+}
+
+/* Вода и активность: две равные колонки, которые сжимаются вместе с экраном. */
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-20);
+}
+
+.water-card,
+.activity-card {
+  min-height: 160px;
+  padding: var(--space-24);
+}
+
+.water-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.plus-button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-accent);
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+
+  span {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 12px;
+    height: 2px;
+    background: var(--color-text-inverse);
+    transform: translate(-50%, -50%);
+
+    &:last-child {
+      transform: translate(-50%, -50%) rotate(90deg);
+    }
+  }
+}
+
+.water-value,
+.activity-value {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: var(--space-4) 0 0;
+
+  .value {
+    @include text-style('heading-h2');
+    color: var(--color-text);
+  }
+
+  .unit {
+    @include text-style('body-medium');
+    color: var(--color-text-muted);
+  }
+}
+
+.water-track {
+  width: 100%;
+  height: 8px;
+  border-radius: var(--space-4);
+  background: var(--color-water-soft);
+  overflow: hidden;
+  margin-top: var(--space-12);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: var(--space-4);
+    background: var(--color-water);
+    transition: width 0.2s ease;
+  }
+}
+
+.water-remaining {
+  @include text-style('body-small');
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: var(--space-8);
+}
+
+.activity-entry {
+  @include text-style('body-medium');
+  color: var(--color-text);
+  display: block;
+  margin-top: var(--space-12);
+  overflow-wrap: anywhere;
+
+  &.muted {
+    color: var(--color-text-muted);
+  }
+}
+
+/* Ноутбуки и планшеты: карточки в одну колонку, график под текстом. */
+@media (max-width: 980px) {
+  .weight-card {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-16);
+  }
+
+  .weight-button {
+    margin-top: var(--space-16);
+  }
+
+  .nutrition-body {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-16);
+  }
+
+  .primary-button {
+    max-width: none;
+  }
+
+  .cards-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Узкие экраны: кольцо и легенда друг под другом, поля карточки меньше. */
+@media (max-width: 640px) {
+  .greeting {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .weight-card,
+  .nutrition-card,
+  .water-card,
+  .activity-card {
+    padding: var(--space-16);
+  }
+
+  .nutrition-summary {
+    flex-direction: column;
+    gap: var(--space-16);
+    padding-left: 0;
+  }
+
+  .legend {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .nutrition-target {
+    top: var(--space-16);
+    right: var(--space-16);
+  }
+
+  .sparkline {
+    height: 120px;
+  }
+}
