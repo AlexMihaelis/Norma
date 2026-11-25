@@ -182,13 +182,18 @@
 }
 
 .bar-value {
-  height: 12px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
   font-size: clamp(8px, 0.66vw, 11px);
   color: var(--color-text-muted);
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .bar-track {
+  position: relative;
   display: flex;
   align-items: flex-end;
   justify-content: center;

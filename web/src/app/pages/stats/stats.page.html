@@ -66,11 +66,13 @@
             >
               @for (day of chartDays(); track day.iso) {
                 <div class="column" [class.month-start]="day.label === '1'">
-                  <span class="bar-value">
-                    {{ day.kcal === null || period() !== 7 ? '' : formatNumber(day.kcal) }}
-                  </span>
-
                   <div class="bar-track">
+                    @if (day.kcal !== null && period() === 7) {
+                      <span class="bar-value" [style.bottom.%]="barHeight(day.kcal)">
+                        {{ formatNumber(day.kcal) }}
+                      </span>
+                    }
+
                     @if (day.kcal !== null) {
                       <span
                         class="bar"
