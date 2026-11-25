@@ -49,12 +49,13 @@ public static class RepeatDiaryDayEndpoint
         var targetDate = request?.Date ?? today;
         var sourceDate = request?.FromDate ?? targetDate.AddDays(-1);
 
-        if (targetDate > today)
+        // Допуск в сутки: клиент живет в местном времени, сервер считает по UTC.
+        if (targetDate > today.AddDays(1))
         {
             errors["date"] = ["Дата не может быть в будущем."];
         }
 
-        if (sourceDate > today)
+        if (sourceDate > today.AddDays(1))
         {
             errors["fromDate"] = ["Дата источника не может быть в будущем."];
         }

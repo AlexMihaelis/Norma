@@ -60,7 +60,8 @@ public static class GetStatsEndpoint
             errors["from"] = ["Начало периода не может быть позже конца."];
         }
 
-        if (end > today)
+        // Допуск в сутки: клиент присылает местную дату, а сервер считает сегодня по UTC.
+        if (end > today.AddDays(1))
         {
             errors["to"] = ["Конец периода не может быть в будущем."];
         }

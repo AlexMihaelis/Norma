@@ -49,7 +49,8 @@ public static class UpdateWeightEndpoint
 
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
-        if (request?.Date is DateOnly date && date > today)
+        // Допуск в сутки: местная дата может быть впереди UTC-даты сервера.
+        if (request?.Date is DateOnly date && date > today.AddDays(1))
         {
             errors["date"] = ["Дата не может быть в будущем."];
         }

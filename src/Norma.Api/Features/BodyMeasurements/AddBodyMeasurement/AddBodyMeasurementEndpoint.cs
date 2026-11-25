@@ -56,7 +56,8 @@ public static class AddBodyMeasurementEndpoint
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var date = request?.Date ?? today;
 
-        if (date > today)
+        // Допуск в сутки: у пользователя может быть уже следующий день по местному времени.
+        if (date > today.AddDays(1))
         {
             errors["date"] = ["Дата не может быть в будущем."];
         }
