@@ -35,7 +35,7 @@ export class WeightPage implements OnInit {
   protected readonly zoneColors = ['#60a5fa', '#22c55e', '#f59e0b', '#dc2626'];
   protected readonly weightZoneLabels = [
     'Недостаток веса',
-    'Норма',
+    'Нормальный',
     'Избыток веса',
     'Ожирение',
   ] as const;
