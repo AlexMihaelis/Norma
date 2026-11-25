@@ -192,10 +192,13 @@
     <div class="zones">
       <h3>
         Вес по зонам
-        <span class="hint" data-tip="Синяя - недостаток, зеленая - норма, оранжевая - избыток, темная - ожирение. Кружок стоит на последнем замере.">?</span>
+        <span class="hint" data-tip="Синяя - недостаток, зеленая - норма, оранжевая - избыток, красная - ожирение. Кружок стоит на последнем замере.">?</span>
       </h3>
 
       @if (weightBoundaries(); as boundaries) {
+        <p class="zone-values">
+          {{ format(currentKg()) }} кг · норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг
+        </p>
         <app-zone-scale [value]="currentKg()" [boundaries]="boundaries" [labels]="weightZoneLabels" />
         <p class="muted small">
           Норма {{ format(boundaries[0]) }}–{{ format(boundaries[1]) }} кг; ожирение от
@@ -213,6 +216,9 @@
       </h3>
 
       @if (bmiBoundaries(); as boundaries) {
+        <p class="zone-values">
+          {{ format(value.bmi) }} · {{ bmiTitles[value.bmiCategory ?? 'Normal'] }}
+        </p>
         <app-zone-scale
           [value]="value.bmi"
           [boundaries]="boundaries"

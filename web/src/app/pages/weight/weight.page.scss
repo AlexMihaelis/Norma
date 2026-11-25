@@ -1,3 +1,30 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  /* Пастельного красного нет в токенах Figma: завела локально для зоны ожирения. */
+  --color-zone-red: #f2b8b5;
+}
+
+.chart-card {
+  order: 1;
+}
+
+.totals-card {
+  order: 2;
+}
+
+.body-card {
+  order: 3;
+}
+
+.zones-card {
+  order: 4;
+}
+
+.history-card {
+  order: 5;
+}
+
 .page-head {
   margin: 0 0 var(--space-16);
 
@@ -294,6 +321,14 @@
   .small {
     margin: var(--space-4) 0 0;
   }
+}
+
+/* Цифры, к которым относится шкала: вес с нормой и ИМТ с категорией. */
+.zone-values {
+  margin: 0 0 var(--space-4);
+  font-size: clamp(11px, 0.9vw, 15px);
+  font-weight: 600;
+  color: var(--color-text);
 }
 
 .ok {

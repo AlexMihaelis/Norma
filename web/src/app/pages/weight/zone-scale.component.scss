@@ -40,7 +40,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  opacity: 0.8;
+  opacity: 0.95;
+  /* Пастельные цвета бледные на белом - чуть затемняем текст подписи. */
+  filter: brightness(0.72);
 
   &.active {
     font-weight: 700;
