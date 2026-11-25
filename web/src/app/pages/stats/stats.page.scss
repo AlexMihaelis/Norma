@@ -121,15 +121,25 @@
   background: var(--color-surface);
 }
 
-.columns {
-  display: grid;
-  grid-auto-flow: column;
-  /* Дни делят ширину поровну: подписи видны всегда, столбцы не разъезжаются. */
-  grid-auto-columns: minmax(14px, 1fr);
-  justify-content: space-between;
-  gap: clamp(var(--space-4), 0.5vw, var(--space-8));
+/* Лента дней: одна прокрутка на столбцы и месяцы, чтобы подписи не разъезжались. */
+.strip {
   overflow-x: auto;
   border-bottom: 1px solid var(--color-border);
+}
+
+.strip-inner {
+  display: grid;
+  gap: clamp(var(--space-4), 0.5vw, var(--space-8));
+  width: 100%;
+
+  &.dense {
+    width: max-content;
+  }
+}
+
+/* Начало месяца отделяем линией и подписью «1 ноя» прямо в строке дат. */
+.column.month-start {
+  border-left: 1px solid var(--color-track);
 }
 
 .column {

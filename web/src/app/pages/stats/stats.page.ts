@@ -20,7 +20,9 @@ interface SummaryItem {
 
 interface ChartDay {
   iso: string;
+  label: string;
   weekday: string;
+  isMonthStart: boolean;
   kcal: number | null;
   targetKcal: number | null;
   diffKcal: number | null;
@@ -35,8 +37,17 @@ interface ChartDay {
 export class StatsPage implements OnInit {
   private readonly stats = inject(StatsService);
 
-  /** Лента дней: после загрузки прокручиваем к сегодняшнему дню, а не к началу. */
-  @ViewChild('columnsRef') private columnsRef?: ElementRef<HTMLDivElement>;
+  /** Лента дней: прокручиваем к сегодняшнему дню, как только она отрисовалась. */
+  @ViewChild('stripRef')
+  private set stripRef(ref: ElementRef<HTMLDivElement> | undefined) {
+    if (!ref) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      ref.nativeElement.scrollLeft = 0;
+    });
+  }
 
   protected readonly periods: PeriodOption[] = [
     { days: 7, title: '7 дней' },
@@ -70,10 +81,19 @@ export class StatsPage implements OnInit {
     while (cursor <= end) {
       const iso = toLocalIso(cursor);
       const day = byDate.get(iso);
+      const isMonthStart = cursor.getDate() === 1 || result.length === 0;
+      const monthShort = cursor.toLocaleDateString('ru-RU', { month: 'short' });
 
       result.push({
         iso,
+        label:
+          this.period() === 7
+            ? cursor.toLocaleDateString('ru-RU', { weekday: 'short' })
+            : isMonthStart
+              ? `${cursor.getDate()} ${monthShort}`
+              : String(cursor.getDate()),
         weekday: cursor.toLocaleDateString('ru-RU', { weekday: 'short' }),
+        isMonthStart,
         kcal: day?.kcal ?? null,
         targetKcal: day?.targetKcal ?? null,
         diffKcal: day?.diffKcal ?? null,
@@ -82,7 +102,8 @@ export class StatsPage implements OnInit {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    return result;
+    // Длинные периоды листаются с сегодняшнего дня: он первый слева, прошлое - справа.
+    return this.period() === 7 ? result : result.reverse();
   });
 
   protected readonly target = computed(() => this.data()?.averages.targetKcal ?? null);
@@ -140,20 +161,8 @@ export class StatsPage implements OnInit {
       next: ({ stats, plan }) => {
         this.data.set(stats);
         this.plan.set(plan);
-        this.scrollToLatest();
       },
       error: (error: HttpErrorResponse) => this.error.set(describeProblem(error)),
-    });
-  }
-
-  /** Столбцы рисуются после смены данных, поэтому прокрутка ждет кадр. */
-  private scrollToLatest(): void {
-    setTimeout(() => {
-      const element = this.columnsRef?.nativeElement;
-
-      if (element) {
-        element.scrollLeft = element.scrollWidth;
-      }
     });
   }
 
