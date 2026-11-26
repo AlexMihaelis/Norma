@@ -32,6 +32,11 @@ using Norma.Api.Features.Health;
 using Norma.Api.Features.Plan;
 using Norma.Api.Features.Profiles.GetProfile;
 using Norma.Api.Features.Profiles.UpdateProfile;
+using Norma.Api.Features.Recipes.CreateRecipe;
+using Norma.Api.Features.Recipes.DeleteRecipe;
+using Norma.Api.Features.Recipes.GetRecipe;
+using Norma.Api.Features.Recipes.ListRecipes;
+using Norma.Api.Features.Recipes.UpdateRecipe;
 using Norma.Api.Features.Stats.GetStats;
 using Norma.Api.Features.Water.AddWater;
 using Norma.Api.Features.Water.GetWaterDay;
@@ -257,6 +262,11 @@ public static class ApiHost
         api.MapListFavorites();
         api.MapDeleteFavorite();
         api.MapGetStats();
+        api.MapCreateRecipe();
+        api.MapListRecipes();
+        api.MapGetRecipe();
+        api.MapUpdateRecipe();
+        api.MapDeleteRecipe();
 
         return app;
     }
