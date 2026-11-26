@@ -99,28 +99,12 @@
 </header>
 
 <section class="nutrition">
-  <div class="ring">
-    <svg viewBox="0 0 108 108" aria-hidden="true">
-      <circle class="ring-track" cx="54" cy="54" [attr.r]="46" />
-      @for (segment of ringSegments(); track segment.color) {
-        <circle
-          class="ring-segment"
-          cx="54"
-          cy="54"
-          [attr.r]="46"
-          [attr.stroke]="segment.color"
-          [attr.stroke-dasharray]="segment.dash"
-          [attr.stroke-dashoffset]="segment.offset"
-          transform="rotate(-90 54 54)"
-        />
-      }
-    </svg>
-
-    <div class="ring-center">
-      <strong>{{ formatNumber(eaten()) }}</strong>
-      <span>ккал</span>
-    </div>
-  </div>
+  <app-nutrition-ring
+    [kcal]="totals().kcal"
+    [protein]="totals().protein"
+    [fat]="totals().fat"
+    [carbs]="totals().carbs"
+  />
 
   <div class="nutrition-cells">
     <div class="cells-row goal-row">

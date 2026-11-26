@@ -17,12 +17,7 @@ import { DiaryService } from '../diary/diary.service';
 import { WeightService } from '../../core/weight.service';
 import { AccountService } from '../../core/account.service';
 import { HomeService } from './home.service';
-
-interface RingSegment {
-  color: string;
-  dash: string;
-  offset: number;
-}
+import { NutritionRingComponent } from '../../ui/nutrition-ring/nutrition-ring.component';
 
 interface SparklinePoint {
   id: string;
@@ -50,7 +45,7 @@ interface WeightDelta {
  */
 @Component({
   selector: 'app-home-page',
-  imports: [RouterLink],
+  imports: [RouterLink, NutritionRingComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -73,10 +68,6 @@ export class HomePage implements OnInit {
   protected readonly dateIso = this.today.toISOString().slice(0, 10);
   protected readonly dateLabel = this.formatDateLabel(this.today);
   protected readonly activityTitles = activityKindTitles;
-
-  /** Радиус кольца и длина окружности: кольцо 108x108, обводка 12. */
-  private readonly ringRadius = 46;
-  private readonly ringLength = 2 * Math.PI * 46;
 
   protected readonly currentKg = computed(
     () => this.weightList()[0]?.kg ?? this.trend()?.currentEmaKg ?? null,
@@ -108,37 +99,6 @@ export class HomePage implements OnInit {
       fat: Math.max(0, Math.round(macros.fatG - this.eaten().fat)),
       carbs: Math.max(0, Math.round(macros.carbsG - this.eaten().carbs)),
     };
-  });
-
-  /** Доля каждого макронутриента от цели: из них собирается кольцо. */
-  protected readonly ringSegments = computed<RingSegment[]>(() => {
-    const macros = this.plan()?.macros;
-    const eatenNow = this.eaten();
-
-    if (!macros) {
-      return [];
-    }
-
-    const shares = [
-      { color: 'var(--color-protein)', value: this.share(eatenNow.protein, macros.proteinG) },
-      { color: 'var(--color-fat-pastel)', value: this.share(eatenNow.fat, macros.fatG) },
-      { color: 'var(--color-carbs-pastel)', value: this.share(eatenNow.carbs, macros.carbsG) },
-    ];
-
-    let sent = 0;
-
-    return shares.map((share) => {
-      const length = share.value * this.ringLength;
-      const segment = {
-        color: share.color,
-        dash: `${length.toFixed(2)} ${(this.ringLength - length).toFixed(2)}`,
-        offset: -sent,
-      };
-
-      sent += length;
-
-      return segment;
-    });
   });
 
   /** Мини-график веса: все замеры окна, подъемы и спады как есть. */
@@ -290,14 +250,6 @@ export class HomePage implements OnInit {
     const left = Math.round(consumed);
 
     return target === undefined ? `${left} г` : `${left} / ${Math.round(target)} г`;
-  }
-
-  private share(value: number, target: number): number {
-    if (target <= 0) {
-      return 0;
-    }
-
-    return Math.min(1, value / target);
   }
 
   private formatDateLabel(date: Date): string {

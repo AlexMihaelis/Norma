@@ -210,50 +210,6 @@
   margin-bottom: var(--space-16);
 }
 
-.ring {
-  position: relative;
-  width: clamp(88px, 7.5vw, 112px);
-  height: clamp(88px, 7.5vw, 112px);
-  flex: 0 0 auto;
-}
-
-.ring svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.ring-track {
-  fill: none;
-  stroke: var(--color-track);
-  stroke-width: 12;
-}
-
-.ring-segment {
-  fill: none;
-  stroke-width: 12;
-}
-
-.ring-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  strong {
-    font-size: clamp(16px, 1.4vw, 24px);
-    line-height: 1.2;
-    color: var(--color-text);
-  }
-
-  span {
-    font-size: clamp(10px, 0.76vw, 13px);
-    color: var(--color-text-muted);
-  }
-}
-
 /* Верхняя строка: цель и остаток; вторая: три макроса с цветными маркерами. */
 .nutrition-cells {
   display: flex;

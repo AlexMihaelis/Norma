@@ -1,0 +1,46 @@
+/* Кольцо тянется вместе с карточкой: на узких экранах меньше, на широких до 112. */
+:host {
+  position: relative;
+  display: block;
+  width: clamp(88px, 7.5vw, 112px);
+  height: clamp(88px, 7.5vw, 112px);
+  flex: 0 0 auto;
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.track {
+  fill: none;
+  stroke: var(--color-track);
+  stroke-width: 12;
+}
+
+.arc {
+  fill: none;
+  stroke-width: 12;
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  strong {
+    font-size: clamp(16px, 1.3vw, 24px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--color-text);
+  }
+
+  span {
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-text-muted);
+  }
+}

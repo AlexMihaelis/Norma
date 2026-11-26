@@ -1,17 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DiaryDay, MealKind, Plan, mealTitles } from '../../core/api.models';
+import { DiaryDay, DiaryTotals, MealKind, Plan, mealTitles } from '../../core/api.models';
 import { toLocalIso } from '../../core/date';
 import { describeProblem } from '../../core/problem';
+import { NutritionRingComponent } from '../../ui/nutrition-ring/nutrition-ring.component';
 import { AddEntryComponent } from './add-entry.component';
 import { DiaryService } from './diary.service';
-
-interface RingSegment {
-  color: string;
-  dash: string;
-  offset: number;
-}
 
 interface CalendarDay {
   iso: string;
@@ -29,7 +24,7 @@ interface CalendarDay {
  */
 @Component({
   selector: 'app-diary-page',
-  imports: [AddEntryComponent, RouterLink],
+  imports: [AddEntryComponent, RouterLink, NutritionRingComponent],
   templateUrl: './diary.page.html',
   styleUrl: './diary.page.scss',
 })
@@ -99,10 +94,12 @@ export class DiaryPage implements OnInit {
     return days;
   });
 
-  private readonly ringRadius = 46;
-  private readonly ringLength = 2 * Math.PI * 46;
-
   protected readonly eaten = computed(() => this.day()?.totals.kcal ?? 0);
+
+  /** Съеденное за день целиком: из этих граммов собирается кольцо БЖУ. */
+  protected readonly totals = computed<DiaryTotals>(
+    () => this.day()?.totals ?? { kcal: 0, protein: 0, fat: 0, carbs: 0 },
+  );
 
   protected readonly remainingKcal = computed(() => {
     const target = this.plan()?.targetKcal;
@@ -123,36 +120,6 @@ export class DiaryPage implements OnInit {
       fat: Math.max(0, Math.round(macros.fatG - totals.fat)),
       carbs: Math.max(0, Math.round(macros.carbsG - totals.carbs)),
     };
-  });
-
-  protected readonly ringSegments = computed<RingSegment[]>(() => {
-    const macros = this.plan()?.macros;
-    const totals = this.day()?.totals;
-
-    if (!macros || !totals) {
-      return [];
-    }
-
-    const shares = [
-      { color: 'var(--color-protein)', value: this.share(totals.protein, macros.proteinG) },
-      { color: 'var(--color-fat-pastel)', value: this.share(totals.fat, macros.fatG) },
-      { color: 'var(--color-carbs-pastel)', value: this.share(totals.carbs, macros.carbsG) },
-    ];
-
-    let sent = 0;
-
-    return shares.map((share) => {
-      const length = share.value * this.ringLength;
-      const segment = {
-        color: share.color,
-        dash: `${length.toFixed(2)} ${(this.ringLength - length).toFixed(2)}`,
-        offset: -sent,
-      };
-
-      sent += length;
-
-      return segment;
-    });
   });
 
   ngOnInit(): void {
@@ -301,13 +268,5 @@ export class DiaryPage implements OnInit {
 
   private firstOfMonth(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), 1);
-  }
-
-  private share(value: number, target: number): number {
-    if (target <= 0) {
-      return 0;
-    }
-
-    return Math.min(1, value / target);
   }
 }
