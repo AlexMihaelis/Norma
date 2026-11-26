@@ -16,12 +16,22 @@ public sealed class Recipe
 
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>Короткая заметка или порядок приготовления, необязательно.</summary>
-    public string? Note { get; set; }
+    /// <summary>Способ приготовления по шагам, необязательно.</summary>
+    public string? Instructions { get; set; }
+
+    /// <summary>Фото готового блюда: тип и байты, как у аватара.</summary>
+    public string? PhotoContentType { get; set; }
+
+    public byte[]? PhotoBytes { get; set; }
+
+    /// <summary>Отметка «избранный рецепт»: рецепт принадлежит пользователю, флаг рядом.</summary>
+    public bool IsFavorite { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 
     public List<RecipeIngredient> Ingredients { get; set; } = [];
+
+    public List<RecipeTagLink> Tags { get; set; } = [];
 
     public User? User { get; set; }
 }

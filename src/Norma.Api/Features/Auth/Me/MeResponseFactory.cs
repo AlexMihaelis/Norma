@@ -1,4 +1,5 @@
 using Norma.Api.Data.Entities;
+using Norma.Api.Features.Images;
 
 namespace Norma.Api.Features.Auth.Me;
 
@@ -9,15 +10,5 @@ namespace Norma.Api.Features.Auth.Me;
 internal static class MeResponseFactory
 {
     public static MeResponse From(User user) =>
-        new(user.Id, user.Email, user.Nickname, AvatarDataUrl(user));
-
-    private static string? AvatarDataUrl(User user)
-    {
-        if (user.AvatarBytes is null || user.AvatarContentType is null)
-        {
-            return null;
-        }
-
-        return $"data:{user.AvatarContentType};base64,{Convert.ToBase64String(user.AvatarBytes)}";
-    }
+        new(user.Id, user.Email, user.Nickname, PictureData.ToDataUrl(user.AvatarContentType, user.AvatarBytes));
 }

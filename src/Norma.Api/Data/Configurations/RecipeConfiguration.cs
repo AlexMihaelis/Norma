@@ -15,10 +15,15 @@ internal sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
 
         builder.Property(recipe => recipe.Name).HasMaxLength(100).IsRequired();
 
-        builder.Property(recipe => recipe.Note).HasMaxLength(500);
+        builder.Property(recipe => recipe.Instructions).HasMaxLength(2000);
+
+        builder.Property(recipe => recipe.PhotoContentType).HasMaxLength(50);
 
         // Список всегда «сначала новые» для конкретного пользователя.
         builder.HasIndex(recipe => new { recipe.UserId, recipe.CreatedAt });
+
+        // Избранное показывается отдельным списком, поэтому фильтр по флагу.
+        builder.HasIndex(recipe => new { recipe.UserId, recipe.IsFavorite });
 
         builder
             .HasOne(recipe => recipe.User)
@@ -52,5 +57,27 @@ internal sealed class RecipeIngredientConfiguration : IEntityTypeConfiguration<R
             .WithMany()
             .HasForeignKey(ingredient => ingredient.FoodId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+/// <summary>Метки рецепта: одна метка входит в рецепт один раз.</summary>
+internal sealed class RecipeTagLinkConfiguration : IEntityTypeConfiguration<RecipeTagLink>
+{
+    public void Configure(EntityTypeBuilder<RecipeTagLink> builder)
+    {
+        builder.ToTable("recipe_tags");
+
+        builder.HasKey(tag => tag.Id);
+
+        builder.Property(tag => tag.Tag).HasMaxLength(30).IsRequired();
+
+        builder.HasIndex(tag => new { tag.RecipeId, tag.Tag }).IsUnique();
+
+        // Метки - часть рецепта: удалили рецепт, ушли и они.
+        builder
+            .HasOne(tag => tag.Recipe)
+            .WithMany(recipe => recipe.Tags)
+            .HasForeignKey(tag => tag.RecipeId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -44,9 +44,20 @@ public static class CreateRecipeEndpoint
             Id = Guid.NewGuid(),
             UserId = userId.Value,
             Name = draft.Name,
-            Note = draft.Note,
+            Instructions = draft.Instructions,
+            PhotoContentType = draft.PhotoContentType,
+            PhotoBytes = draft.PhotoBytes,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+
+        foreach (var tag in draft.Tags)
+        {
+            recipe.Tags.Add(new RecipeTagLink
+            {
+                Id = Guid.NewGuid(),
+                Tag = tag.ToString(),
+            });
+        }
 
         foreach (var (food, grams) in draft.Lines)
         {

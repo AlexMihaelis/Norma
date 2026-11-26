@@ -1,15 +1,21 @@
-namespace Norma.Api.Features.Account;
+namespace Norma.Api.Features.Images;
 
 /// <summary>
-/// Разбор аватара из data URL. Аватар хранится в базе целиком, поэтому формат и
-/// размер проверяются до сохранения.
+/// Разбор картинки из data URL: аватар и фото рецепта хранятся в базе целиком,
+/// поэтому формат и размер проверяются до сохранения.
 /// </summary>
-internal static class AvatarData
+internal static class PictureData
 {
     /// <summary>Потолок размера картинки: больше держать в строке таблицы незачем.</summary>
     public const int MaxBytes = 256 * 1024;
 
     private static readonly string[] AllowedMimeTypes = ["image/png", "image/jpeg", "image/webp"];
+
+    /// <summary>Собирает data URL обратно из байтов и типа.</summary>
+    public static string? ToDataUrl(string? contentType, byte[]? bytes) =>
+        bytes is null || contentType is null
+            ? null
+            : $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
 
     public static bool TryParse(string? dataUrl, out string mime, out byte[] bytes, out string? error)
     {

@@ -194,6 +194,111 @@ public sealed class RecipeTests
         Assert.Equal(HttpStatusCode.Unauthorized, create.StatusCode);
     }
 
+    [Fact]
+    public async Task Tags_favorite_and_instructions_round_trip()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "recipe-tags@example.com");
+        var food = await CreateFoodAsync(app, user.Token, "Кабачок", 24, 0.6, 0.3, 4.6);
+
+        using var create = await SendAsync(app, HttpMethod.Post, "/api/v1/recipes", user.Token, new
+        {
+            name = "Кабачок в духовке",
+            instructions = "Нарезать, посолить, запечь 25 минут.",
+            tags = new[] { "Dinner", "Oven" },
+            ingredients = new[] { new { foodId = food, grams = 300 } },
+        });
+
+        create.EnsureSuccessStatusCode();
+
+        var created = await create.Content.ReadFromJsonAsync<RecipePayload>();
+        Assert.NotNull(created);
+
+        Assert.Equal("Нарезать, посолить, запечь 25 минут.", created.Instructions);
+        Assert.Contains("Dinner", created.Tags);
+        Assert.Contains("Oven", created.Tags);
+        Assert.False(created.IsFavorite);
+
+        using var favorite = await SendAsync(
+            app, HttpMethod.Put, $"/api/v1/recipes/{created.Id}/favorite", user.Token, new { isFavorite = true });
+
+        Assert.Equal(HttpStatusCode.NoContent, favorite.StatusCode);
+
+        var favoriteList = await ListAsync(app, user.Token, favoriteOnly: true);
+        Assert.Single(favoriteList);
+
+        // Метка в списке тоже фильтрует.
+        var dinnerList = await ListAsync(app, user.Token, tag: "Dinner");
+        Assert.Single(dinnerList);
+
+        var breakfastList = await ListAsync(app, user.Token, tag: "Breakfast");
+        Assert.Empty(breakfastList);
+    }
+
+    [Fact]
+    public async Task Auto_tags_are_computed_from_composition()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "recipe-auto@example.com");
+        var chicken = await CreateFoodAsync(app, user.Token, "Куриная грудка", 165, 31, 3.6, 0);
+
+        var recipe = await CreateRecipeAsync(app, user.Token, "Грудка на пару", [(chicken, 200)]);
+
+        Assert.Contains("Chicken", recipe.AutoTags);
+        Assert.Contains("HighProtein", recipe.AutoTags);
+        Assert.Empty(recipe.Tags);
+    }
+
+    [Fact]
+    public async Task Unknown_tag_and_broken_photo_are_rejected()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "recipe-bad-tag@example.com");
+        var food = await CreateFoodAsync(app, user.Token, "Огурец", 15, 0.8, 0.1, 2.8);
+
+        using var unknownTag = await SendAsync(app, HttpMethod.Post, "/api/v1/recipes", user.Token, new
+        {
+            name = "Огурец",
+            tags = new[] { "Космос" },
+            ingredients = new[] { new { foodId = food, grams = 100 } },
+        });
+
+        using var brokenPhoto = await SendAsync(app, HttpMethod.Post, "/api/v1/recipes", user.Token, new
+        {
+            name = "Огурец с фото",
+            photoDataUrl = "data:text/plain;base64,AAAA",
+            ingredients = new[] { new { foodId = food, grams = 100 } },
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, unknownTag.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, brokenPhoto.StatusCode);
+    }
+
+    [Fact]
+    public async Task Tag_catalog_is_available()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "recipe-catalog@example.com");
+
+        using var response = await SendAsync(app, HttpMethod.Get, "/api/v1/recipes/tags", user.Token);
+
+        response.EnsureSuccessStatusCode();
+
+        var catalog = await response.Content.ReadFromJsonAsync<TagCatalogPayload>();
+        Assert.NotNull(catalog);
+
+        Assert.Contains(catalog.Items, item => item.Code == "Breakfast" && item.Title == "завтрак");
+        Assert.Contains(catalog.Items, item => item.Code == "HighProtein");
+    }
+
     private static async Task<HttpResponseMessage> SendAsync(
         ApiApp app, HttpMethod method, string url, string token, object? body = null)
     {
@@ -248,9 +353,32 @@ public sealed class RecipeTests
     }
 
     private static async Task<IReadOnlyList<RecipeSummaryPayload>> ListAsync(
-        ApiApp app, string token, string? query = null)
+        ApiApp app,
+        string token,
+        string? query = null,
+        string? tag = null,
+        bool favoriteOnly = false)
     {
-        var url = query is null ? "/api/v1/recipes" : $"/api/v1/recipes?q={Uri.EscapeDataString(query)}";
+        var parts = new List<string>();
+
+        if (query is not null)
+        {
+            parts.Add($"q={Uri.EscapeDataString(query)}");
+        }
+
+        if (tag is not null)
+        {
+            parts.Add($"tag={Uri.EscapeDataString(tag)}");
+        }
+
+        if (favoriteOnly)
+        {
+            parts.Add("favorite=true");
+        }
+
+        var url = parts.Count == 0
+            ? "/api/v1/recipes"
+            : $"/api/v1/recipes?{string.Join("&", parts)}";
 
         using var response = await SendAsync(app, HttpMethod.Get, url, token);
         response.EnsureSuccessStatusCode();
@@ -300,17 +428,33 @@ public sealed class RecipeTests
     private sealed record RecipePayload(
         Guid Id,
         string Name,
-        string? Note,
+        string? Instructions,
         double Grams,
         double KcalPer100g,
         double ProteinPer100g,
         double FatPer100g,
         double CarbsPer100g,
         double Kcal,
+        List<string> Tags,
+        List<string> AutoTags,
+        bool IsFavorite,
+        string? PhotoDataUrl,
         List<RecipeIngredientPayload> Ingredients);
 
     private sealed record RecipeSummaryPayload(
-        Guid Id, string Name, double Grams, double KcalPer100g, double Kcal, int IngredientCount);
+        Guid Id,
+        string Name,
+        double Grams,
+        double KcalPer100g,
+        double Kcal,
+        int IngredientCount,
+        List<string> Tags,
+        List<string> AutoTags,
+        bool IsFavorite);
 
     private sealed record RecipeListPayload(List<RecipeSummaryPayload> Items);
+
+    private sealed record TagPayload(string Code, string Title, string Group);
+
+    private sealed record TagCatalogPayload(List<TagPayload> Items);
 }

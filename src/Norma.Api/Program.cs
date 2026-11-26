@@ -36,6 +36,8 @@ using Norma.Api.Features.Recipes.CreateRecipe;
 using Norma.Api.Features.Recipes.DeleteRecipe;
 using Norma.Api.Features.Recipes.GetRecipe;
 using Norma.Api.Features.Recipes.ListRecipes;
+using Norma.Api.Features.Recipes.ListRecipeTags;
+using Norma.Api.Features.Recipes.SetRecipeFavorite;
 using Norma.Api.Features.Recipes.UpdateRecipe;
 using Norma.Api.Features.Stats.GetStats;
 using Norma.Api.Features.Water.AddWater;
@@ -264,8 +266,10 @@ public static class ApiHost
         api.MapGetStats();
         api.MapCreateRecipe();
         api.MapListRecipes();
+        api.MapListRecipeTags();
         api.MapGetRecipe();
         api.MapUpdateRecipe();
+        api.MapSetRecipeFavorite();
         api.MapDeleteRecipe();
 
         return app;

@@ -55,14 +55,31 @@ public static class UpdateRecipeEndpoint
         }
 
         recipe.Name = draft.Name;
-        recipe.Note = draft.Note;
+        recipe.Instructions = draft.Instructions;
 
-        // Старый состав удаляем запросом, не поднимая строки в контекст: тогда
-        // уникальный индекс (RecipeId, FoodId) не спорит между удалением и
-        // вставкой одного и того же продукта.
+        // Фото в теле нет - значит его снимают: замена полная.
+        recipe.PhotoContentType = draft.PhotoContentType;
+        recipe.PhotoBytes = draft.PhotoBytes;
+
+        // Старый состав и метки удаляем запросами, не поднимая строки в контекст:
+        // тогда уникальные индексы не спорят между удалением и вставкой.
         await db.RecipeIngredients
             .Where(ingredient => ingredient.RecipeId == recipe.Id)
             .ExecuteDeleteAsync(cancellationToken);
+
+        await db.RecipeTags
+            .Where(tag => tag.RecipeId == recipe.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        foreach (var tag in draft.Tags)
+        {
+            db.RecipeTags.Add(new RecipeTagLink
+            {
+                Id = Guid.NewGuid(),
+                RecipeId = recipe.Id,
+                Tag = tag.ToString(),
+            });
+        }
 
         foreach (var (food, grams) in draft.Lines)
         {

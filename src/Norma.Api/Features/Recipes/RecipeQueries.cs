@@ -11,13 +11,14 @@ internal static class RecipeQueries
     /// списка, карточки и замены, чтобы нигде не забыть Include.
     /// </summary>
     /// <remarks>
-    /// Две коллекции в одном запросе (строки состава и названия продуктов) дают
-    /// декартово произведение, поэтому грузим их отдельными запросами.
+    /// Коллекции (строки состава, названия продуктов, метки) грузятся отдельными
+    /// запросами: иначе JOIN перемножает их и получаются лишние строки.
     /// </remarks>
     public static IQueryable<Recipe> WithComposition(this IQueryable<Recipe> recipes) =>
         recipes
             .AsSplitQuery()
             .Include(recipe => recipe.Ingredients)
             .ThenInclude(ingredient => ingredient.Food)
-            .ThenInclude(food => food!.Names);
+            .ThenInclude(food => food!.Names)
+            .Include(recipe => recipe.Tags);
 }

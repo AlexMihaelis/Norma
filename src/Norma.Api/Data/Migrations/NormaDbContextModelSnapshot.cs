@@ -284,14 +284,24 @@ namespace Norma.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                    b.Property<byte[]>("PhotoBytes")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("PhotoContentType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
@@ -299,6 +309,8 @@ namespace Norma.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "IsFavorite");
 
                     b.ToTable("recipes", (string)null);
                 });
@@ -326,6 +338,28 @@ namespace Norma.Api.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("recipe_ingredients", (string)null);
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.RecipeTagLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId", "Tag")
+                        .IsUnique();
+
+                    b.ToTable("recipe_tags", (string)null);
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.User", b =>
@@ -630,6 +664,17 @@ namespace Norma.Api.Data.Migrations
                     b.Navigation("Recipe");
                 });
 
+            modelBuilder.Entity("Norma.Api.Data.Entities.RecipeTagLink", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.Recipe", "Recipe")
+                        .WithMany("Tags")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
             modelBuilder.Entity("Norma.Api.Data.Entities.UserProfile", b =>
                 {
                     b.HasOne("Norma.Api.Data.Entities.User", "User")
@@ -689,6 +734,8 @@ namespace Norma.Api.Data.Migrations
             modelBuilder.Entity("Norma.Api.Data.Entities.Recipe", b =>
                 {
                     b.Navigation("Ingredients");
+
+                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

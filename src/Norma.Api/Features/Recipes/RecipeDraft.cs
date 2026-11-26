@@ -1,19 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
+using Norma.Api.Features.Images;
+using Norma.Core.Recipes;
 
 namespace Norma.Api.Features.Recipes;
 
 /// <summary>
-/// Разобранное тело рецепта: готовые строки состава с продуктами и ошибки
-/// валидации. Одна проверка на создание и на полную замену, чтобы правила не
-/// разъезжались.
+/// Разобранное тело рецепта: поля, метки, фото, готовые строки состава с
+/// продуктами и ошибки валидации. Одна проверка на создание и на полную замену,
+/// чтобы правила не разъезжались.
 /// </summary>
 internal sealed class RecipeDraft
 {
     private const int MinNameLength = 2;
     private const int MaxNameLength = 100;
-    private const int MaxNoteLength = 500;
+    private const int MaxInstructionsLength = 2000;
+    private const int MaxTags = 10;
 
     // Тридцать строк - уже большой рецепт, а не суп на неделю.
     private const int MaxIngredients = 30;
@@ -30,7 +33,13 @@ internal sealed class RecipeDraft
 
     public string Name { get; private set; } = string.Empty;
 
-    public string? Note { get; private set; }
+    public string? Instructions { get; private set; }
+
+    public List<RecipeTag> Tags { get; } = [];
+
+    public string? PhotoContentType { get; private set; }
+
+    public byte[]? PhotoBytes { get; private set; }
 
     public List<(Food Food, double Grams)> Lines { get; } = [];
 
@@ -44,7 +53,9 @@ internal sealed class RecipeDraft
         var draft = new RecipeDraft
         {
             Name = request?.Name?.Trim() ?? string.Empty,
-            Note = string.IsNullOrWhiteSpace(request?.Note) ? null : request.Note.Trim(),
+            Instructions = string.IsNullOrWhiteSpace(request?.Instructions)
+                ? null
+                : request.Instructions.Trim(),
         };
 
         if (draft.Name.Length < MinNameLength || draft.Name.Length > MaxNameLength)
@@ -53,54 +64,18 @@ internal sealed class RecipeDraft
                 [$"Название должно быть длиной от {MinNameLength} до {MaxNameLength} символов."];
         }
 
-        if (draft.Note is { Length: > MaxNoteLength })
+        if (draft.Instructions is { Length: > MaxInstructionsLength })
         {
-            draft.Errors["note"] = [$"Заметка не может быть длиннее {MaxNoteLength} символов."];
+            draft.Errors["instructions"] =
+                [$"Инструкция не может быть длиннее {MaxInstructionsLength} символов."];
         }
 
-        var ingredients = request?.Ingredients;
+        draft.ReadTags(request?.Tags);
+        draft.ReadPhoto(request?.PhotoDataUrl);
 
-        if (ingredients is null || ingredients.Count == 0)
+        if (!draft.ReadIngredients(request?.Ingredients))
         {
-            draft.Errors["ingredients"] = ["Добавьте хотя бы один продукт."];
             return draft;
-        }
-
-        if (ingredients.Count > MaxIngredients)
-        {
-            draft.Errors["ingredients"] = [$"Продуктов в рецепте может быть не больше {MaxIngredients}."];
-            return draft;
-        }
-
-        var weights = new List<(Guid FoodId, double Grams)>();
-        var seen = new HashSet<Guid>();
-
-        for (var index = 0; index < ingredients.Count; index++)
-        {
-            var item = ingredients[index];
-
-            if (item?.FoodId is not Guid foodId || foodId == Guid.Empty)
-            {
-                draft.Errors[$"ingredients[{index}].foodId"] = ["Выберите продукт."];
-                continue;
-            }
-
-            if (item.Grams is not double grams
-                || double.IsNaN(grams)
-                || grams < MinGrams
-                || grams > MaxGrams)
-            {
-                draft.Errors[$"ingredients[{index}].grams"] = [$"Вес должен быть от {MinGrams} до {MaxGrams}."];
-                continue;
-            }
-
-            if (!seen.Add(foodId))
-            {
-                draft.Errors[$"ingredients[{index}].foodId"] = ["Этот продукт уже добавлен в рецепт."];
-                continue;
-            }
-
-            weights.Add((foodId, grams));
         }
 
         if (!draft.IsValid)
@@ -108,13 +83,13 @@ internal sealed class RecipeDraft
             return draft;
         }
 
-        var ids = weights.Select(line => line.FoodId).ToArray();
+        var ids = draft.Weights.Select(line => line.FoodId).ToArray();
         var foods = await db.Foods
             .Include(food => food.Names)
             .Where(food => ids.Contains(food.Id))
             .ToListAsync(cancellationToken);
 
-        foreach (var (foodId, grams) in weights)
+        foreach (var (foodId, grams) in draft.Weights)
         {
             var food = foods.FirstOrDefault(candidate => candidate.Id == foodId);
 
@@ -128,5 +103,109 @@ internal sealed class RecipeDraft
         }
 
         return draft;
+    }
+
+    /// <summary>Пары «продукт и вес» до загрузки продуктов из каталога.</summary>
+    private List<(Guid FoodId, double Grams)> Weights { get; } = [];
+
+    private void ReadTags(IReadOnlyList<string>? raw)
+    {
+        if (raw is null || raw.Count == 0)
+        {
+            return;
+        }
+
+        if (raw.Count > MaxTags)
+        {
+            Errors["tags"] = [$"Меток может быть не больше {MaxTags}."];
+            return;
+        }
+
+        foreach (var code in raw)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                continue;
+            }
+
+            var tag = RecipeTagCatalog.ParseManual(code);
+
+            if (tag is null)
+            {
+                Errors["tags"] = [$"Неизвестная метка: {code}."];
+                return;
+            }
+
+            if (!Tags.Contains(tag.Value))
+            {
+                Tags.Add(tag.Value);
+            }
+        }
+    }
+
+    private void ReadPhoto(string? dataUrl)
+    {
+        // Пустое значение - это осознанное «без фото»: замена полная, значит фото снимается.
+        if (string.IsNullOrWhiteSpace(dataUrl))
+        {
+            return;
+        }
+
+        if (!PictureData.TryParse(dataUrl, out var mime, out var bytes, out var error))
+        {
+            Errors["photoDataUrl"] = [error!];
+            return;
+        }
+
+        PhotoContentType = mime;
+        PhotoBytes = bytes;
+    }
+
+    /// <summary>Разбирает состав; <c>false</c>, если список не годен целиком.</summary>
+    private bool ReadIngredients(IReadOnlyList<RecipeIngredientRequest>? ingredients)
+    {
+        if (ingredients is null || ingredients.Count == 0)
+        {
+            Errors["ingredients"] = ["Добавьте хотя бы один продукт."];
+            return false;
+        }
+
+        if (ingredients.Count > MaxIngredients)
+        {
+            Errors["ingredients"] = [$"Продуктов в рецепте может быть не больше {MaxIngredients}."];
+            return false;
+        }
+
+        var seen = new HashSet<Guid>();
+
+        for (var index = 0; index < ingredients.Count; index++)
+        {
+            var item = ingredients[index];
+
+            if (item?.FoodId is not Guid foodId || foodId == Guid.Empty)
+            {
+                Errors[$"ingredients[{index}].foodId"] = ["Выберите продукт."];
+                continue;
+            }
+
+            if (item.Grams is not double grams
+                || double.IsNaN(grams)
+                || grams < MinGrams
+                || grams > MaxGrams)
+            {
+                Errors[$"ingredients[{index}].grams"] = [$"Вес должен быть от {MinGrams} до {MaxGrams}."];
+                continue;
+            }
+
+            if (!seen.Add(foodId))
+            {
+                Errors[$"ingredients[{index}].foodId"] = ["Этот продукт уже добавлен в рецепт."];
+                continue;
+            }
+
+            Weights.Add((foodId, grams));
+        }
+
+        return true;
     }
 }
