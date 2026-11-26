@@ -74,7 +74,7 @@ export class RecipesService {
 
   /** Поиск продуктов для строк состава: тот же каталог, что и в дневнике. */
   searchFoods(query: string): Observable<FoodSearchResponse> {
-    return this.http.get<FoodSearchResponse>(`${environment.apiUrl}/foods`, {
+    return this.http.get<FoodSearchResponse>(`${environment.apiUrl}/foods/search`, {
       params: new HttpParams().set('q', query),
     });
   }
