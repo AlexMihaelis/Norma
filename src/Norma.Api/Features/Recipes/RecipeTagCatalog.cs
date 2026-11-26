@@ -43,8 +43,8 @@ internal static class RecipeTagCatalog
 
     public static IReadOnlyList<RecipeTagResponse> Build() =>
         Manual
-            .Select(tag => new RecipeTagResponse(tag.Tag.ToString(), tag.Title, tag.Group))
-            .Concat(Auto.Select(tag => new RecipeTagResponse(tag.Tag.ToString(), tag.Title, AutoGroup)))
+            .Select(tag => new RecipeTagResponse(tag.Tag.ToString(), tag.Title, tag.Group, Auto: false))
+            .Concat(Auto.Select(tag => new RecipeTagResponse(tag.Tag.ToString(), tag.Title, AutoGroup, Auto: true)))
             .ToList();
 
     /// <summary>Код метки, которую человек ставит сам; <c>null</c>, если код неизвестен.</summary>

@@ -14,8 +14,19 @@ public sealed record RecipeRequest(
     string? PhotoDataUrl,
     IReadOnlyList<RecipeIngredientRequest>? Ingredients);
 
-/// <summary>Строка состава в ответе: продукт, вес и калории этой строки.</summary>
-public sealed record RecipeIngredientResponse(Guid FoodId, string Name, double Grams, double Kcal);
+/// <summary>
+/// Строка состава в ответе: продукт, вес, калории строки и ценности продукта на
+/// 100 единиц - по ним форма рецепта пересчитывает итог без второго запроса.
+/// </summary>
+public sealed record RecipeIngredientResponse(
+    Guid FoodId,
+    string Name,
+    double Grams,
+    double Kcal,
+    double KcalPer100g,
+    double ProteinPer100g,
+    double FatPer100g,
+    double CarbsPer100g);
 
 /// <summary>Рецепт в списке: без состава, но с цифрами на 100 г, метками и фото.</summary>
 public sealed record RecipeSummary(
@@ -55,8 +66,8 @@ public sealed record RecipeResponse(
 /// <summary>Список рецептов пользователя.</summary>
 public sealed record RecipeListResponse(IReadOnlyList<RecipeSummary> Items);
 
-/// <summary>Метка в справочнике фильтров: код, подпись и группа.</summary>
-public sealed record RecipeTagResponse(string Code, string Title, string Group);
+/// <summary>Метка в справочнике фильтров: код, подпись, группа и признак «сама».</summary>
+public sealed record RecipeTagResponse(string Code, string Title, string Group, bool Auto);
 
 /// <summary>Справочник меток для панели фильтров.</summary>
 public sealed record RecipeTagListResponse(IReadOnlyList<RecipeTagResponse> Items);

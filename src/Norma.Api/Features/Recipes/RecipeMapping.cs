@@ -92,6 +92,10 @@ internal static class RecipeMapping
                     food.ProteinPer100g,
                     food.FatPer100g,
                     food.CarbsPer100g),
-                ingredient.Grams).Kcal);
+                ingredient.Grams).Kcal,
+            food.KcalPer100g,
+            food.ProteinPer100g,
+            food.FatPer100g,
+            food.CarbsPer100g);
     }
 }
