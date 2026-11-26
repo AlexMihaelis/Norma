@@ -12,8 +12,7 @@ namespace Norma.Api.Features.Recipes;
 /// </summary>
 internal static class RecipeMapping
 {
-    public static RecipeTotals Totals(Recipe recipe) =>
-        RecipeMath.Compute(recipe.Ingredients.Select(Line));
+    public static RecipeTotals Totals(Recipe recipe) => RecipeNutrition.Totals(recipe);
 
     public static RecipeSummary ToSummary(Recipe recipe)
     {
@@ -94,19 +93,5 @@ internal static class RecipeMapping
                     food.FatPer100g,
                     food.CarbsPer100g),
                 ingredient.Grams).Kcal);
-    }
-
-    private static RecipeLine Line(RecipeIngredient ingredient)
-    {
-        var food = ingredient.Food
-            ?? throw new InvalidOperationException("Состав рецепта загружен без продукта.");
-
-        return new RecipeLine(
-            new NutritionValues(
-                food.KcalPer100g,
-                food.ProteinPer100g,
-                food.FatPer100g,
-                food.CarbsPer100g),
-            ingredient.Grams);
     }
 }

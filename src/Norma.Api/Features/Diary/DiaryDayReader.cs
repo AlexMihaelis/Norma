@@ -5,8 +5,8 @@ using Norma.Api.Data.Entities;
 namespace Norma.Api.Features.Diary;
 
 /// <summary>
-/// Чтение дня дневника: позиции с продуктом, шесть блоков приема и итоги. Общая
-/// операция для дня и для повтора.
+/// Чтение дня дневника: позиции с продуктом или составом рецепта, шесть блоков
+/// приема и итоги. Общая операция для дня и для повтора.
 /// </summary>
 internal static class DiaryDayReader
 {
@@ -23,6 +23,11 @@ internal static class DiaryDayReader
             .Include(item => item.Meal)
             .Include(item => item.Food)
             .ThenInclude(food => food!.Names)
+            .Include(item => item.Recipe)
+            .ThenInclude(recipe => recipe!.Ingredients)
+            .ThenInclude(ingredient => ingredient.Food)
+            .ThenInclude(food => food!.Names)
+            .AsSplitQuery()
             .OrderBy(item => item.CreatedAt)
             .ToListAsync(cancellationToken);
 

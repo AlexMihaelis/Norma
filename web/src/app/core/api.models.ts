@@ -38,7 +38,9 @@ export interface DiaryTotals {
 
 export interface DiaryEntry {
   id: string;
-  foodId: string;
+  kind: 'Food' | 'Recipe';
+  foodId: string | null;
+  recipeId: string | null;
   foodName: string;
   quantity: number;
   unit: 'Gram' | 'Milliliter';
@@ -87,12 +89,68 @@ export interface FoodSearchResponse {
   items: FoodSummary[];
 }
 
-/** Тело записи позиции: единица не передается, API берет базовую у продукта. */
+/** Тело записи позиции: либо продукт, либо рецепт, но не оба сразу. */
 export interface AddDiaryEntryRequest {
   meal: MealKind;
-  foodId: string;
+  foodId?: string;
+  recipeId?: string;
   quantity: number;
   date: string;
+}
+
+/** Метка из справочника фильтров: код, подпись и группа. */
+export interface RecipeTag {
+  code: string;
+  title: string;
+  group: string;
+}
+
+export interface RecipeTagListResponse {
+  items: RecipeTag[];
+}
+
+/** Рецепт в списке: цифры на 100 г, метки и фото. */
+export interface RecipeSummary {
+  id: string;
+  name: string;
+  grams: number;
+  kcalPer100g: number;
+  proteinPer100g: number;
+  fatPer100g: number;
+  carbsPer100g: number;
+  kcal: number;
+  ingredientCount: number;
+  tags: string[];
+  autoTags: string[];
+  isFavorite: boolean;
+  photoDataUrl: string | null;
+  createdAt: string;
+}
+
+export interface RecipeIngredient {
+  foodId: string;
+  name: string;
+  grams: number;
+  kcal: number;
+}
+
+/** Рецепт целиком: состав, инструкция и посчитанные цифры. */
+export interface Recipe extends RecipeSummary {
+  instructions: string | null;
+  ingredients: RecipeIngredient[];
+}
+
+export interface RecipeListResponse {
+  items: RecipeSummary[];
+}
+
+/** Тело создания и полной замены рецепта. */
+export interface RecipeRequest {
+  name: string;
+  instructions: string | null;
+  tags: string[];
+  photoDataUrl: string | null;
+  ingredients: { foodId: string; grams: number }[];
 }
 
 export type Sex = 'Female' | 'Male';
