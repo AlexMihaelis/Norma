@@ -34,7 +34,9 @@
       <section class="numbers">
         <div class="number">
           <span class="number-value">{{ recipe.kcalPer100g | number: '1.0-0' }}</span>
-          <span class="number-label">ккал на 100 г, примерно</span>
+          <span class="number-label">
+            {{ recipe.manualNutrition ? 'ккал на 100 г, свои' : 'ккал на 100 г, примерно' }}
+          </span>
         </div>
         <div class="number">
           <span class="number-value">{{ recipe.proteinPer100g | number: '1.0-0' }}</span>
