@@ -1,0 +1,153 @@
+<div class="overlay" (click)="close()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <header class="dialog-head">
+      <h2>{{ recipe() ? 'Изменить рецепт' : 'Новый рецепт' }}</h2>
+      <button type="button" class="icon-button" aria-label="Закрыть" (click)="close()">×</button>
+    </header>
+
+    @if (error(); as message) {
+      <p class="error">{{ message }}</p>
+    }
+
+    <div class="top">
+      <label class="photo-field">
+        <app-recipe-photo [photo]="photo()" [name]="name() || 'Рецепт'" class="photo" />
+        <input type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onPhoto($event)" />
+        <span class="photo-hint">{{ photoBusy() ? 'Готовлю фото…' : 'Загрузить фото' }}</span>
+      </label>
+
+      <div class="main-fields">
+        <label>
+          Название
+          <input
+            type="text"
+            [value]="name()"
+            maxlength="100"
+            placeholder="Например, куриная грудка с рисом"
+            (input)="onName($any($event.target).value)"
+          />
+        </label>
+
+        <label>
+          Способ приготовления
+          <textarea
+            rows="3"
+            [value]="instructions()"
+            maxlength="2000"
+            placeholder="Что сделать по шагам"
+            (input)="onInstructions($any($event.target).value)"
+          ></textarea>
+        </label>
+      </div>
+    </div>
+
+    @if (photo()) {
+      <button type="button" class="link" (click)="clearPhoto()">Убрать фото</button>
+    }
+
+    <section class="block">
+      <h3>Метки</h3>
+
+      @for (group of groups(); track group.title) {
+        <div class="tag-group">
+          <span class="tag-group-title">{{ group.title }}</span>
+          <div class="chips">
+            @for (tag of group.items; track tag.code) {
+              <button
+                type="button"
+                class="chip"
+                [class.active]="tags().includes(tag.code)"
+                (click)="toggleTag(tag.code)"
+              >
+                {{ tag.title }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </section>
+
+    <section class="block">
+      <h3>Состав</h3>
+
+      <div class="search">
+        <input
+          type="text"
+          [value]="query()"
+          placeholder="Найти продукт: курица, рис, молоко…"
+          (input)="onQuery($any($event.target).value)"
+        />
+
+        @if (results().length > 0) {
+          <ul class="found">
+            @for (food of results(); track food.id) {
+              <li>
+                <button type="button" class="found-row" (click)="addFood(food)">
+                  <span class="found-name">{{ food.name }}</span>
+                  <span class="found-meta">
+                    {{ food.kcalPer100g | number: '1.0-0' }} ккал на 100
+                    {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      @if (rows().length === 0) {
+        <p class="muted">Пока пусто: найди первый продукт и добавь его в состав.</p>
+      } @else {
+        <ul class="rows">
+          @for (row of rows(); track row.food.id; let index = $index) {
+            <li class="row">
+              <span class="row-name">{{ row.food.name }}</span>
+
+              <label class="row-grams">
+                <input
+                  type="text"
+                  inputmode="decimal"
+                  [value]="row.grams"
+                  (input)="onGrams(index, $any($event.target).value)"
+                />
+                <span class="unit">{{ row.food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}</span>
+              </label>
+
+              <span class="row-kcal">{{ row.food.kcalPer100g * row.grams / 100 | number: '1.0-0' }} ккал</span>
+
+              <button type="button" class="icon-button" aria-label="Убрать" (click)="removeRow(index)">
+                ×
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="totals">
+      <div class="total">
+        <span class="total-label">Вес блюда</span>
+        <span class="total-value">{{ totals().grams | number: '1.0-0' }} г</span>
+      </div>
+      <div class="total">
+        <span class="total-label">Ккал на 100 г, примерно</span>
+        <span class="total-value">{{ totals().kcalPer100 | number: '1.0-0' }}</span>
+      </div>
+      <div class="total">
+        <span class="total-label">Белки / жиры / углеводы на 100 г</span>
+        <span class="total-value">
+          {{ totals().proteinPer100 | number: '1.0-0' }} /
+          {{ totals().fatPer100 | number: '1.0-0' }} /
+          {{ totals().carbsPer100 | number: '1.0-0' }}
+        </span>
+      </div>
+    </section>
+
+    <footer class="actions">
+      <button type="button" class="ghost-dark" (click)="close()">Отмена</button>
+      <button type="button" class="primary" [disabled]="busy()" (click)="save()">
+        {{ busy() ? 'Сохраняю…' : recipe() ? 'Сохранить' : 'Создать рецепт' }}
+      </button>
+    </footer>
+  </div>
+</div>

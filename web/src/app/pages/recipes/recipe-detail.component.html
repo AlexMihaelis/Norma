@@ -1,0 +1,107 @@
+@if (current(); as recipe) {
+  <div class="overlay" (click)="close()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <header class="dialog-head">
+        <h2>{{ recipe.name }}</h2>
+        <div class="head-actions">
+          <button
+            type="button"
+            class="star"
+            [class.on]="recipe.isFavorite"
+            [attr.aria-label]="recipe.isFavorite ? 'Убрать из избранного' : 'В избранное'"
+            [disabled]="busy()"
+            (click)="toggleFavorite()"
+          >
+            {{ recipe.isFavorite ? '★' : '☆' }}
+          </button>
+          <button type="button" class="icon-button" aria-label="Закрыть" (click)="close()">×</button>
+        </div>
+      </header>
+
+      @if (error(); as message) {
+        <p class="error">{{ message }}</p>
+      }
+
+      <app-recipe-photo class="hero" [photo]="recipe.photoDataUrl" [name]="recipe.name" />
+
+      @if (addedNotice()) {
+        <p class="added-note">
+          Блюдо записано в дневник.
+          <a routerLink="/diary" (click)="close()">Открыть дневник</a>
+        </p>
+      }
+
+      <section class="numbers">
+        <div class="number">
+          <span class="number-value">{{ recipe.kcalPer100g | number: '1.0-0' }}</span>
+          <span class="number-label">ккал на 100 г, примерно</span>
+        </div>
+        <div class="number">
+          <span class="number-value">{{ recipe.proteinPer100g | number: '1.0-0' }}</span>
+          <span class="number-label">белки</span>
+        </div>
+        <div class="number">
+          <span class="number-value">{{ recipe.fatPer100g | number: '1.0-0' }}</span>
+          <span class="number-label">жиры</span>
+        </div>
+        <div class="number">
+          <span class="number-value">{{ recipe.carbsPer100g | number: '1.0-0' }}</span>
+          <span class="number-label">углеводы</span>
+        </div>
+        <div class="number">
+          <span class="number-value">{{ recipe.grams | number: '1.0-0' }}</span>
+          <span class="number-label">вес блюда, г</span>
+        </div>
+      </section>
+
+      @if (tagList().length > 0) {
+        <div class="chips">
+          @for (title of tagList(); track title) {
+            <span class="chip">{{ title }}</span>
+          }
+        </div>
+      }
+
+      <section class="block">
+        <h3>Состав</h3>
+        <ul class="ingredients">
+          @for (item of recipe.ingredients; track item.foodId) {
+            <li>
+              <span class="ingredient-name">{{ item.name }}</span>
+              <span class="ingredient-weight">{{ item.grams | number: '1.0-0' }} г</span>
+              <span class="ingredient-kcal">{{ item.kcal | number: '1.0-0' }} ккал</span>
+            </li>
+          }
+        </ul>
+      </section>
+
+      @if (recipe.instructions) {
+        <section class="block">
+          <h3>Как готовить</h3>
+          <p class="instructions">{{ recipe.instructions }}</p>
+        </section>
+      }
+
+      @if (confirmDelete()) {
+        <div class="confirm">
+          <span>Удалить рецепт? Если он уже записан в дневник, удалить не получится.</span>
+          <div class="confirm-actions">
+            <button type="button" class="ghost-dark" (click)="confirmDelete.set(false)">Отмена</button>
+            <button type="button" class="danger" [disabled]="busy()" (click)="remove()">Удалить</button>
+          </div>
+        </div>
+      }
+
+      <footer class="actions">
+        <button type="button" class="link danger-link" (click)="confirmDelete.set(true)">Удалить</button>
+        <span class="spacer"></span>
+        <button type="button" class="ghost-dark" (click)="edit()">Изменить</button>
+        <button type="button" class="primary" (click)="openAdd()">Записать в дневник</button>
+      </footer>
+    </div>
+  </div>
+
+  @if (addOpen()) {
+    <app-add-to-diary [recipe]="recipe" (added)="onAdded()" (closed)="addOpen.set(false)" />
+  }
+}

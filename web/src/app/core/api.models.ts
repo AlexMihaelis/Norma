@@ -98,11 +98,12 @@ export interface AddDiaryEntryRequest {
   date: string;
 }
 
-/** Метка из справочника фильтров: код, подпись и группа. */
+/** Метка из справочника фильтров: код, подпись, группа и признак «считается сама». */
 export interface RecipeTag {
   code: string;
   title: string;
   group: string;
+  auto: boolean;
 }
 
 export interface RecipeTagListResponse {
@@ -132,6 +133,10 @@ export interface RecipeIngredient {
   name: string;
   grams: number;
   kcal: number;
+  kcalPer100g: number;
+  proteinPer100g: number;
+  fatPer100g: number;
+  carbsPer100g: number;
 }
 
 /** Рецепт целиком: состав, инструкция и посчитанные цифры. */

@@ -1,0 +1,44 @@
+<div class="overlay" (click)="close()">
+  <div class="dialog" (click)="$event.stopPropagation()">
+    <header class="dialog-head">
+      <h2>Записать в дневник</h2>
+      <button type="button" class="icon-button" aria-label="Закрыть" (click)="close()">×</button>
+    </header>
+
+    <p class="recipe-name">{{ recipe().name }}</p>
+
+    @if (error(); as message) {
+      <p class="error">{{ message }}</p>
+    }
+
+    <div class="fields">
+      <label>
+        Граммовка
+        <input
+          type="text"
+          inputmode="decimal"
+          [value]="grams()"
+          (input)="onGrams($any($event.target).value)"
+        />
+      </label>
+
+      <label>
+        Прием пищи
+        <select [value]="meal()" (change)="onMeal($any($event.target).value)">
+          @for (item of mealList; track item) {
+            <option [value]="item">{{ meals[item] }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <p class="preview">Это примерно {{ kcal() }} ккал и {{ recipe().proteinPer100g * grams() / 100 | number: '1.0-0' }} г белка.</p>
+
+    <footer class="actions">
+      <button type="button" class="ghost-dark" (click)="close()">Отмена</button>
+      <button type="button" class="primary" [disabled]="busy()" (click)="save()">
+        {{ busy() ? 'Записываю…' : 'Записать' }}
+      </button>
+    </footer>
+  </div>
+</div>
