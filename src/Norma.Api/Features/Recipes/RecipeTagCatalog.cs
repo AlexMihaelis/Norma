@@ -22,6 +22,7 @@ internal static class RecipeTagCatalog
         (RecipeTag.Salad, "салат", DishGroup),
         (RecipeTag.Soup, "суп", DishGroup),
         (RecipeTag.Baking, "выпечка", DishGroup),
+        (RecipeTag.Appetizer, "закуска", DishGroup),
         (RecipeTag.AirFryer, "аэрогриль", CookingGroup),
         (RecipeTag.SlowCooker, "мультиварка", CookingGroup),
         (RecipeTag.Oven, "духовка", CookingGroup),

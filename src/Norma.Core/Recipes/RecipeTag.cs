@@ -14,6 +14,7 @@ public enum RecipeTag
     Salad,
     Soup,
     Baking,
+    Appetizer,
     AirFryer,
     SlowCooker,
     Oven,
