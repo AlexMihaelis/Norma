@@ -9,6 +9,7 @@ namespace Norma.Api.Tests.Account;
 /// Интеграционные тесты аккаунта: ник в шапке, аватар картинкой и откат к
 /// инициалам, когда картинки нет.
 /// </summary>
+[Collection(PostgresCollection.Name)]
 public sealed class AccountTests
 {
     // 1x1 PNG: минимальная валидная картинка, чтобы проверить путь без больших файлов.
