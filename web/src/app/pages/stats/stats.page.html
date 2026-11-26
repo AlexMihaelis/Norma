@@ -41,9 +41,6 @@
   <section class="card bars-card">
     <div class="card-head">
       <h2>Калории по дням</h2>
-      @if (target(); as targetKcal) {
-        <span class="card-meta">цель {{ formatNumber(targetKcal) }}</span>
-      }
     </div>
 
     <div class="chart">
@@ -67,9 +64,13 @@
               @for (day of chartDays(); track day.iso) {
                 <div class="column" [class.month-start]="day.label === '1'">
                   <div class="bar-track">
-                    @if (day.kcal !== null && period() === 7) {
-                      <span class="bar-value" [style.bottom.%]="barHeight(day.kcal)">
-                        {{ formatNumber(day.kcal) }}
+                    @if (day.kcal !== null) {
+                      <span
+                        class="bar-value"
+                        [class.dense]="period() > 7"
+                        [style.bottom.%]="barHeight(day.kcal)"
+                      >
+                        {{ period() > 7 ? compact(day.kcal) : formatNumber(day.kcal) }}
                       </span>
                     }
 

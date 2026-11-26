@@ -95,10 +95,6 @@
 }
 
 /* График: сплошная лента дней, пунктир цели и ее число справа. */
-.chart {
-  padding-top: var(--space-8);
-}
-
 .plot {
   position: relative;
 }
@@ -181,15 +177,22 @@
   min-width: 0;
 }
 
+/* Число ккал стоит вплотную над вершиной своего столбца, отдельной строки сверху нет. */
 .bar-value {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
   font-size: clamp(8px, 0.66vw, 11px);
+  line-height: 1;
   color: var(--color-text-muted);
   white-space: nowrap;
   pointer-events: none;
+
+  /* В ленте на 30 дней столбцы узкие: подпись мельче и без разделителя тысяч. */
+  &.dense {
+    font-size: clamp(7px, 0.55vw, 9px);
+  }
 }
 
 .bar-track {
@@ -197,7 +200,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  height: clamp(120px, 11vw, 180px);
+  height: clamp(150px, 12.5vw, 210px);
   width: 100%;
 }
 

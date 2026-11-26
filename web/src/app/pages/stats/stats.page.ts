@@ -40,6 +40,12 @@ interface MonthMarker {
   styleUrl: './stats.page.scss',
 })
 export class StatsPage implements OnInit {
+  /**
+   * Запас над шкалой: линия цели и подпись ккал над самым высоким столбцом
+   * не должны липнуть к верхнему краю графика.
+   */
+  private static readonly ChartHeadroom = 1.1;
+
   private readonly stats = inject(StatsService);
 
   /** Лента дней: прокручиваем к сегодняшнему дню, как только она отрисовалась. */
@@ -138,7 +144,7 @@ export class StatsPage implements OnInit {
     const values = this.days().map((day) => day.kcal);
     const target = this.data()?.averages.targetKcal ?? 0;
 
-    return Math.max(1, target, ...values);
+    return Math.max(1, target, ...values) * StatsPage.ChartHeadroom;
   });
 
   protected readonly summary = computed<SummaryItem[]>(() => {
@@ -207,6 +213,11 @@ export class StatsPage implements OnInit {
 
   protected formatNumber(value: number | null | undefined): string {
     return value === null || value === undefined ? '—' : Math.round(value).toLocaleString('ru-RU');
+  }
+
+  /** В плотной ленте (30 и больше дней) число пишем без пробела-разделителя: столбец узкий. */
+  protected compact(value: number): string {
+    return String(Math.round(value));
   }
 
   protected bju(day: StatsDay): string {
