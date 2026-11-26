@@ -61,6 +61,12 @@ public static class UpdateRecipeEndpoint
         recipe.PhotoContentType = draft.PhotoContentType;
         recipe.PhotoBytes = draft.PhotoBytes;
 
+        // Свои КБЖУ: пусто в теле - считаем из состава.
+        recipe.ManualKcalPer100g = draft.KcalPer100g;
+        recipe.ManualProteinPer100g = draft.ProteinPer100g;
+        recipe.ManualFatPer100g = draft.FatPer100g;
+        recipe.ManualCarbsPer100g = draft.CarbsPer100g;
+
         // Старый состав и метки удаляем запросами, не поднимая строки в контекст:
         // тогда уникальные индексы не спорят между удалением и вставкой.
         await db.RecipeIngredients

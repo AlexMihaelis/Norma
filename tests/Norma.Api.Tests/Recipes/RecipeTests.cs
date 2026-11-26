@@ -299,6 +299,72 @@ public sealed class RecipeTests
         Assert.Contains(catalog.Items, item => item.Code == "HighProtein");
     }
 
+    [Fact]
+    public async Task Manual_nutrition_overrides_composition()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "recipe-manual@example.com");
+        var food = await CreateFoodAsync(app, user.Token, "Кабачок", 24, 0.6, 0.3, 4.6);
+
+        using var create = await SendAsync(app, HttpMethod.Post, "/api/v1/recipes", user.Token, new
+        {
+            name = "Кабачок по-своему",
+            kcalPer100 = 250,
+            proteinPer100 = 20,
+            fatPer100 = 10,
+            carbsPer100 = 15,
+            ingredients = new[] { new { foodId = food, grams = 200 } },
+        });
+
+        create.EnsureSuccessStatusCode();
+
+        var created = await create.Content.ReadFromJsonAsync<RecipePayload>();
+        Assert.NotNull(created);
+
+        Assert.True(created.ManualNutrition);
+        Assert.Equal(250, created.KcalPer100g, 3);
+        Assert.Equal(20, created.ProteinPer100g, 3);
+        // 250 ккал на 100 г × 200 г = 500.
+        Assert.Equal(500, created.Kcal, 3);
+
+        // Замена без своих цифр возвращает расчет из состава.
+        using var update = await SendAsync(
+            app, HttpMethod.Put, $"/api/v1/recipes/{created.Id}", user.Token, new
+            {
+                name = "Кабачок по-своему",
+                ingredients = new[] { new { foodId = food, grams = 200 } },
+            });
+
+        update.EnsureSuccessStatusCode();
+
+        var updated = await update.Content.ReadFromJsonAsync<RecipePayload>();
+        Assert.NotNull(updated);
+
+        Assert.False(updated.ManualNutrition);
+        Assert.Equal(24, updated.KcalPer100g, 3);
+    }
+
+    [Fact]
+    public async Task Partial_manual_nutrition_is_rejected()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "recipe-half@example.com");
+        var food = await CreateFoodAsync(app, user.Token, "Огурец", 15, 0.8, 0.1, 2.8);
+
+        using var response = await SendAsync(app, HttpMethod.Post, "/api/v1/recipes", user.Token, new
+        {
+            name = "Огурец",
+            kcalPer100 = 100,
+            ingredients = new[] { new { foodId = food, grams = 100 } },
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private static async Task<HttpResponseMessage> SendAsync(
         ApiApp app, HttpMethod method, string url, string token, object? body = null)
     {
@@ -438,6 +504,7 @@ public sealed class RecipeTests
         List<string> Tags,
         List<string> AutoTags,
         bool IsFavorite,
+        bool ManualNutrition,
         string? PhotoDataUrl,
         List<RecipeIngredientPayload> Ingredients);
 

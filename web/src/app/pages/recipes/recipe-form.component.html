@@ -9,16 +9,18 @@
       <p class="error">{{ message }}</p>
     }
 
-    <div class="top">
+    <div class="layout">
       <label class="photo-field">
-        <app-recipe-photo [photo]="photo()" [name]="name() || 'Рецепт'" class="photo" />
+        <app-recipe-photo class="photo" [photo]="photo()" [name]="name() || 'Рецепт'" />
         <input type="file" accept="image/png,image/jpeg,image/webp" hidden (change)="onPhoto($event)" />
-        <span class="photo-hint">{{ photoBusy() ? 'Готовлю фото…' : 'Загрузить фото' }}</span>
+        <span class="photo-hint">
+          {{ photoBusy() ? 'Готовлю фото…' : photo() ? 'Заменить фото' : 'Добавить фото' }}
+        </span>
       </label>
 
-      <div class="main-fields">
-        <label>
-          Название
+      <div class="fields">
+        <label class="field">
+          Название блюда
           <input
             type="text"
             [value]="name()"
@@ -28,7 +30,168 @@
           />
         </label>
 
-        <label>
+        <div class="field">
+          <span class="field-label">Ингредиенты</span>
+
+          @if (rows().length > 0) {
+            <ol class="rows">
+              @for (row of rows(); track row.food.id; let index = $index) {
+                <li class="row">
+                  <span class="row-number">{{ index + 1 }}.</span>
+                  <span class="row-name">{{ row.food.name }}</span>
+
+                  <label class="row-grams">
+                    <input
+                      type="text"
+                      inputmode="decimal"
+                      [value]="row.grams"
+                      (input)="onGrams(index, $any($event.target).value)"
+                    />
+                    <span class="unit">{{ row.food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}</span>
+                  </label>
+
+                  <span class="row-kcal">
+                    {{ row.food.kcalPer100g * row.grams / 100 | number: '1.0-0' }} ккал
+                  </span>
+
+                  <button
+                    type="button"
+                    class="icon-button small"
+                    aria-label="Убрать продукт"
+                    (click)="removeRow(index)"
+                  >
+                    ×
+                  </button>
+                </li>
+              }
+            </ol>
+          }
+
+          <div class="add-row">
+            <div class="search">
+              <input
+                type="text"
+                [value]="query()"
+                placeholder="Продукт из базы: курица, рис, молоко…"
+                (input)="onQuery($any($event.target).value)"
+              />
+
+              @if (results().length > 0) {
+                <ul class="found">
+                  @for (food of results(); track food.id) {
+                    <li>
+                      <button type="button" class="found-row" (click)="pick(food)">
+                        <span class="found-name">{{ food.name }}</span>
+                        <span class="found-meta">
+                          {{ food.kcalPer100g | number: '1.0-0' }} ккал на 100
+                          {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}
+                        </span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+
+            <label class="grams-field">
+              <input
+                type="text"
+                inputmode="decimal"
+                [value]="gramsInput()"
+                (input)="onGramsInput($any($event.target).value)"
+              />
+              <span class="unit">{{ unit() }}</span>
+            </label>
+
+            <button type="button" class="plus" aria-label="Добавить продукт" (click)="addIngredient()">
+              +
+            </button>
+          </div>
+
+          <p class="field-hint">
+            Если продукта нет в базе, набери название и нажми «+» - откроется быстрая форма с КБЖУ.
+          </p>
+
+          @if (quickOpen()) {
+            <div class="quick">
+              <div class="quick-head">
+                <span>Новый продукт</span>
+                <button type="button" class="icon-button small" aria-label="Закрыть" (click)="closeQuick()">
+                  ×
+                </button>
+              </div>
+
+              <div class="quick-grid">
+                <label class="field">
+                  Название
+                  <input
+                    type="text"
+                    [value]="quickName()"
+                    maxlength="100"
+                    (input)="onQuickName($any($event.target).value)"
+                  />
+                </label>
+
+                <label class="field">
+                  Единица
+                  <select [value]="quickUnit()" (change)="onQuickUnit($any($event.target).value)">
+                    <option value="Gram">граммы</option>
+                    <option value="Milliliter">миллилитры</option>
+                  </select>
+                </label>
+
+                <label class="field">
+                  Ккал на 100
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="quickKcal()"
+                    (input)="onQuickField('kcal', $any($event.target).value)"
+                  />
+                </label>
+
+                <label class="field">
+                  Белки
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="quickProtein()"
+                    (input)="onQuickField('protein', $any($event.target).value)"
+                  />
+                </label>
+
+                <label class="field">
+                  Жиры
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="quickFat()"
+                    (input)="onQuickField('fat', $any($event.target).value)"
+                  />
+                </label>
+
+                <label class="field">
+                  Углеводы
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    [value]="quickCarbs()"
+                    (input)="onQuickField('carbs', $any($event.target).value)"
+                  />
+                </label>
+              </div>
+
+              <div class="quick-actions">
+                <button type="button" class="ghost-dark" (click)="closeQuick()">Отмена</button>
+                <button type="button" class="primary" [disabled]="quickBusy()" (click)="saveQuickFood()">
+                  {{ quickBusy() ? 'Сохраняю…' : 'Сохранить продукт и добавить' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+
+        <label class="field">
           Способ приготовления
           <textarea
             rows="3"
@@ -68,77 +231,75 @@
     </section>
 
     <section class="block">
-      <h3>Состав</h3>
+      <h3>КБЖУ на 100 г</h3>
+      <p class="field-hint">
+        Не заполняй - посчитаем примерно из состава. Свои цифры важнее, если знаешь точные.
+      </p>
 
-      <div class="search">
-        <input
-          type="text"
-          [value]="query()"
-          placeholder="Найти продукт: курица, рис, молоко…"
-          (input)="onQuery($any($event.target).value)"
-        />
+      <div class="manual-grid">
+        <label class="field">
+          Ккал
+          <input
+            type="text"
+            inputmode="decimal"
+            [value]="manual().kcal"
+            [placeholder]="computedTotals().kcalPer100 | number: '1.0-0'"
+            (input)="onManual('kcal', $any($event.target).value)"
+          />
+        </label>
 
-        @if (results().length > 0) {
-          <ul class="found">
-            @for (food of results(); track food.id) {
-              <li>
-                <button type="button" class="found-row" (click)="addFood(food)">
-                  <span class="found-name">{{ food.name }}</span>
-                  <span class="found-meta">
-                    {{ food.kcalPer100g | number: '1.0-0' }} ккал на 100
-                    {{ food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}
-                  </span>
-                </button>
-              </li>
-            }
-          </ul>
-        }
+        <label class="field">
+          Белки
+          <input
+            type="text"
+            inputmode="decimal"
+            [value]="manual().protein"
+            [placeholder]="computedTotals().proteinPer100 | number: '1.0-0'"
+            (input)="onManual('protein', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="field">
+          Жиры
+          <input
+            type="text"
+            inputmode="decimal"
+            [value]="manual().fat"
+            [placeholder]="computedTotals().fatPer100 | number: '1.0-0'"
+            (input)="onManual('fat', $any($event.target).value)"
+          />
+        </label>
+
+        <label class="field">
+          Углеводы
+          <input
+            type="text"
+            inputmode="decimal"
+            [value]="manual().carbs"
+            [placeholder]="computedTotals().carbsPer100 | number: '1.0-0'"
+            (input)="onManual('carbs', $any($event.target).value)"
+          />
+        </label>
       </div>
-
-      @if (rows().length === 0) {
-        <p class="muted">Пока пусто: найди первый продукт и добавь его в состав.</p>
-      } @else {
-        <ul class="rows">
-          @for (row of rows(); track row.food.id; let index = $index) {
-            <li class="row">
-              <span class="row-name">{{ row.food.name }}</span>
-
-              <label class="row-grams">
-                <input
-                  type="text"
-                  inputmode="decimal"
-                  [value]="row.grams"
-                  (input)="onGrams(index, $any($event.target).value)"
-                />
-                <span class="unit">{{ row.food.baseUnit === 'Milliliter' ? 'мл' : 'г' }}</span>
-              </label>
-
-              <span class="row-kcal">{{ row.food.kcalPer100g * row.grams / 100 | number: '1.0-0' }} ккал</span>
-
-              <button type="button" class="icon-button" aria-label="Убрать" (click)="removeRow(index)">
-                ×
-              </button>
-            </li>
-          }
-        </ul>
-      }
     </section>
 
     <section class="totals">
       <div class="total">
         <span class="total-label">Вес блюда</span>
-        <span class="total-value">{{ totals().grams | number: '1.0-0' }} г</span>
+        <span class="total-value">{{ effectivePer100().grams | number: '1.0-0' }} г</span>
       </div>
       <div class="total">
-        <span class="total-label">Ккал на 100 г, примерно</span>
-        <span class="total-value">{{ totals().kcalPer100 | number: '1.0-0' }}</span>
+        <span class="total-label">
+          Ккал на 100 г{{ manualActive() ? ' (свои)' : ', примерно из состава' }}
+        </span>
+        <span class="total-value">{{ effectivePer100().kcalPer100 | number: '1.0-0' }}</span>
       </div>
       <div class="total">
         <span class="total-label">Белки / жиры / углеводы на 100 г</span>
         <span class="total-value">
-          {{ totals().proteinPer100 | number: '1.0-0' }} /
-          {{ totals().fatPer100 | number: '1.0-0' }} /
-          {{ totals().carbsPer100 | number: '1.0-0' }}
+          {{ effectivePer100().proteinPer100 | number: '1.0-0' }} /
+          {{ effectivePer100().fatPer100 | number: '1.0-0' }} /
+          {{ effectivePer100().carbsPer100 | number: '1.0-0' }}
         </span>
       </div>
     </section>

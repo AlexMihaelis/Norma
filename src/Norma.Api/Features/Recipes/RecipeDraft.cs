@@ -41,6 +41,15 @@ internal sealed class RecipeDraft
 
     public byte[]? PhotoBytes { get; private set; }
 
+    /// <summary>Свои КБЖУ на 100 г; <c>null</c>, если человек их не вводил.</summary>
+    public double? KcalPer100g { get; private set; }
+
+    public double? ProteinPer100g { get; private set; }
+
+    public double? FatPer100g { get; private set; }
+
+    public double? CarbsPer100g { get; private set; }
+
     public List<(Food Food, double Grams)> Lines { get; } = [];
 
     public bool IsValid => Errors.Count == 0;
@@ -72,6 +81,7 @@ internal sealed class RecipeDraft
 
         draft.ReadTags(request?.Tags);
         draft.ReadPhoto(request?.PhotoDataUrl);
+        draft.ReadManualNutrition(request);
 
         if (!draft.ReadIngredients(request?.Ingredients))
         {
@@ -141,6 +151,62 @@ internal sealed class RecipeDraft
                 Tags.Add(tag.Value);
             }
         }
+    }
+
+    /// <summary>
+    /// Свои КБЖУ: либо все четыре поля, либо ни одного. Половина заполненных
+    /// значений - ошибка ввода, а не повод считать что-то среднее.
+    /// </summary>
+    private void ReadManualNutrition(RecipeRequest? request)
+    {
+        var values = new (string Key, double? Value, double Max)[]
+        {
+            ("kcalPer100", request?.KcalPer100, 950),
+            ("proteinPer100", request?.ProteinPer100, 100),
+            ("fatPer100", request?.FatPer100, 100),
+            ("carbsPer100", request?.CarbsPer100, 100),
+        };
+
+        var given = values.Count(item => item.Value is not null);
+
+        if (given == 0)
+        {
+            return;
+        }
+
+        if (given != values.Length)
+        {
+            Errors["nutrition"] = ["Заполни все четыре поля КБЖУ или оставь их пустыми - посчитаем из состава."];
+            return;
+        }
+
+        foreach (var (key, value, max) in values)
+        {
+            if (value is not double number || double.IsNaN(number) || number < 0 || number > max)
+            {
+                Errors[key] = [$"Значение должно быть в диапазоне 0-{max}."];
+            }
+        }
+
+        if (Errors.Count > 0)
+        {
+            return;
+        }
+
+        var macroSum = request!.ProteinPer100!.Value
+            + request.FatPer100!.Value
+            + request.CarbsPer100!.Value;
+
+        if (macroSum > 100.5)
+        {
+            Errors["nutrition"] = ["Сумма белков, жиров и углеводов не может быть больше 100 г на 100 г."];
+            return;
+        }
+
+        KcalPer100g = request.KcalPer100;
+        ProteinPer100g = request.ProteinPer100;
+        FatPer100g = request.FatPer100;
+        CarbsPer100g = request.CarbsPer100;
     }
 
     private void ReadPhoto(string? dataUrl)

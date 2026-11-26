@@ -5,13 +5,17 @@ public sealed record RecipeIngredientRequest(Guid? FoodId, double? Grams);
 
 /// <summary>
 /// Тело создания и полной замены рецепта. Замена полная, как у профиля: чего нет
-/// в теле, того не будет и в рецепте (включая фото).
+/// в теле, того не будет и в рецепте (включая фото и свои КБЖУ).
 /// </summary>
 public sealed record RecipeRequest(
     string? Name,
     string? Instructions,
     IReadOnlyList<string>? Tags,
     string? PhotoDataUrl,
+    double? KcalPer100,
+    double? ProteinPer100,
+    double? FatPer100,
+    double? CarbsPer100,
     IReadOnlyList<RecipeIngredientRequest>? Ingredients);
 
 /// <summary>
@@ -42,6 +46,7 @@ public sealed record RecipeSummary(
     IReadOnlyList<string> Tags,
     IReadOnlyList<string> AutoTags,
     bool IsFavorite,
+    bool ManualNutrition,
     string? PhotoDataUrl,
     DateTimeOffset CreatedAt);
 
@@ -59,6 +64,7 @@ public sealed record RecipeResponse(
     IReadOnlyList<string> Tags,
     IReadOnlyList<string> AutoTags,
     bool IsFavorite,
+    bool ManualNutrition,
     string? PhotoDataUrl,
     IReadOnlyList<RecipeIngredientResponse> Ingredients,
     DateTimeOffset CreatedAt);

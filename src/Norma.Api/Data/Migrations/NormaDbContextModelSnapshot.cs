@@ -299,6 +299,18 @@ namespace Norma.Api.Data.Migrations
                     b.Property<bool>("IsFavorite")
                         .HasColumnType("boolean");
 
+                    b.Property<double?>("ManualCarbsPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ManualFatPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ManualKcalPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ManualProteinPer100g")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)

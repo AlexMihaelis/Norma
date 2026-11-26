@@ -47,6 +47,10 @@ public static class CreateRecipeEndpoint
             Instructions = draft.Instructions,
             PhotoContentType = draft.PhotoContentType,
             PhotoBytes = draft.PhotoBytes,
+            ManualKcalPer100g = draft.KcalPer100g,
+            ManualProteinPer100g = draft.ProteinPer100g,
+            ManualFatPer100g = draft.FatPer100g,
+            ManualCarbsPer100g = draft.CarbsPer100g,
             CreatedAt = DateTimeOffset.UtcNow,
         };
 

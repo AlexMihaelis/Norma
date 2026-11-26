@@ -194,6 +194,32 @@ public sealed class RecipeDiaryTests
         Assert.Equal(105, dayAfter.Totals.Kcal);
     }
 
+    [Fact]
+    public async Task Manual_nutrition_drives_diary_entry()
+    {
+        var connectionString = await ResetAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "diary-manual@example.com");
+        var food = await CreateFoodAsync(app, user.Token, "Кабачок", 24, 0.6, 0.3, 4.6);
+        var recipe = await CreateRecipeAsync(app, user.Token, "Кабачок по-своему", [(food, 200)], manualKcal: 250);
+
+        using var add = await SendAsync(app, HttpMethod.Post, "/api/v1/diary", user.Token, new
+        {
+            meal = "Dinner",
+            recipeId = recipe.Id,
+            quantity = 100,
+        });
+
+        add.EnsureSuccessStatusCode();
+
+        var entry = await add.Content.ReadFromJsonAsync<DiaryEntryPayload>();
+        Assert.NotNull(entry);
+
+        // Свои 250 ккал на 100 г важнее расчета из состава (24 ккал).
+        Assert.Equal(250, entry.Kcal);
+    }
+
     private static string Today() => DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
 
     private static async Task<HttpResponseMessage> SendAsync(
@@ -244,11 +270,19 @@ public sealed class RecipeDiaryTests
     }
 
     private static async Task<RecipePayload> CreateRecipeAsync(
-        ApiApp app, string token, string name, IReadOnlyList<(Guid FoodId, double Grams)> composition)
+        ApiApp app,
+        string token,
+        string name,
+        IReadOnlyList<(Guid FoodId, double Grams)> composition,
+        double? manualKcal = null)
     {
         using var response = await SendAsync(app, HttpMethod.Post, "/api/v1/recipes", token, new
         {
             name,
+            kcalPer100 = manualKcal,
+            proteinPer100 = manualKcal is null ? (double?)null : 10,
+            fatPer100 = manualKcal is null ? (double?)null : 5,
+            carbsPer100 = manualKcal is null ? (double?)null : 20,
             ingredients = composition.Select(line => new { foodId = line.FoodId, grams = line.Grams }),
         });
 

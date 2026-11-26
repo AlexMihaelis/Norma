@@ -27,6 +27,18 @@ public sealed class Recipe
     /// <summary>Отметка «избранный рецепт»: рецепт принадлежит пользователю, флаг рядом.</summary>
     public bool IsFavorite { get; set; }
 
+    /// <summary>
+    /// Свои КБЖУ на 100 г, если человек их ввел. Пусто - цифры считаются из
+    /// состава, как обычно.
+    /// </summary>
+    public double? ManualKcalPer100g { get; set; }
+
+    public double? ManualProteinPer100g { get; set; }
+
+    public double? ManualFatPer100g { get; set; }
+
+    public double? ManualCarbsPer100g { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public List<RecipeIngredient> Ingredients { get; set; } = [];

@@ -10,7 +10,7 @@
 }
 
 .dialog {
-  width: min(760px, 100%);
+  width: min(820px, 100%);
   max-height: calc(100vh - 2 * var(--space-16));
   overflow-y: auto;
   padding: clamp(var(--space-16), 1.6vw, var(--space-24));
@@ -48,13 +48,20 @@
   &:hover {
     background: var(--color-border);
   }
+
+  &.small {
+    width: 24px;
+    height: 24px;
+    font-size: 15px;
+  }
 }
 
-.top {
+/* Слева фото, справа все поля - как в макете пользователя. */
+.layout {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
+  grid-template-columns: 210px minmax(0, 1fr);
   gap: var(--space-16);
-  margin-bottom: var(--space-8);
+  align-items: start;
 }
 
 .photo-field {
@@ -77,12 +84,15 @@
   }
 }
 
-.main-fields {
+.fields {
   display: grid;
   gap: var(--space-12);
+  min-width: 0;
 }
 
-label {
+.field,
+.field-label {
+  display: block;
   font-size: clamp(11px, 0.83vw, 14px);
   color: var(--color-text-muted);
 }
@@ -110,13 +120,194 @@ textarea {
   resize: vertical;
 }
 
+.field-hint {
+  margin: var(--space-4) 0 0;
+  font-size: clamp(9px, 0.72vw, 12px);
+  color: var(--color-text-muted);
+}
+
+/* Состав: нумерованный список добавленного над строкой ввода. */
+.rows {
+  list-style: none;
+  margin: var(--space-8) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+  counter-reset: ingredient;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 96px 72px 24px;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-field);
+  background: var(--color-track);
+}
+
+.row-number {
+  font-size: clamp(11px, 0.83vw, 14px);
+  color: var(--color-text-muted);
+}
+
+.row-name {
+  font-size: clamp(12px, 0.9vw, 15px);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-grams {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  input {
+    margin-top: 0;
+    padding: 6px 8px;
+    text-align: right;
+  }
+
+  .unit {
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-text-muted);
+  }
+}
+
+.row-kcal {
+  font-size: clamp(10px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 40px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.search {
+  position: relative;
+  min-width: 0;
+}
+
+.found {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  box-shadow: 0 12px 28px rgb(15 23 42 / 16%);
+}
+
+.found-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: none;
+  border-bottom: 1px solid var(--color-track);
+  border-radius: 0;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+
+  &:hover {
+    background: var(--color-track);
+  }
+}
+
+.found-name {
+  font-size: clamp(12px, 0.9vw, 15px);
+  font-weight: 600;
+}
+
+.found-meta {
+  font-size: clamp(10px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+}
+
+.grams-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  input {
+    margin-top: 0;
+    padding: 9px 8px;
+    text-align: right;
+  }
+
+  .unit {
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-text-muted);
+  }
+}
+
+.plus {
+  height: 38px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Быстрая форма продукта, которого нет в каталоге. */
+.quick {
+  margin-top: var(--space-8);
+  padding: var(--space-12);
+  border: 1px dashed var(--color-accent-border);
+  border-radius: var(--radius-card);
+  background: var(--color-accent-soft);
+}
+
+.quick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  font-size: clamp(11px, 0.83vw, 14px);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-8);
+}
+
+.quick-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
 .block {
   margin-top: var(--space-16);
   padding-top: var(--space-16);
   border-top: 1px solid var(--color-track);
 
   h3 {
-    margin: 0 0 var(--space-12);
+    margin: 0 0 var(--space-8);
     font-size: clamp(12px, 0.97vw, 16px);
     font-weight: 700;
     color: var(--color-text);
@@ -156,95 +347,10 @@ textarea {
   }
 }
 
-.search {
-  position: relative;
-}
-
-.found {
-  list-style: none;
-  margin: var(--space-4) 0 0;
-  padding: 0;
-  max-height: 220px;
-  overflow-y: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-field);
-  background: var(--color-surface);
-}
-
-.found-row {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  width: 100%;
-  padding: var(--space-8) var(--space-12);
-  border: none;
-  border-bottom: 1px solid var(--color-track);
-  border-radius: 0;
-  background: none;
-  color: var(--color-text);
-  text-align: left;
-
-  &:hover {
-    background: var(--color-track);
-  }
-}
-
-.found-name {
-  font-size: clamp(12px, 0.9vw, 15px);
-  font-weight: 600;
-}
-
-.found-meta {
-  font-size: clamp(10px, 0.76vw, 13px);
-  color: var(--color-text-muted);
-}
-
-.rows {
-  list-style: none;
-  margin: var(--space-12) 0 0;
-  padding: 0;
+.manual-grid {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-8);
-}
-
-.row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px 80px 30px;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-8) var(--space-12);
-  border-radius: var(--radius-field);
-  background: var(--color-track);
-}
-
-.row-name {
-  font-size: clamp(12px, 0.9vw, 15px);
-  color: var(--color-text);
-}
-
-.row-grams {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-
-  input {
-    margin-top: 0;
-    padding: 6px 8px;
-    text-align: right;
-  }
-
-  .unit {
-    font-size: clamp(10px, 0.76vw, 13px);
-    color: var(--color-text-muted);
-  }
-}
-
-.row-kcal {
-  font-size: clamp(11px, 0.83vw, 14px);
-  color: var(--color-text-muted);
-  text-align: right;
-  white-space: nowrap;
 }
 
 .totals {
@@ -299,6 +405,7 @@ textarea {
 }
 
 .link {
+  margin-top: var(--space-8);
   padding: 0;
   border: none;
   background: none;
@@ -307,13 +414,22 @@ textarea {
   text-decoration: underline;
 }
 
-@media (max-width: 640px) {
-  .top {
+@media (max-width: 720px) {
+  .layout {
     grid-template-columns: 1fr;
   }
 
+  .photo-field .photo {
+    aspect-ratio: 16 / 9;
+  }
+
+  .manual-grid,
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .row {
-    grid-template-columns: minmax(0, 1fr) 90px 30px;
+    grid-template-columns: auto minmax(0, 1fr) 88px 24px;
 
     .row-kcal {
       display: none;

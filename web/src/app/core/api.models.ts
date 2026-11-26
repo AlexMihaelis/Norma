@@ -124,6 +124,7 @@ export interface RecipeSummary {
   tags: string[];
   autoTags: string[];
   isFavorite: boolean;
+  manualNutrition: boolean;
   photoDataUrl: string | null;
   createdAt: string;
 }
@@ -155,6 +156,11 @@ export interface RecipeRequest {
   instructions: string | null;
   tags: string[];
   photoDataUrl: string | null;
+  /** Свои КБЖУ на 100 г: либо все четыре, либо ни одного. */
+  kcalPer100: number | null;
+  proteinPer100: number | null;
+  fatPer100: number | null;
+  carbsPer100: number | null;
   ingredients: { foodId: string; grams: number }[];
 }
 

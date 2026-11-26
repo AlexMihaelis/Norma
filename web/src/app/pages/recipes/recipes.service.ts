@@ -3,7 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
+  CreateFoodRequest,
   FoodSearchResponse,
+  FoodSummary,
   MealKind,
   Recipe,
   RecipeListResponse,
@@ -75,6 +77,11 @@ export class RecipesService {
     return this.http.get<FoodSearchResponse>(`${environment.apiUrl}/foods`, {
       params: new HttpParams().set('q', query),
     });
+  }
+
+  /** Быстрое создание продукта прямо из формы рецепта. */
+  createFood(request: CreateFoodRequest): Observable<FoodSummary> {
+    return this.http.post<FoodSummary>(`${environment.apiUrl}/foods`, request);
   }
 
   /** Запись рецепта в дневник: граммовка и прием пищи. */
