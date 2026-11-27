@@ -160,6 +160,39 @@ public sealed class WaterTests
     }
 
     [Fact]
+    public async Task Delete_last_removes_only_the_latest_intake()
+    {
+        var connectionString = await MigrateAsync();
+        await using var app = await StartApiAsync(connectionString);
+
+        var user = await RegisterAsync(app, "undo-water@example.com");
+
+        await AddWaterAsync(app, user.Token, 250, Day);
+        await AddWaterAsync(app, user.Token, 500, Day);
+
+        using var first = await SendAsync(app, HttpMethod.Delete, $"/api/v1/water/last?date={Day}", user.Token);
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+
+        var afterFirst = await first.Content.ReadFromJsonAsync<WaterDayPayload>();
+        Assert.NotNull(afterFirst);
+
+        // Удаляется самый свежий прием - 500 мл, а не первый.
+        Assert.Equal(250, afterFirst.DrunkMl);
+
+        using var second = await SendAsync(app, HttpMethod.Delete, $"/api/v1/water/last?date={Day}", user.Token);
+        var afterSecond = await second.Content.ReadFromJsonAsync<WaterDayPayload>();
+        Assert.NotNull(afterSecond);
+
+        Assert.Equal(0, afterSecond.DrunkMl);
+
+        // Пустой день отменять нечего.
+        using var third = await SendAsync(app, HttpMethod.Delete, $"/api/v1/water/last?date={Day}", user.Token);
+
+        Assert.Equal(HttpStatusCode.NotFound, third.StatusCode);
+    }
+
+    [Fact]
     public async Task Endpoints_require_token()
     {
         var connectionString = await MigrateAsync();

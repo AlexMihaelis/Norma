@@ -117,16 +117,29 @@
         </span>
         <h2 class="card-title">Вода</h2>
 
-        <button
-          type="button"
-          class="plus"
-          [disabled]="waterBusy()"
-          (click)="addWaterGlass()"
-          title="Добавить 250 мл"
-          aria-label="Добавить 250 мл"
-        >
-          +
-        </button>
+        <div class="water-actions">
+          <button
+            type="button"
+            class="round"
+            [disabled]="waterBusy() || (water()?.drunkMl ?? 0) <= 0"
+            (click)="removeWaterGlass()"
+            title="Убрать последний стакан"
+            aria-label="Убрать последний стакан"
+          >
+            −
+          </button>
+
+          <button
+            type="button"
+            class="plus"
+            [disabled]="waterBusy()"
+            (click)="addWaterGlass()"
+            title="Добавить 250 мл"
+            aria-label="Добавить 250 мл"
+          >
+            +
+          </button>
+        </div>
       </header>
 
       <p class="water-value">
@@ -149,14 +162,6 @@
 
     <article class="card activity-card">
       <header class="card-head">
-        <span class="icon-badge activity">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              d="M8.5 5.5c0 1.2.6 2 1.6 2.4M14.5 8.2c1.2.2 2-.4 2.4-1.4M7.6 12.4c.6 1.6 1.8 2.4 3.4 2.6M15.2 13.4c1.6-.4 2.6-1.4 3-3M9.4 18.4c1 .8 2.4 1 3.8.6"
-            />
-            <path d="M6.2 9.4c1 1 1.6 2.2 1.8 3.6M17.8 10.6c-.4 1.4-.2 2.6.6 3.6" />
-          </svg>
-        </span>
         <h2 class="card-title">Активность</h2>
 
         <a class="chevron" routerLink="/stats" aria-label="Статистика активности">›</a>

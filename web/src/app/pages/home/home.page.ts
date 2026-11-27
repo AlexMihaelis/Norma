@@ -311,6 +311,26 @@ export class HomePage implements OnInit {
     });
   }
 
+  /** Минус: убирает последний стакан, чтобы случайный плюс можно было отменить. */
+  protected removeWaterGlass(): void {
+    if (this.waterBusy() || (this.water()?.drunkMl ?? 0) <= 0) {
+      return;
+    }
+
+    this.waterBusy.set(true);
+
+    this.home.removeLastWater(this.dateIso).subscribe({
+      next: (water) => {
+        this.waterBusy.set(false);
+        this.water.set(water);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.waterBusy.set(false);
+        this.error.set(describeProblem(error));
+      },
+    });
+  }
+
   protected formatKg(value: number | null): string {
     return value === null ? '—' : value.toFixed(1).replace('.', ',');
   }

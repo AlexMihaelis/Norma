@@ -41,6 +41,7 @@ using Norma.Api.Features.Recipes.SetRecipeFavorite;
 using Norma.Api.Features.Recipes.UpdateRecipe;
 using Norma.Api.Features.Stats.GetStats;
 using Norma.Api.Features.Water.AddWater;
+using Norma.Api.Features.Water.DeleteLastWater;
 using Norma.Api.Features.Water.GetWaterDay;
 using Norma.Api.Features.Weight.AddWeight;
 using Norma.Api.Features.Weight.GetWeightTrend;
@@ -254,6 +255,7 @@ public static class ApiHost
         api.MapUpdateProfile();
         api.MapAddWater();
         api.MapGetWaterDay();
+        api.MapDeleteLastWater();
         api.MapAddActivity();
         api.MapGetActivityDay();
         api.MapAddDiaryEntry();

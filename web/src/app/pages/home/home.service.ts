@@ -25,4 +25,9 @@ export class HomeService {
   addWater(ml: number, date: string): Observable<unknown> {
     return this.http.post(`${environment.apiUrl}/water`, { ml, date });
   }
+
+  /** Шаг назад: удаляет последний прием за день и отдает день целиком. */
+  removeLastWater(date: string): Observable<WaterDay> {
+    return this.http.delete<WaterDay>(`${environment.apiUrl}/water/last`, { params: { date } });
+  }
 }
