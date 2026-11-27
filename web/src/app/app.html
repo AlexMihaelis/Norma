@@ -1,55 +1,103 @@
-<header class="topbar">
-  <a class="brand" routerLink="/">
-    <span class="brand-mark">N</span>
-    <span class="brand-name">Norma</span>
-  </a>
+@if (auth.signedIn()) {
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="sidebar-brand" routerLink="/" aria-label="На главную">
+        <app-logo [compact]="true" />
+      </a>
 
-  @if (auth.signedIn()) {
-    <nav>
-      <a routerLink="/diary" routerLinkActive="active">Дневник</a>
-      <a routerLink="/recipes" routerLinkActive="active">Рецепты</a>
-      <a routerLink="/weight" routerLinkActive="active">Вес</a>
-      <a routerLink="/stats" routerLinkActive="active">Статистика</a>
-      <a routerLink="/profile" routerLinkActive="active">Профиль</a>
-    </nav>
-
-    <span class="spacer"></span>
-
-    <div class="account-block">
-      <button
-        type="button"
-        class="account-button"
-        [attr.aria-expanded]="menuOpen()"
-        (click)="toggleMenu($event)"
-      >
-        @if (account.avatarDataUrl(); as image) {
-          <img class="avatar" [src]="image" alt="Аватар" />
-        } @else {
-          <span class="avatar initials">{{ account.initials() }}</span>
+      <nav class="sidebar-nav">
+        @for (item of nav; track item.path) {
+          <a
+            class="nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.exact === true }"
+          >
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path [attr.d]="item.icon" />
+            </svg>
+            <span class="nav-title">{{ item.title }}</span>
+          </a>
         }
-        <span class="account-name">{{ account.displayName() }}</span>
-        <svg
-          class="account-chevron"
-          [class.open]="menuOpen()"
-          viewBox="0 0 12 8"
-          width="12"
-          height="8"
-          aria-hidden="true"
+
+        <button type="button" class="nav-item" disabled title="Скоро">
+          <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="settingsIcon" />
+          </svg>
+          <span class="nav-title">Настройки</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button
+          type="button"
+          class="icon-button"
+          disabled
+          title="Темная тема - позже"
+          aria-label="Темная тема"
         >
-          <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        </svg>
-      </button>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="sunIcon" />
+          </svg>
+        </button>
 
-      @if (menuOpen()) {
-        <div class="account-menu" (click)="$event.stopPropagation()">
-          <a routerLink="/profile" (click)="closeMenu()">Профиль</a>
-          <button type="button" class="menu-item" (click)="signOut()">Выйти</button>
+        <button type="button" class="icon-button" (click)="signOut()" aria-label="Выйти" title="Выйти">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="logoutIcon" />
+          </svg>
+        </button>
+      </div>
+    </aside>
+
+    <div class="content">
+      <header class="shell-header">
+        <app-logo />
+
+        <p class="slogan">Путь к здоровью<br />начинается с баланса</p>
+
+        <span class="spacer"></span>
+
+        <div class="account-block">
+          <button
+            type="button"
+            class="account-button"
+            [attr.aria-expanded]="menuOpen()"
+            (click)="toggleMenu($event)"
+          >
+            @if (account.avatarDataUrl(); as image) {
+              <img class="avatar" [src]="image" alt="Аватар" />
+            } @else {
+              <span class="avatar initials">{{ account.initials() }}</span>
+            }
+            <span class="account-name">{{ account.displayName() }}</span>
+            <svg
+              class="account-chevron"
+              [class.open]="menuOpen()"
+              viewBox="0 0 12 8"
+              width="12"
+              height="8"
+              aria-hidden="true"
+            >
+              <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+          </button>
+
+          @if (menuOpen()) {
+            <div class="account-menu" (click)="$event.stopPropagation()">
+              <a routerLink="/profile" (click)="closeMenu()">Профиль</a>
+              <button type="button" class="menu-item" (click)="signOut()">Выйти</button>
+            </div>
+          }
         </div>
-      }
-    </div>
-  }
-</header>
+      </header>
 
-<main class="page">
-  <router-outlet />
-</main>
+      <main class="page">
+        <router-outlet />
+      </main>
+    </div>
+  </div>
+} @else {
+  <main class="auth-shell">
+    <router-outlet />
+  </main>
+}

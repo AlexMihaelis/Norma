@@ -1,0 +1,35 @@
+/*
+ * Редизайн 2026-11-27: фиолетовый акцент и мягкие карточки.
+ *
+ * Файл отдельный, чтобы правки не терялись при повторной генерации
+ * `_tokens.scss` из Figma: там остаются исходные значения, здесь - слой
+ * поверх них. Зелень из tokens не удалена: она осталась в логотипе, в дельтах
+ * веса и в макросах кольца.
+ */
+:root {
+  --color-violet: #6c5ce7;
+  --color-violet-dark: #5b4bd6;
+  --color-violet-soft: #efecff;
+  --color-violet-border: #d9d2ff;
+  --color-shell: #f6f5fc;
+  --color-leaf: #7cc39a;
+  --color-leaf-dark: #4f9d76;
+
+  /* Основные роли перекрашиваем на месте: страницы про акцент уже знают. */
+  --color-accent: var(--color-violet);
+  --color-accent-soft: var(--color-violet-soft);
+  --color-accent-border: var(--color-violet-border);
+  --color-text: #1b1b33;
+  --color-text-muted: #6b6b85;
+  --color-border: #e7e5f2;
+  --color-track: #f2f1f9;
+
+  --radius-card: 16px;
+  --radius-modal: 20px;
+  --radius-field: 12px;
+  --radius-button: 12px;
+  --radius-chip: 999px;
+
+  --shadow-card: 0 10px 30px rgb(76 60 160 / 7%);
+  --shadow-pop: 0 20px 50px rgb(27 27 51 / 16%);
+}

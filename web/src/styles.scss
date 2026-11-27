@@ -1,4 +1,5 @@
 @use 'styles/tokens';
+@use 'styles/theme';
 
 :root {
   color-scheme: light;
@@ -16,8 +17,8 @@ body {
 
 body {
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  background: #f8fafc;
-  color: #111827;
+  background: var(--color-shell);
+  color: var(--color-text);
   line-height: 1.5;
 }
 
@@ -26,8 +27,7 @@ body {
  * на большом экране чуть шире, на маленьком - уже, на мобильном - во всю ширину.
  */
 .page {
-  width: clamp(680px, 50vw, 1080px);
-  max-width: calc(100% - 2 * var(--space-16));
+  width: min(1180px, 100%);
   margin: 0 auto;
   padding: clamp(var(--space-16), 1.7vw, var(--space-32));
 }
@@ -35,8 +35,8 @@ body {
 .card {
   background: var(--color-surface);
   border-radius: var(--radius-card);
-  padding: var(--space-24);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  padding: clamp(var(--space-16), 1.5vw, var(--space-24));
+  box-shadow: var(--shadow-card);
 }
 
 /* Шапка из макета «Главная»: темная полоса 64 px, логотип-знак, навигация. */
