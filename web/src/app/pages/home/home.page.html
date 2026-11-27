@@ -32,6 +32,16 @@
               </text>
             }
 
+            @for (x of weekChart().dayLines; track x) {
+              <line
+                [attr.x1]="x"
+                [attr.x2]="x"
+                [attr.y1]="plot.top"
+                [attr.y2]="plot.bottom"
+                class="grid vertical"
+              />
+            }
+
             @for (label of weekChart().labels; track label.text) {
               <text [attr.x]="label.x" y="194" text-anchor="middle" class="axis">{{ label.text }}</text>
             }
@@ -41,18 +51,18 @@
 
             @for (point of weekChart().points; track point.id) {
               @if (point.measured) {
-                <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" class="dot" />
+                <circle [attr.cx]="point.x" [attr.cy]="point.y" r="5" class="dot" />
               }
             }
 
             @if (weekChart().last; as last) {
-              <circle [attr.cx]="last.x" [attr.cy]="last.y" r="5.5" class="dot last" />
+              <circle [attr.cx]="last.x" [attr.cy]="last.y" r="7" class="dot last" />
             }
 
             @if (weekChart().bubble; as bubble) {
               <g class="bubble">
-                <rect [attr.x]="bubble.x" [attr.y]="bubble.y" width="72" height="29" rx="10" />
-                <text [attr.x]="bubble.x + 36" [attr.y]="bubble.y + 19" text-anchor="middle">
+                <rect [attr.x]="bubble.x" [attr.y]="bubble.y" width="84" height="32" rx="11" />
+                <text [attr.x]="bubble.x + 42" [attr.y]="bubble.y + 21" text-anchor="middle">
                   {{ formatKg(weekChart().last?.kg ?? null) }} кг
                 </text>
               </g>

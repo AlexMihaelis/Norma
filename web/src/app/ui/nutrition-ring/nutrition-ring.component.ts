@@ -29,7 +29,7 @@ export class NutritionRingComponent {
   private readonly circumference = 2 * Math.PI * 46;
 
   /** Зазор между секторами: цвета не сливаются в один бублик. */
-  private readonly gap = 6;
+  private readonly gap = 0;
 
   protected readonly arcs = computed<RingArc[]>(() => {
     const parts = [

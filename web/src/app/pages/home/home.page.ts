@@ -44,6 +44,7 @@ interface WeekChart {
   area: string;
   ticks: ChartTick[];
   labels: ChartLabel[];
+  dayLines: number[];
   last: ChartPoint | null;
   bubble: { x: number; y: number } | null;
 }
@@ -61,7 +62,7 @@ interface WeightDelta {
 }
 
 /** Прямоугольник графика в координатах SVG. */
-const PlotLeft = 40;
+const PlotLeft = 64;
 const PlotRight = 336;
 const PlotTop = 26;
 const PlotBottom = 168;
@@ -132,16 +133,22 @@ export class HomePage implements OnInit {
   });
 
   /**
-   * График веса за неделю: по каждому дню берется последний замер не позже этой
-   * даты, поэтому линия непрерывная, а точки стоят только там, где был замер.
+   * График веса за текущую неделю, с понедельника по воскресенье: по каждому
+   * дню берется последний замер не позже этой даты, поэтому линия непрерывная,
+   * а точки стоят только там, где был замер. Будущие дни остаются пустыми.
    */
   protected readonly weekChart = computed<WeekChart>(() => {
     const days: { iso: string; label: string }[] = [];
     const todayDate = new Date();
+    const todayIso = toIso(todayDate);
+    const monday = new Date(todayDate);
 
-    for (let shift = 6; shift >= 0; shift -= 1) {
-      const date = new Date(todayDate);
-      date.setDate(todayDate.getDate() - shift);
+    // getDay(): 0 - воскресенье, поэтому сдвиг к понедельнику считается так.
+    monday.setDate(todayDate.getDate() - ((todayDate.getDay() + 6) % 7));
+
+    for (let shift = 0; shift < 7; shift += 1) {
+      const date = new Date(monday);
+      date.setDate(monday.getDate() + shift);
       days.push({
         iso: toIso(date),
         label: date.toLocaleDateString('ru-RU', { weekday: 'short' }),
@@ -149,17 +156,30 @@ export class HomePage implements OnInit {
     }
 
     const entries = [...this.weightList()].sort((left, right) => left.date.localeCompare(right.date));
+    const measured = new Set(entries.map((entry) => entry.date));
     const values = days.map((day) => {
+      if (day.iso > todayIso) {
+        return null;
+      }
+
       const found = [...entries].reverse().find((entry) => entry.date <= day.iso);
 
       return found?.kg ?? null;
     });
 
-    const measured = new Set(entries.map((entry) => entry.date));
     const known = values.filter((value): value is number => value !== null);
 
     if (known.length === 0) {
-      return { points: [], polyline: '', area: '', ticks: [], labels: [], last: null, bubble: null };
+      return {
+        points: [],
+        polyline: '',
+        area: '',
+        ticks: [],
+        labels: [],
+        dayLines: [],
+        last: null,
+        bubble: null,
+      };
     }
 
     const min = Math.min(...known) - 0.4;
@@ -171,11 +191,13 @@ export class HomePage implements OnInit {
 
     const points: ChartPoint[] = [];
     const labels: ChartLabel[] = [];
+    const dayLines: number[] = [];
 
     days.forEach((day, index) => {
       const x = PlotLeft + index * step;
 
       labels.push({ x, text: day.label.charAt(0).toUpperCase() + day.label.slice(1) });
+      dayLines.push(x);
 
       const kg = values[index];
 
@@ -199,12 +221,12 @@ export class HomePage implements OnInit {
 
     const bubble = last
       ? {
-          x: Math.min(Math.max(last.x - 36, PlotLeft - 24), PlotRight - 76),
-          y: Math.max(4, last.y - 42),
+          x: Math.min(Math.max(last.x - 40, PlotLeft - 30), PlotRight - 84),
+          y: Math.max(4, last.y - 46),
         }
       : null;
 
-    return { points, polyline, area, ticks, labels, last: last ?? null, bubble };
+    return { points, polyline, area, ticks, labels, dayLines, last: last ?? null, bubble };
   });
 
   /**
