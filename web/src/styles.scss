@@ -20,6 +20,12 @@ body {
   background: var(--color-shell);
   color: var(--color-text);
   line-height: 1.5;
+  overflow-x: clip;
+}
+
+img,
+svg {
+  max-width: 100%;
 }
 
 /*
@@ -30,7 +36,7 @@ body {
   width: 100%;
   max-width: 2000px;
   margin: 0 auto;
-  padding: clamp(24px, 1.6vw, 44px);
+  padding: clamp(16px, 1.6vw, 44px);
 }
 
 .card {

@@ -12,6 +12,7 @@
             [routerLink]="item.path"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: item.exact === true }"
+            [attr.title]="item.title"
           >
             <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path [attr.d]="item.icon" />

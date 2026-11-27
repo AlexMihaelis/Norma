@@ -227,18 +227,24 @@
 
 /* ---------- Узкие экраны ---------- */
 
-@media (max-width: 1080px) {
+/* Ноутбук: сайдбар сжимается до иконок, подписи прячутся. */
+@media (max-width: 1200px) {
   .shell {
-    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-columns: 84px minmax(0, 1fr);
   }
 
   .sidebar {
-    padding: var(--space-16) var(--space-8);
     align-items: center;
+    padding: clamp(14px, 1.2vw, 20px) 8px;
+  }
+
+  .sidebar-brand {
+    padding: 0;
   }
 
   .nav-item {
     justify-content: center;
+    width: 100%;
     padding: 12px 0;
   }
 
@@ -252,7 +258,8 @@
   }
 }
 
-@media (max-width: 760px) {
+/* Планшет: сайдбар становится верхней полосой, пункты переносятся, а не прокручиваются. */
+@media (max-width: 900px) {
   .shell {
     grid-template-columns: 1fr;
   }
@@ -261,12 +268,12 @@
     position: static;
     height: auto;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    gap: var(--space-8);
-    padding: var(--space-8) var(--space-12);
+    gap: 6px;
+    padding: 8px 12px;
     border-right: none;
     border-bottom: 1px solid var(--color-border);
-    overflow-x: auto;
   }
 
   .sidebar-brand {
@@ -275,31 +282,34 @@
 
   .sidebar-nav {
     display: flex;
-    gap: var(--space-4);
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
   }
 
-  .nav-title {
-    display: inline;
-    white-space: nowrap;
+  .nav-item {
+    width: auto;
+    padding: 10px;
   }
 
   .sidebar-footer {
-    margin-top: 0;
-    margin-left: auto;
     flex-direction: row;
+    margin: 0;
   }
 
-  .slogan {
+  .header-date {
     display: none;
   }
 }
 
+/* Телефон: только иконки пунктов, шапка компактнее. */
 @media (max-width: 560px) {
   .nav-item {
-    padding: 10px;
+    padding: 9px;
   }
 
-  .nav-title {
-    display: none;
+  .shell-header {
+    gap: var(--space-8);
+    min-height: 64px;
   }
 }

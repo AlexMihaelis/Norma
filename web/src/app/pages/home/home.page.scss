@@ -210,11 +210,12 @@
   align-items: center;
   gap: clamp(var(--space-12), 1.2vw, var(--space-20));
   flex: 1;
+  flex-wrap: wrap;
 }
 
 .kcal-body app-nutrition-ring {
-  width: clamp(170px, 12.5vw, 330px);
-  height: clamp(170px, 12.5vw, 330px);
+  width: clamp(150px, 11.5vw, 330px);
+  height: clamp(150px, 11.5vw, 330px);
 }
 
 .macro-list {
@@ -415,22 +416,86 @@
 
 /* ---------- Узкие экраны ---------- */
 
-@media (max-width: 1180px) {
-  .top-row {
-    grid-template-columns: 1fr;
-  }
-
+/* На ноутбуке панель веса ужимается, чтобы не давить на график. */
+@media (max-width: 1400px) {
   .weight-card {
-    grid-template-columns: minmax(0, 1fr) 190px;
+    grid-template-columns: minmax(0, 1fr) clamp(190px, 16vw, 260px);
   }
 }
 
-@media (max-width: 860px) {
+/* Уже ноутбука - панель веса встает под графиком одной строкой. */
+@media (max-width: 1200px) {
+  .weight-card {
+    grid-template-columns: 1fr;
+  }
+
+  .last-weight {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-20);
+  }
+
+  .last-label {
+    flex: 1 1 100%;
+  }
+
+  .last-value {
+    flex: 0 0 auto;
+  }
+
+  .delta {
+    flex: 0 0 auto;
+  }
+
+  .last-weight .primary-button {
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+  }
+}
+
+@media (max-width: 980px) {
+  .top-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
   .bottom-row {
     grid-template-columns: 1fr;
   }
 
+  .week-chart {
+    min-height: 170px;
+  }
+}
+
+/* Телефон: кольцо над легендой, лишние столбики прячем. */
+@media (max-width: 520px) {
+  .kcal-body {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-12);
+  }
+
+  .kcal-body app-nutrition-ring {
+    width: 150px;
+    height: 150px;
+  }
+
+  .macro-list {
+    width: 100%;
+  }
+
+  .activity-bars {
+    display: none;
+  }
+
+  .greeting h1 {
+    font-size: clamp(22px, 6vw, 30px);
+  }
+
   .weight-card {
-    grid-template-columns: 1fr;
+    gap: var(--space-12);
   }
 }
