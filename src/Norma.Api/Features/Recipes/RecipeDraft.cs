@@ -50,6 +50,9 @@ internal sealed class RecipeDraft
 
     public double? CarbsPer100g { get; private set; }
 
+    /// <summary>Время приготовления в минутах; <c>null</c> - не указано.</summary>
+    public int? CookingMinutes { get; private set; }
+
     public List<(Food Food, double Grams)> Lines { get; } = [];
 
     public bool IsValid => Errors.Count == 0;
@@ -82,6 +85,7 @@ internal sealed class RecipeDraft
         draft.ReadTags(request?.Tags);
         draft.ReadPhoto(request?.PhotoDataUrl);
         draft.ReadManualNutrition(request);
+        draft.ReadCookingMinutes(request?.CookingMinutes);
 
         if (!draft.ReadIngredients(request?.Ingredients))
         {
@@ -207,6 +211,23 @@ internal sealed class RecipeDraft
         ProteinPer100g = request.ProteinPer100;
         FatPer100g = request.FatPer100;
         CarbsPer100g = request.CarbsPer100;
+    }
+
+    /// <summary>Время приготовления: необязательное, но если задано - от минуты до десяти часов.</summary>
+    private void ReadCookingMinutes(int? minutes)
+    {
+        if (minutes is null)
+        {
+            return;
+        }
+
+        if (minutes is < 1 or > 600)
+        {
+            Errors["cookingMinutes"] = ["Время приготовления должно быть от 1 до 600 минут."];
+            return;
+        }
+
+        CookingMinutes = minutes.Value;
     }
 
     private void ReadPhoto(string? dataUrl)

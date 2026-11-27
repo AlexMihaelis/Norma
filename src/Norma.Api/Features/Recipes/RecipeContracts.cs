@@ -16,6 +16,7 @@ public sealed record RecipeRequest(
     double? ProteinPer100,
     double? FatPer100,
     double? CarbsPer100,
+    int? CookingMinutes,
     IReadOnlyList<RecipeIngredientRequest>? Ingredients);
 
 /// <summary>
@@ -47,6 +48,7 @@ public sealed record RecipeSummary(
     IReadOnlyList<string> AutoTags,
     bool IsFavorite,
     bool ManualNutrition,
+    int? CookingMinutes,
     string? PhotoDataUrl,
     DateTimeOffset CreatedAt);
 
@@ -65,6 +67,7 @@ public sealed record RecipeResponse(
     IReadOnlyList<string> AutoTags,
     bool IsFavorite,
     bool ManualNutrition,
+    int? CookingMinutes,
     string? PhotoDataUrl,
     IReadOnlyList<RecipeIngredientResponse> Ingredients,
     DateTimeOffset CreatedAt);

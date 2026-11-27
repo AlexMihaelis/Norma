@@ -1,42 +1,53 @@
 <header class="page-head">
-  <div class="head-left">
-    <h1>Рецепты</h1>
-    <p class="subtitle">Свои блюда с посчитанным КБЖУ - цифры примерные, считаются из состава.</p>
-  </div>
+  <h1>Рецепты</h1>
 
-  <div class="head-actions">
-    <button
-      type="button"
-      class="favorites"
-      [class.active]="favoritesOnly()"
-      (click)="toggleFavorites()"
-    >
-      <span class="star-glyph">{{ favoritesOnly() ? '★' : '☆' }}</span>
-      Избранные
-    </button>
-
-    <button type="button" class="primary" (click)="openCreate()">Создать рецепт</button>
-  </div>
+  <button type="button" class="primary-button" (click)="openCreate()">Создать рецепт</button>
 </header>
 
 <div class="search-row">
-  <input
-    type="search"
-    [value]="query()"
-    placeholder="Найти рецепт по названию"
-    (input)="onQuery($any($event.target).value)"
-  />
+  <div class="search">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </svg>
+
+    <input
+      type="search"
+      [value]="query()"
+      placeholder="Поиск рецептов..."
+      aria-label="Поиск рецептов"
+      (input)="onQuery($any($event.target).value)"
+    />
+  </div>
+
+  <button
+    type="button"
+    class="icon-button"
+    [class.active]="favoritesOnly()"
+    [attr.aria-pressed]="favoritesOnly()"
+    title="Только избранные"
+    aria-label="Только избранные"
+    (click)="toggleFavorites()"
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z" />
+    </svg>
+  </button>
 </div>
 
 <div class="filters">
-  @for (tag of catalog(); track tag.code) {
+  <button type="button" class="chip" [class.active]="activeFilter() === null" (click)="clearFilter()">
+    Все
+  </button>
+
+  @for (tag of manualTags(); track tag.code) {
     <button
       type="button"
       class="chip"
       [class.active]="activeFilter()?.code === tag.code"
       (click)="toggleFilter(tag)"
     >
-      {{ tag.title }}
+      {{ chipTitle(tag) }}
     </button>
   }
 </div>
@@ -66,7 +77,7 @@
       }
     </p>
     @if (!query() && !activeFilter() && !favoritesOnly()) {
-      <button type="button" class="primary" (click)="openCreate()">Создать рецепт</button>
+      <button type="button" class="primary-button" (click)="openCreate()">Создать рецепт</button>
     }
   </div>
 } @else {
@@ -84,31 +95,39 @@
 
           <button
             type="button"
-            class="star"
+            class="heart"
             [class.on]="item.isFavorite"
             [attr.aria-label]="item.isFavorite ? 'Убрать из избранного' : 'В избранное'"
             (click)="toggleFavorite(item, $event)"
           >
-            {{ item.isFavorite ? '★' : '☆' }}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 20s-7-4.4-7-9a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.6-7 9-7 9z" />
+            </svg>
           </button>
         </div>
 
         <div class="card-body">
           <h2>{{ item.name }}</h2>
 
-          <p class="macros">
-            <span class="kcal">{{ item.kcalPer100g | number: '1.0-0' }} ккал</span>
-            <span class="macro">Б {{ item.proteinPer100g | number: '1.0-0' }}</span>
-            <span class="macro">Ж {{ item.fatPer100g | number: '1.0-0' }}</span>
-            <span class="macro">У {{ item.carbsPer100g | number: '1.0-0' }}</span>
-            <span class="per">на 100 г</span>
+          <p class="meta">
+            @if (item.cookingMinutes !== null) {
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8" />
+                  <path d="M12 8v4.5l3 1.8" />
+                </svg>
+                {{ item.cookingMinutes }} мин
+              </span>
+            }
+
+            <span class="meta-item">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3s4.5 4.2 4.5 8.2A4.5 4.5 0 0 1 12 15.5a4.5 4.5 0 0 1-4.5-4.3C7.5 7.2 12 3 12 3z" />
+                <path d="M12 18v3" />
+              </svg>
+              {{ item.kcalPer100g | number: '1.0-0' }} ккал
+            </span>
           </p>
-
-          @if (tagTitles(item); as tags) {
-            <p class="tags">{{ tags }}</p>
-          }
-
-          <p class="weight">{{ item.grams | number: '1.0-0' }} г · {{ item.ingredientCount }} прод.</p>
         </div>
       </article>
     }

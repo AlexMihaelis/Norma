@@ -45,6 +45,9 @@ export class RecipesPage implements OnInit {
     Object.fromEntries(this.catalog().map((tag) => [tag.code, tag.title])),
   );
 
+  /** Фильтры-чипсы: только ручные метки, автоматические оставляем карточкам. */
+  protected readonly manualTags = computed(() => this.catalog().filter((tag) => !tag.auto));
+
   private readonly queries = new Subject<string>();
 
   ngOnInit(): void {
@@ -73,6 +76,31 @@ export class RecipesPage implements OnInit {
   protected toggleFilter(tag: RecipeTag): void {
     this.activeFilter.update((current) => (current?.code === tag.code ? null : tag));
     this.load();
+  }
+
+  protected clearFilter(): void {
+    this.activeFilter.set(null);
+    this.load();
+  }
+
+  /** Подписи чипсов во множественном числе, как в макете: «Обеды», а не «обед». */
+  protected chipTitle(tag: RecipeTag): string {
+    const plural: Record<string, string> = {
+      Breakfast: 'Завтраки',
+      Lunch: 'Обеды',
+      Dinner: 'Ужины',
+      Snack: 'Перекусы',
+      Salad: 'Салаты',
+      Soup: 'Супы',
+      Baking: 'Выпечка',
+      Appetizer: 'Закуски',
+      AirFryer: 'Аэрогриль',
+      SlowCooker: 'Мультиварка',
+      Oven: 'Духовка',
+      Pan: 'Сковорода',
+    };
+
+    return plural[tag.code] ?? tag.title.charAt(0).toUpperCase() + tag.title.slice(1);
   }
 
   protected load(): void {
@@ -162,15 +190,6 @@ export class RecipesPage implements OnInit {
 
   protected onRecipeAdded(): void {
     this.notice.set('Блюдо записано в дневник.');
-  }
-
-  protected tagTitles(recipe: RecipeSummary): string {
-    const titles = this.titles();
-
-    return [...recipe.autoTags, ...recipe.tags]
-      .map((code) => titles[code])
-      .filter((title): title is string => Boolean(title))
-      .join(' · ');
   }
 
   private filter(): {

@@ -27,6 +27,9 @@ public sealed class Recipe
     /// <summary>Отметка «избранный рецепт»: рецепт принадлежит пользователю, флаг рядом.</summary>
     public bool IsFavorite { get; set; }
 
+    /// <summary>Сколько минут готовить блюдо, необязательно (1-600).</summary>
+    public int? CookingMinutes { get; set; }
+
     /// <summary>
     /// Свои КБЖУ на 100 г, если человек их ввел. Пусто - цифры считаются из
     /// состава, как обычно.

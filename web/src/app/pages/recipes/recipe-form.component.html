@@ -201,6 +201,17 @@
             (input)="onInstructions($any($event.target).value)"
           ></textarea>
         </label>
+
+        <label class="field">
+          Время приготовления, мин
+          <input
+            type="text"
+            inputmode="numeric"
+            [value]="cooking()"
+            placeholder="Например, 25"
+            (input)="onCooking($any($event.target).value)"
+          />
+        </label>
       </div>
     </div>
 

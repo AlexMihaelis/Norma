@@ -51,6 +51,7 @@ public static class CreateRecipeEndpoint
             ManualProteinPer100g = draft.ProteinPer100g,
             ManualFatPer100g = draft.FatPer100g,
             ManualCarbsPer100g = draft.CarbsPer100g,
+            CookingMinutes = draft.CookingMinutes,
             CreatedAt = DateTimeOffset.UtcNow,
         };
 

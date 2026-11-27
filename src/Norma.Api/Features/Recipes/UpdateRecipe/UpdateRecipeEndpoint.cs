@@ -66,6 +66,7 @@ public static class UpdateRecipeEndpoint
         recipe.ManualProteinPer100g = draft.ProteinPer100g;
         recipe.ManualFatPer100g = draft.FatPer100g;
         recipe.ManualCarbsPer100g = draft.CarbsPer100g;
+        recipe.CookingMinutes = draft.CookingMinutes;
 
         // Старый состав и метки удаляем запросами, не поднимая строки в контекст:
         // тогда уникальные индексы не спорят между удалением и вставкой.

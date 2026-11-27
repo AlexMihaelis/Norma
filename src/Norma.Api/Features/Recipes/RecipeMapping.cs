@@ -32,6 +32,7 @@ internal static class RecipeMapping
             AutoTags(recipe, totals),
             recipe.IsFavorite,
             RecipeNutrition.HasManual(recipe),
+            recipe.CookingMinutes,
             PictureData.ToDataUrl(recipe.PhotoContentType, recipe.PhotoBytes),
             recipe.CreatedAt);
     }
@@ -54,6 +55,7 @@ internal static class RecipeMapping
             AutoTags(recipe, totals),
             recipe.IsFavorite,
             RecipeNutrition.HasManual(recipe),
+            recipe.CookingMinutes,
             PictureData.ToDataUrl(recipe.PhotoContentType, recipe.PhotoBytes),
             recipe.Ingredients
                 .OrderBy(ingredient => ingredient.Id)

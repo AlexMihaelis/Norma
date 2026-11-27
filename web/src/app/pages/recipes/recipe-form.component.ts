@@ -45,6 +45,7 @@ export class RecipeFormComponent implements OnInit {
 
   protected readonly name = signal('');
   protected readonly instructions = signal('');
+  protected readonly cooking = signal('');
   protected readonly photo = signal<string | null>(null);
   protected readonly tags = signal<string[]>([]);
   protected readonly rows = signal<IngredientRow[]>([]);
@@ -160,6 +161,7 @@ export class RecipeFormComponent implements OnInit {
     if (current) {
       this.name.set(current.name);
       this.instructions.set(current.instructions ?? '');
+      this.cooking.set(current.cookingMinutes === null ? '' : String(current.cookingMinutes));
       this.photo.set(current.photoDataUrl);
       this.tags.set([...current.tags]);
       this.rows.set(
@@ -209,6 +211,10 @@ export class RecipeFormComponent implements OnInit {
 
   protected onName(value: string): void {
     this.name.set(value);
+  }
+
+  protected onCooking(value: string): void {
+    this.cooking.set(value);
   }
 
   protected onInstructions(value: string): void {
@@ -381,9 +387,17 @@ export class RecipeFormComponent implements OnInit {
       return;
     }
 
+    const minutes = this.cooking().trim() === '' ? null : Math.round(number(this.cooking()));
+
+    if (minutes !== null && (minutes < 1 || minutes > 600)) {
+      this.error.set('Время приготовления должно быть от 1 до 600 минут.');
+      return;
+    }
+
     const request: RecipeRequest = {
       name: this.name().trim(),
       instructions: this.instructions().trim() || null,
+      cookingMinutes: minutes,
       tags: this.tags(),
       photoDataUrl: this.photo(),
       kcalPer100: filled === 4 ? number(manual.kcal) : null,

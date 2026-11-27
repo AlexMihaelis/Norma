@@ -18,6 +18,10 @@
         </div>
       </header>
 
+      @if (recipe.cookingMinutes !== null) {
+        <p class="cook-time">≈ {{ recipe.cookingMinutes }} мин на приготовление</p>
+      }
+
       @if (error(); as message) {
         <p class="error">{{ message }}</p>
       }
