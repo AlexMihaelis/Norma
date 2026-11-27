@@ -34,10 +34,22 @@
           class="icon-button"
           disabled
           title="Темная тема - позже"
-          aria-label="Темная тема"
+          aria-label="Светлая тема"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path [attr.d]="sunIcon" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="icon-button"
+          disabled
+          title="Темная тема - позже"
+          aria-label="Темная тема"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="moonIcon" />
           </svg>
         </button>
 
@@ -64,6 +76,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path [attr.d]="bellIcon" />
           </svg>
+          <span class="bell-dot"></span>
         </button>
 
         <div class="account-block">

@@ -27,7 +27,7 @@
 }
 
 .heart {
-  color: var(--color-violet);
+  color: #3fa76a;
 }
 
 /* ---------- Сетка ---------- */
@@ -39,7 +39,7 @@
 
 .top-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.9fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
   gap: clamp(var(--space-16), 1.4vw, var(--space-24));
   align-items: stretch;
 }
@@ -59,7 +59,7 @@
 
 .card-title {
   margin: 0;
-  font-size: clamp(14px, 1.05vw, 18px);
+  font-size: clamp(15px, 1.1vw, 19px);
   font-weight: 700;
   color: var(--color-text);
 }
@@ -70,17 +70,30 @@
   color: var(--color-text-muted);
 }
 
-/* ---------- График веса ---------- */
+/* ---------- Вес: график и панель последнего замера ---------- */
+
+.weight-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(172px, 16vw, 224px);
+  gap: clamp(var(--space-12), 1.2vw, var(--space-20));
+  align-items: stretch;
+}
+
+.weight-chart-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  min-width: 0;
+}
 
 .week-chart {
   width: 100%;
   height: auto;
-  min-height: 200px;
   margin-top: auto;
 }
 
 .grid {
-  stroke: var(--color-track);
+  stroke: #ece7f8;
   stroke-width: 1;
 }
 
@@ -90,7 +103,7 @@
 }
 
 .area {
-  fill: rgb(108 92 231 / 12%);
+  fill: rgb(108 92 231 / 10%);
 }
 
 .line {
@@ -113,7 +126,7 @@
 
 .bubble rect {
   fill: var(--color-surface);
-  stroke: var(--color-violet-border);
+  stroke: #ece7f8;
   stroke-width: 1;
 }
 
@@ -123,18 +136,30 @@
   fill: var(--color-text);
 }
 
-/* ---------- Последний вес ---------- */
+.last-weight {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: clamp(var(--space-12), 1.2vw, var(--space-20));
+  border-radius: 14px;
+  background: #f5f2ff;
+}
 
-.big-value {
+.last-label {
+  font-size: clamp(11px, 0.85vw, 14px);
+  color: var(--color-text-muted);
+}
+
+.last-value {
   margin: 0;
-  font-size: clamp(32px, 2.8vw, 46px);
+  font-size: clamp(26px, 2.2vw, 36px);
   font-weight: 700;
   line-height: 1.1;
   color: var(--color-text);
 
   .unit {
-    margin-left: 8px;
-    font-size: 0.42em;
+    margin-left: 6px;
+    font-size: 0.45em;
     font-weight: 500;
     color: var(--color-text-muted);
   }
@@ -143,9 +168,9 @@
 .delta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   margin: 0;
-  font-size: clamp(13px, 1vw, 16px);
+  font-size: clamp(12px, 0.95vw, 15px);
   font-weight: 600;
 
   &.down {
@@ -155,11 +180,6 @@
   &.up {
     color: #d9663f;
   }
-
-  .delta-label {
-    font-weight: 500;
-    color: var(--color-text-muted);
-  }
 }
 
 .primary-button {
@@ -167,12 +187,14 @@
   align-items: center;
   justify-content: center;
   margin-top: auto;
-  padding: 13px 18px;
+  padding: 11px 14px;
   border-radius: var(--radius-button);
   background: var(--color-violet);
   color: #fff;
-  font-size: clamp(13px, 1vw, 16px);
+  font-size: clamp(12px, 0.9vw, 15px);
   font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
   text-decoration: none;
   box-shadow: 0 8px 18px rgb(108 92 231 / 24%);
 
@@ -186,14 +208,13 @@
 .kcal-body {
   display: flex;
   align-items: center;
-  gap: clamp(var(--space-16), 1.6vw, var(--space-24));
-  margin: auto 0;
+  gap: clamp(var(--space-12), 1.2vw, var(--space-20));
+  flex: 1;
 }
 
-/* В макете кольцо крупнее, чем в дневнике: здесь оно главный элемент карточки. */
 .kcal-body app-nutrition-ring {
-  width: clamp(132px, 11.5vw, 176px);
-  height: clamp(132px, 11.5vw, 176px);
+  width: clamp(132px, 11vw, 168px);
+  height: clamp(132px, 11vw, 168px);
 }
 
 .macro-list {
@@ -206,18 +227,26 @@
 
   li {
     display: grid;
-    grid-template-columns: 11px minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: 11px minmax(0, 1fr);
     gap: var(--space-8);
-    font-size: clamp(12px, 0.95vw, 15px);
+    align-items: start;
   }
 }
 
+.macro-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
 .macro-name {
+  font-size: clamp(12px, 0.95vw, 15px);
   color: var(--color-text);
 }
 
 .macro-value {
+  font-size: clamp(11px, 0.85vw, 14px);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
@@ -225,6 +254,7 @@
 .dot {
   width: 11px;
   height: 11px;
+  margin-top: 4px;
   border-radius: 50%;
   display: inline-block;
 
@@ -279,15 +309,15 @@
 }
 
 .plus {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   margin-left: auto;
   padding: 0;
   border: none;
   border-radius: 50%;
   background: var(--color-violet-soft);
   color: var(--color-violet);
-  font-size: 21px;
+  font-size: 22px;
   line-height: 1;
 
   &:hover:not(:disabled) {
@@ -308,9 +338,10 @@
   }
 }
 
-.water-value {
+.water-value,
+.activity-value {
   margin: 0;
-  font-size: clamp(24px, 2.2vw, 34px);
+  font-size: clamp(24px, 2.1vw, 34px);
   font-weight: 700;
   color: var(--color-text);
 
@@ -331,9 +362,16 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    background: linear-gradient(90deg, #6c5ce7, #8b5cf6);
+    background: linear-gradient(90deg, #4f7df7, #6c8cf7);
     transition: width 0.25s ease;
   }
+}
+
+.activity-bottom {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-16);
+  margin-top: auto;
 }
 
 .activity-bars {
@@ -341,7 +379,7 @@
   align-items: flex-end;
   gap: 6px;
   height: 52px;
-  margin-top: auto;
+  margin-left: auto;
 
   span {
     flex: 1;
@@ -355,21 +393,20 @@
 
 @media (max-width: 1180px) {
   .top-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
-  .chart-card {
-    grid-column: span 2;
+  .weight-card {
+    grid-template-columns: minmax(0, 1fr) 190px;
   }
 }
 
 @media (max-width: 860px) {
-  .top-row,
   .bottom-row {
     grid-template-columns: 1fr;
   }
 
-  .chart-card {
-    grid-column: auto;
+  .weight-card {
+    grid-template-columns: 1fr;
   }
 }

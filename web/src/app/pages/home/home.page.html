@@ -11,69 +11,72 @@
 
 <section class="dashboard">
   <div class="top-row">
-    <article class="card chart-card">
-      <h2 class="card-title">График веса</h2>
+    <article class="card weight-card">
+      <div class="weight-chart-side">
+        <h2 class="card-title">График веса</h2>
 
-      @if (weekChart().points.length === 0) {
-        <p class="muted">Замеров пока нет - добавь первый, и здесь появится график.</p>
-      } @else {
-        <svg class="week-chart" viewBox="0 0 348 196" aria-hidden="true">
-          @for (tick of weekChart().ticks; track tick.label) {
-            <line
-              [attr.x1]="plot.left"
-              [attr.x2]="plot.right"
-              [attr.y1]="tick.y"
-              [attr.y2]="tick.y"
-              class="grid"
-            />
-            <text [attr.x]="plot.left - 8" [attr.y]="tick.y + 4" text-anchor="end" class="axis">
-              {{ tick.label }}
-            </text>
-          }
-
-          @for (label of weekChart().labels; track label.text) {
-            <text [attr.x]="label.x" y="190" text-anchor="middle" class="axis">{{ label.text }}</text>
-          }
-
-          <path [attr.d]="weekChart().area" class="area" />
-          <polyline [attr.points]="weekChart().polyline" class="line" />
-
-          @for (point of weekChart().points; track point.id) {
-            <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" class="dot" />
-          }
-
-          @if (weekChart().last; as last) {
-            <circle [attr.cx]="last.x" [attr.cy]="last.y" r="5.5" class="dot last" />
-          }
-
-          @if (weekChart().bubble; as bubble) {
-            <g class="bubble">
-              <rect [attr.x]="bubble.x" [attr.y]="bubble.y" width="68" height="27" rx="9" />
-              <text [attr.x]="bubble.x + 34" [attr.y]="bubble.y + 18" text-anchor="middle">
-                {{ formatKg(weekChart().last?.kg ?? null) }} кг
+        @if (weekChart().points.length === 0) {
+          <p class="muted">Замеров пока нет - добавь первый, и здесь появится график.</p>
+        } @else {
+          <svg class="week-chart" viewBox="0 0 348 200" aria-hidden="true">
+            @for (tick of weekChart().ticks; track tick.label) {
+              <line
+                [attr.x1]="plot.left"
+                [attr.x2]="plot.right"
+                [attr.y1]="tick.y"
+                [attr.y2]="tick.y"
+                class="grid"
+              />
+              <text [attr.x]="plot.left - 10" [attr.y]="tick.y + 4" text-anchor="end" class="axis">
+                {{ tick.label }}
               </text>
-            </g>
-          }
-        </svg>
-      }
-    </article>
+            }
 
-    <article class="card last-weight-card">
-      <h2 class="card-title">Последний вес</h2>
+            @for (label of weekChart().labels; track label.text) {
+              <text [attr.x]="label.x" y="194" text-anchor="middle" class="axis">{{ label.text }}</text>
+            }
 
-      <p class="big-value">
-        {{ formatKg(currentKg()) }}<span class="unit">кг</span>
-      </p>
+            <path [attr.d]="weekChart().area" class="area" />
+            <polyline [attr.points]="weekChart().polyline" class="line" />
 
-      @if (weightDelta(); as delta) {
-        <p class="delta" [class.down]="delta.value < 0" [class.up]="delta.value >= 0">
-          <span class="arrow">{{ delta.value < 0 ? '↓' : '↑' }}</span>
-          {{ formatSigned(delta.value) }} кг
-          <span class="delta-label">{{ delta.label }}</span>
+            @for (point of weekChart().points; track point.id) {
+              @if (point.measured) {
+                <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" class="dot" />
+              }
+            }
+
+            @if (weekChart().last; as last) {
+              <circle [attr.cx]="last.x" [attr.cy]="last.y" r="5.5" class="dot last" />
+            }
+
+            @if (weekChart().bubble; as bubble) {
+              <g class="bubble">
+                <rect [attr.x]="bubble.x" [attr.y]="bubble.y" width="72" height="29" rx="10" />
+                <text [attr.x]="bubble.x + 36" [attr.y]="bubble.y + 19" text-anchor="middle">
+                  {{ formatKg(weekChart().last?.kg ?? null) }} кг
+                </text>
+              </g>
+            }
+          </svg>
+        }
+      </div>
+
+      <aside class="last-weight">
+        <span class="last-label">Последний вес</span>
+
+        <p class="last-value">
+          {{ formatKg(currentKg()) }}<span class="unit">кг</span>
         </p>
-      }
 
-      <a class="primary-button" routerLink="/weight">Зафиксировать вес</a>
+        @if (weightDelta(); as delta) {
+          <p class="delta" [class.down]="delta.value < 0" [class.up]="delta.value >= 0">
+            <span class="arrow">{{ delta.value < 0 ? '↓' : '↑' }}</span>
+            {{ formatSigned(delta.value) }} кг
+          </p>
+        }
+
+        <a class="primary-button" routerLink="/weight">Зафиксировать вес</a>
+      </aside>
     </article>
 
     <article class="card kcal-card">
@@ -91,8 +94,10 @@
           @for (row of macros(); track row.key) {
             <li>
               <span class="dot" [class]="row.key"></span>
-              <span class="macro-name">{{ row.title }}</span>
-              <span class="macro-value">{{ row.grams | number: '1.0-0' }} г ({{ row.percent }}%)</span>
+              <span class="macro-text">
+                <span class="macro-name">{{ row.title }}</span>
+                <span class="macro-value">{{ row.grams | number: '1.0-0' }} г ({{ row.percent }}%)</span>
+              </span>
             </li>
           }
         </ul>
@@ -146,8 +151,10 @@
       <header class="card-head">
         <span class="icon-badge activity">
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 3s4.5 4.2 4.5 8.2A4.5 4.5 0 0 1 12 15.5a4.5 4.5 0 0 1-4.5-4.3C7.5 7.2 12 3 12 3z" />
-            <path d="M10.5 12.2c.6 1.2 1.5 1.8 2.8 1.9M12 18v3" />
+            <path
+              d="M8.5 5.5c0 1.2.6 2 1.6 2.4M14.5 8.2c1.2.2 2-.4 2.4-1.4M7.6 12.4c.6 1.6 1.8 2.4 3.4 2.6M15.2 13.4c1.6-.4 2.6-1.4 3-3M9.4 18.4c1 .8 2.4 1 3.8.6"
+            />
+            <path d="M6.2 9.4c1 1 1.6 2.2 1.8 3.6M17.8 10.6c-.4 1.4-.2 2.6.6 3.6" />
           </svg>
         </span>
         <h2 class="card-title">Активность</h2>
@@ -155,28 +162,32 @@
         <a class="chevron" routerLink="/stats" aria-label="Статистика активности">›</a>
       </header>
 
-      <p class="big-value">
-        {{ activityMinutes() }}<span class="unit">мин</span>
-      </p>
+      <div class="activity-bottom">
+        <div>
+          <p class="activity-value">
+            {{ activityMinutes() }}<span class="unit">мин</span>
+          </p>
 
-      <p class="card-hint">
-        @if (activityMinutes() > 0) {
-          примерно {{ formatNumber(activity()?.totalKcal) }} ккал за сегодня
-        } @else {
-          Пока нет записей за день
-        }
-      </p>
-
-      @if (activityItems().length > 0) {
-        <div class="activity-bars">
-          @for (item of activityItems(); track item.id) {
-            <span
-              [style.height.%]="barHeight(item.minutes)"
-              [title]="activityTitles[item.kind] + ' ' + item.minutes + ' мин'"
-            ></span>
-          }
+          <p class="card-hint">
+            @if (activityMinutes() > 0) {
+              примерно {{ formatNumber(activity()?.totalKcal) }} ккал за сегодня
+            } @else {
+              Пока нет записей за день
+            }
+          </p>
         </div>
-      }
+
+        @if (activityItems().length > 0) {
+          <div class="activity-bars">
+            @for (item of activityItems(); track item.id) {
+              <span
+                [style.height.%]="barHeight(item.minutes)"
+                [title]="activityTitles[item.kind] + ' ' + item.minutes + ' мин'"
+              ></span>
+            }
+          </div>
+        }
+      </div>
     </article>
   </div>
 </section>

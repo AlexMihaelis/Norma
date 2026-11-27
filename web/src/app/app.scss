@@ -2,7 +2,7 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: var(--color-shell);
+  background: linear-gradient(180deg, #fbfaff 0%, #f3efff 100%);
 }
 
 .shell {
@@ -133,7 +133,7 @@
   align-items: center;
   gap: var(--space-16);
   min-height: 76px;
-  padding: 0 clamp(var(--space-20), 2vw, var(--space-32));
+  padding: 0 clamp(20px, 1.8vw, 32px);
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
 }
@@ -159,6 +159,29 @@
 
 .bell {
   position: relative;
+}
+
+.bell-dot {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #e05a5a;
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+
+/* Аватар как в макете: белое кольцо и мягкая тень. */
+.account-button .avatar {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--color-surface);
+  box-shadow: 0 0 0 2px #e9e4fb, 0 6px 14px rgb(76 60 160 / 14%);
+}
+
+.content .page {
+  flex: 1;
 }
 
 .spacer {

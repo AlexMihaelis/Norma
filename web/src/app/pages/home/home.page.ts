@@ -25,6 +25,7 @@ interface ChartPoint {
   x: number;
   y: number;
   kg: number;
+  measured: boolean;
 }
 
 interface ChartTick {
@@ -154,6 +155,7 @@ export class HomePage implements OnInit {
       return found?.kg ?? null;
     });
 
+    const measured = new Set(entries.map((entry) => entry.date));
     const known = values.filter((value): value is number => value !== null);
 
     if (known.length === 0) {
@@ -178,7 +180,7 @@ export class HomePage implements OnInit {
       const kg = values[index];
 
       if (kg !== null) {
-        points.push({ id: day.iso, x, y: yFor(kg), kg });
+        points.push({ id: day.iso, x, y: yFor(kg), kg, measured: measured.has(day.iso) });
       }
     });
 
@@ -189,11 +191,11 @@ export class HomePage implements OnInit {
       .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
       .join(' L ')} L ${last.x.toFixed(1)},${PlotBottom} Z`;
 
-    const ticks: ChartTick[] = [
-      { y: yFor(max), label: this.formatKg(max) },
-      { y: yFor((max + min) / 2), label: this.formatKg((max + min) / 2) },
-      { y: yFor(min), label: this.formatKg(min) },
-    ];
+    const ticks: ChartTick[] = [0, 1, 2, 3].map((index) => {
+      const value = max - (span * index) / 3;
+
+      return { y: yFor(value), label: String(Math.round(value)) };
+    });
 
     const bubble = last
       ? {
