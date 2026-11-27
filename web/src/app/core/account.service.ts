@@ -36,15 +36,24 @@ export class AccountService {
     return local === '' ? '' : local.charAt(0).toUpperCase() + local.slice(1);
   });
 
-  /** Инициалы для кружка, если картинки нет: «Анна Петрова» -> «АП». */
+  /**
+   * Инициалы для кружка, если картинки нет.
+   *
+   * Ник - первое, что видит пользователь, поэтому буквы берутся из него:
+   * «Анна Петрова» -> «АП», «Миха» -> «М». Если ника нет, работает та же
+   * логика на части email до «@». Пустая строка вместо «?»: вопросительный знак
+   * в аватаре выглядит как ошибка загрузки.
+   */
   readonly initials = computed(() => {
-    const source = this.nickname()?.trim() || this.email() || '?';
-    const parts = source.split(/[\s@._-]+/).filter(Boolean);
+    const nickname = this.nickname()?.trim();
 
-    return parts
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '')
-      .join('');
+    if (nickname) {
+      return initialsOf(nickname.split(/\s+/));
+    }
+
+    const local = this.email()?.split('@')[0]?.trim();
+
+    return local ? initialsOf(local.split(/[\s._-]+/)) : '';
   });
 
   /** Загружает аккаунт, если есть токен. Ошибку глотаем: guard разберется. */
@@ -94,4 +103,13 @@ export class AccountService {
     this.nickname.set(me.nickname);
     this.avatarDataUrl.set(me.avatarDataUrl);
   }
+}
+
+/** Первые буквы первых двух слов: «Анна Петрова» -> «АП», «Миха» -> «М». */
+function initialsOf(words: string[]): string {
+  return words
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('');
 }
