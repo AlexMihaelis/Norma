@@ -1,35 +1,7 @@
-<svg
-  class="logo"
-  [attr.viewBox]="compact() ? '24 0 56 48' : '0 0 180 48'"
-  role="img"
-  aria-label="Norma"
->
-  <defs>
-    <linearGradient id="norma-mark" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#4f8cf7" />
-      <stop offset="0.55" stop-color="#6c5ce7" />
-      <stop offset="1" stop-color="#8b5cf6" />
-    </linearGradient>
-  </defs>
+<span class="lockup" [class.compact]="compact()">
+  <img class="mark" src="logo.png" [attr.alt]="compact() ? 'Norma' : ''" [attr.aria-hidden]="compact() ? null : 'true'" />
 
   @if (!compact()) {
-    <path d="M4 34c0-11 7-19 17-21-1 13-8 19-17 21z" fill="#7cc39a" />
-    <path d="M12 39c1-9 7-16 16-17-1 10-7 15-16 17z" fill="#4f9d76" opacity="0.9" />
-    <path d="M1 41c1-7 5-12 11-13-1 8-5 12-11 13z" fill="#a7dcbe" opacity="0.9" />
+    <span class="wordmark">Norma</span>
   }
-
-  <path
-    d="M38 38V12l16 20V12"
-    fill="none"
-    stroke="url(#norma-mark)"
-    stroke-width="5.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-
-  <path d="M51 10c4-5 10-5 13-1-4 5-9 5-13 1z" fill="#7cc39a" />
-
-  @if (!compact()) {
-    <text x="78" y="35" class="wordmark">Norma</text>
-  }
-</svg>
+</span>
