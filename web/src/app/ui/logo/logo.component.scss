@@ -23,13 +23,13 @@
   line-height: 1;
 }
 
-/* Сайдбар: логотип меньше, чтобы не спорить с навигацией. */
+/* Сайдбар: логотип тянется за шириной панели, как в макете. */
 .lockup.sm .mark {
-  height: 30px;
+  height: clamp(38px, 2vw, 54px);
 }
 
 .lockup.sm .wordmark {
-  font-size: 21px;
+  font-size: clamp(26px, 1.5vw, 38px);
 }
 
 .lockup.compact .mark {
