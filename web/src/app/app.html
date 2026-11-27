@@ -51,11 +51,24 @@
 
     <div class="content">
       <header class="shell-header">
-        <app-logo />
+        <a class="header-brand" routerLink="/" aria-label="Главная">
+          <app-logo />
+        </a>
 
-        <p class="slogan">Путь к здоровью<br />начинается с баланса</p>
+        <span class="header-date">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="calendarIcon" />
+          </svg>
+          {{ todayLabel }}
+        </span>
 
         <span class="spacer"></span>
+
+        <button type="button" class="icon-button bell" disabled title="Уведомления скоро" aria-label="Уведомления">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path [attr.d]="bellIcon" />
+          </svg>
+        </button>
 
         <div class="account-block">
           <button
@@ -63,13 +76,13 @@
             class="account-button"
             [attr.aria-expanded]="menuOpen()"
             (click)="toggleMenu($event)"
+            aria-label="Меню аккаунта"
           >
             @if (account.avatarDataUrl(); as image) {
               <img class="avatar" [src]="image" alt="Аватар" />
             } @else {
               <span class="avatar initials">{{ account.initials() }}</span>
             }
-            <span class="account-name">{{ account.displayName() }}</span>
             <svg
               class="account-chevron"
               [class.open]="menuOpen()"
@@ -84,6 +97,7 @@
 
           @if (menuOpen()) {
             <div class="account-menu" (click)="$event.stopPropagation()">
+              <span class="menu-caption">{{ account.displayName() }}</span>
               <a routerLink="/profile" (click)="closeMenu()">Профиль</a>
               <button type="button" class="menu-item" (click)="signOut()">Выйти</button>
             </div>

@@ -15,6 +15,11 @@
   --color-leaf: #7cc39a;
   --color-leaf-dark: #4f9d76;
 
+  /* Макросы как в макете: белок - зелень, жир - коралл, углеводы - янтарь. */
+  --color-protein: #7cc39a;
+  --color-fat-pastel: #ef8a7e;
+  --color-carbs-pastel: #f2c14e;
+
   /* Основные роли перекрашиваем на месте: страницы про акцент уже знают. */
   --color-accent: var(--color-violet);
   --color-accent-soft: var(--color-violet-soft);

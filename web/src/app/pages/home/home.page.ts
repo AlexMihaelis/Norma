@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, Observable, of } from 'rxjs';
@@ -16,21 +17,41 @@ import { describeProblem } from '../../core/problem';
 import { DiaryService } from '../diary/diary.service';
 import { WeightService } from '../../core/weight.service';
 import { AccountService } from '../../core/account.service';
-import { HomeService } from './home.service';
 import { NutritionRingComponent } from '../../ui/nutrition-ring/nutrition-ring.component';
+import { HomeService } from './home.service';
 
-interface SparklinePoint {
+interface ChartPoint {
   id: string;
   x: number;
   y: number;
   kg: number;
-  date: string;
 }
 
-interface Sparkline {
+interface ChartTick {
+  y: number;
+  label: string;
+}
+
+interface ChartLabel {
+  x: number;
+  text: string;
+}
+
+interface WeekChart {
+  points: ChartPoint[];
   polyline: string;
   area: string;
-  points: SparklinePoint[];
+  ticks: ChartTick[];
+  labels: ChartLabel[];
+  last: ChartPoint | null;
+  bubble: { x: number; y: number } | null;
+}
+
+interface MacroRow {
+  key: 'protein' | 'fat' | 'carbs';
+  title: string;
+  grams: number;
+  percent: number;
 }
 
 interface WeightDelta {
@@ -38,14 +59,20 @@ interface WeightDelta {
   label: string;
 }
 
+/** Прямоугольник графика в координатах SVG. */
+const PlotLeft = 40;
+const PlotRight = 336;
+const PlotTop = 26;
+const PlotBottom = 168;
+
 /**
- * Главный экран: приветствие, вес с мини-графиком, питание за день, вода и
- * активность. Все запросы независимы: если один раздел недоступен (нет профиля,
- * нет веса), остальные карточки все равно рисуются.
+ * Главный экран по макету: приветствие, график веса, последний вес, кольцо КБЖУ,
+ * вода и активность. Все запросы независимы: нет веса или профиля - остальные
+ * карточки все равно рисуются.
  */
 @Component({
   selector: 'app-home-page',
-  imports: [RouterLink, NutritionRingComponent],
+  imports: [RouterLink, DecimalPipe, NutritionRingComponent],
   templateUrl: './home.page.html',
   styleUrl: './home.page.scss',
 })
@@ -66,76 +93,121 @@ export class HomePage implements OnInit {
 
   protected readonly today = new Date();
   protected readonly dateIso = this.today.toISOString().slice(0, 10);
-  protected readonly dateLabel = this.formatDateLabel(this.today);
   protected readonly activityTitles = activityKindTitles;
+
+  /** Границы области графика: те же числа, что в шаблоне SVG. */
+  protected readonly plot = { left: PlotLeft, right: PlotRight, top: PlotTop, bottom: PlotBottom };
+
+  /** Приветствие по времени суток, как в макете. */
+  protected readonly greeting = computed(() => {
+    const hour = new Date().getHours();
+
+    return hour < 12 ? 'Доброе утро' : hour < 18 ? 'Добрый день' : 'Добрый вечер';
+  });
 
   protected readonly currentKg = computed(
     () => this.weightList()[0]?.kg ?? this.trend()?.currentEmaKg ?? null,
   );
 
-  protected readonly goalKg = computed(() => this.trend()?.targetKg ?? null);
-
-  protected readonly rate = computed(() => this.trend()?.rateKgPerWeek ?? null);
-
   protected readonly eaten = computed<DiaryTotals>(
     () => this.diary()?.totals ?? { kcal: 0, protein: 0, fat: 0, carbs: 0 },
   );
 
-  protected readonly remainingKcal = computed(() => {
-    const target = this.plan()?.targetKcal;
+  /** Легенда кольца: граммы съеденного и доля калорий макроса. */
+  protected readonly macros = computed<MacroRow[]>(() => {
+    const eatenNow = this.eaten();
+    const proteinKcal = eatenNow.protein * 4;
+    const fatKcal = eatenNow.fat * 9;
+    const carbsKcal = eatenNow.carbs * 4;
+    const total = proteinKcal + fatKcal + carbsKcal;
 
-    return target === null || target === undefined ? null : Math.round(target - this.eaten().kcal);
+    const share = (value: number) => (total > 0 ? Math.round((value / total) * 100) : 0);
+
+    return [
+      { key: 'protein', title: 'Белки', grams: eatenNow.protein, percent: share(proteinKcal) },
+      { key: 'fat', title: 'Жиры', grams: eatenNow.fat, percent: share(fatKcal) },
+      { key: 'carbs', title: 'Углеводы', grams: eatenNow.carbs, percent: share(carbsKcal) },
+    ];
   });
 
-  protected readonly remainingMacros = computed(() => {
-    const macros = this.plan()?.macros;
+  /**
+   * График веса за неделю: по каждому дню берется последний замер не позже этой
+   * даты, поэтому линия непрерывная, а точки стоят только там, где был замер.
+   */
+  protected readonly weekChart = computed<WeekChart>(() => {
+    const days: { iso: string; label: string }[] = [];
+    const todayDate = new Date();
 
-    if (!macros) {
-      return null;
+    for (let shift = 6; shift >= 0; shift -= 1) {
+      const date = new Date(todayDate);
+      date.setDate(todayDate.getDate() - shift);
+      days.push({
+        iso: toIso(date),
+        label: date.toLocaleDateString('ru-RU', { weekday: 'short' }),
+      });
     }
 
-    return {
-      protein: Math.max(0, Math.round(macros.proteinG - this.eaten().protein)),
-      fat: Math.max(0, Math.round(macros.fatG - this.eaten().fat)),
-      carbs: Math.max(0, Math.round(macros.carbsG - this.eaten().carbs)),
-    };
-  });
+    const entries = [...this.weightList()].sort((left, right) => left.date.localeCompare(right.date));
+    const values = days.map((day) => {
+      const found = [...entries].reverse().find((entry) => entry.date <= day.iso);
 
-  /** Мини-график веса: все замеры окна, подъемы и спады как есть. */
-  protected readonly sparkline = computed<Sparkline>(() => {
-    const entries = [...this.weightList()]
-      .sort((left, right) => left.date.localeCompare(right.date))
-      .slice(-14);
+      return found?.kg ?? null;
+    });
 
-    if (entries.length === 0) {
-      return { polyline: '', area: '', points: [] };
+    const known = values.filter((value): value is number => value !== null);
+
+    if (known.length === 0) {
+      return { points: [], polyline: '', area: '', ticks: [], labels: [], last: null, bubble: null };
     }
 
-    const values = entries.map((entry) => entry.kg);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+    const min = Math.min(...known) - 0.4;
+    const max = Math.max(...known) + 0.4;
     const span = max - min || 1;
+    const step = days.length > 1 ? (PlotRight - PlotLeft) / (days.length - 1) : 0;
 
-    const points: SparklinePoint[] = entries.map((entry, index) => ({
-      id: entry.id,
-      x: entries.length === 1 ? 198 : (index / (entries.length - 1)) * 396,
-      y: 6 + (1 - (entry.kg - min) / span) * 136,
-      kg: entry.kg,
-      date: entry.date,
-    }));
+    const yFor = (kg: number) => PlotBottom - ((kg - min) / span) * (PlotBottom - PlotTop);
+
+    const points: ChartPoint[] = [];
+    const labels: ChartLabel[] = [];
+
+    days.forEach((day, index) => {
+      const x = PlotLeft + index * step;
+
+      labels.push({ x, text: day.label.charAt(0).toUpperCase() + day.label.slice(1) });
+
+      const kg = values[index];
+
+      if (kg !== null) {
+        points.push({ id: day.iso, x, y: yFor(kg), kg });
+      }
+    });
 
     const polyline = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
     const first = points[0];
     const last = points[points.length - 1];
-    const area = `M ${first.x.toFixed(1)},148 L ${polyline.replaceAll(' ', ' L ')} L ${last.x.toFixed(1)},148 Z`;
+    const area = `M ${first.x.toFixed(1)},${PlotBottom} L ${points
+      .map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`)
+      .join(' L ')} L ${last.x.toFixed(1)},${PlotBottom} Z`;
 
-    return { polyline, area, points };
+    const ticks: ChartTick[] = [
+      { y: yFor(max), label: this.formatKg(max) },
+      { y: yFor((max + min) / 2), label: this.formatKg((max + min) / 2) },
+      { y: yFor(min), label: this.formatKg(min) },
+    ];
+
+    const bubble = last
+      ? {
+          x: Math.min(Math.max(last.x - 34, 4), PlotRight - 72),
+          y: Math.max(4, last.y - 36),
+        }
+      : null;
+
+    return { points, polyline, area, ticks, labels, last: last ?? null, bubble };
   });
 
   /**
-   * Изменение веса: скорость из тренда, если история уже набралась, иначе
-   * разница первого и последнего замера в окне - цифра под весом должна быть
-   * видна всегда.
+   * Изменение веса: скорость из тренда, если история набралась, иначе разница
+   * первого и последнего замера в окне.
    */
   protected readonly weightDelta = computed<WeightDelta | null>(() => {
     const rate = this.trend()?.rateKgPerWeek;
@@ -173,7 +245,18 @@ export class HomePage implements OnInit {
     return Math.min(100, Math.round((water.drunkMl / norm) * 100));
   });
 
-  protected readonly firstActivity = computed(() => this.activity()?.items[0] ?? null);
+  protected readonly activityMinutes = computed(() =>
+    (this.activity()?.items ?? []).reduce((sum, item) => sum + item.minutes, 0),
+  );
+
+  protected readonly activityItems = computed(() => this.activity()?.items ?? []);
+
+  /** Высота столбика активности: самая длинная запись дает 100 %. */
+  protected barHeight(minutes: number): number {
+    const longest = Math.max(1, ...this.activityItems().map((item) => item.minutes));
+
+    return Math.max(14, Math.round((minutes / longest) * 100));
+  }
 
   ngOnInit(): void {
     this.load();
@@ -182,8 +265,7 @@ export class HomePage implements OnInit {
   protected load(): void {
     this.error.set(null);
 
-    const fallback = <T>(source: Observable<T>) =>
-      source.pipe(catchError(() => of(null)));
+    const fallback = <T>(source: Observable<T>) => source.pipe(catchError(() => of(null)));
 
     forkJoin({
       diary: fallback(this.diaryService.day(this.dateIso)),
@@ -231,31 +313,29 @@ export class HomePage implements OnInit {
     return value === null ? '—' : value.toFixed(1).replace('.', ',');
   }
 
-  protected formatDelta(value: number, label: string): string {
+  protected formatSigned(value: number): string {
     const sign = value > 0 ? '+' : '';
 
-    return `${sign}${value.toFixed(1).replace('.', ',')} кг ${label}`;
+    return `${sign}${value.toFixed(1).replace('.', ',')}`;
+  }
+
+  protected formatDelta(value: number, label: string): string {
+    return `${this.formatSigned(value)} кг ${label}`;
+  }
+
+  protected formatLiters(ml: number | null | undefined): string {
+    return ml === null || ml === undefined ? '—' : (ml / 1000).toFixed(1).replace('.', ',');
   }
 
   protected formatNumber(value: number | null | undefined): string {
     return value === null || value === undefined ? '—' : value.toLocaleString('ru-RU');
   }
+}
 
-  protected abs(value: number): number {
-    return Math.abs(value);
-  }
+/** Локальная дата в формате yyyy-MM-dd без сдвига часовым поясом. */
+function toIso(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
 
-  /** В макете легенда показывает «съедено / цель», например «60 / 140 г». */
-  protected legendValue(consumed: number, target: number | undefined): string {
-    const left = Math.round(consumed);
-
-    return target === undefined ? `${left} г` : `${left} / ${Math.round(target)} г`;
-  }
-
-  private formatDateLabel(date: Date): string {
-    const weekday = date.toLocaleDateString('ru-RU', { weekday: 'long' });
-    const rest = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-
-    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${rest}`;
-  }
+  return `${date.getFullYear()}-${month}-${day}`;
 }

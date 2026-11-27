@@ -68,6 +68,25 @@ export class App {
 
   protected readonly logoutIcon = 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 8l-4 4 4 4M6 12h9';
 
+  protected readonly calendarIcon =
+    'M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM8 3v4M16 3v4M4 11h16';
+
+  protected readonly bellIcon =
+    'M12 4a5 5 0 0 0-5 5v3l-1.5 3h13L17 12V9a5 5 0 0 0-5-5zM10 18a2 2 0 0 0 4 0';
+
+  /** Дата в шапке: «Суббота, 27 ноября 2026». */
+  protected readonly todayLabel = this.formatToday();
+
+  private formatToday(): string {
+    const date = new Date();
+    const weekday = date.toLocaleDateString('ru-RU', { weekday: 'long' });
+    const rest = date
+      .toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+      .replace(' г.', '');
+
+    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${rest}`;
+  }
+
   constructor() {
     // Вошли или вышли - подтягиваем (или чистим) ник и аватар для шапки.
     effect(() => {

@@ -4,160 +4,179 @@
 
 <header class="greeting">
   <h1>
-    Добрый день@if (account.displayName(); as name) {, {{ name }}}
+    {{ greeting() }}@if (account.displayName(); as name) {, {{ name }}} <span class="wave">👋</span>
   </h1>
-  <span class="greeting-date">{{ dateLabel }}</span>
+  <p class="greeting-sub">Пусть сегодня будет продуктивный и здоровый день <span class="heart">♡</span></p>
 </header>
 
-<section class="card weight-card">
-  <div class="weight-main">
-    <span class="card-label">Вес</span>
+<section class="dashboard">
+  <div class="top-row">
+    <article class="card chart-card">
+      <h2 class="card-title">График веса</h2>
 
-    <p class="weight-value">
-      <span class="value">{{ formatKg(currentKg()) }}</span>
-      <span class="unit">кг</span>
-      @if (goalKg(); as goal) {
-        <span class="goal">цель {{ formatKg(goal) }} кг</span>
+      @if (weekChart().points.length === 0) {
+        <p class="muted">Замеров пока нет - добавь первый, и здесь появится график.</p>
+      } @else {
+        <svg class="week-chart" viewBox="0 0 348 196" aria-hidden="true">
+          @for (tick of weekChart().ticks; track tick.label) {
+            <line
+              [attr.x1]="plot.left"
+              [attr.x2]="plot.right"
+              [attr.y1]="tick.y"
+              [attr.y2]="tick.y"
+              class="grid"
+            />
+            <text [attr.x]="plot.left - 8" [attr.y]="tick.y + 4" text-anchor="end" class="axis">
+              {{ tick.label }}
+            </text>
+          }
+
+          @for (label of weekChart().labels; track label.text) {
+            <text [attr.x]="label.x" y="190" text-anchor="middle" class="axis">{{ label.text }}</text>
+          }
+
+          <path [attr.d]="weekChart().area" class="area" />
+          <polyline [attr.points]="weekChart().polyline" class="line" />
+
+          @for (point of weekChart().points; track point.id) {
+            <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3.5" class="dot" />
+          }
+
+          @if (weekChart().last; as last) {
+            <circle [attr.cx]="last.x" [attr.cy]="last.y" r="5.5" class="dot last" />
+          }
+
+          @if (weekChart().bubble; as bubble) {
+            <g class="bubble">
+              <rect [attr.x]="bubble.x" [attr.y]="bubble.y" width="68" height="27" rx="9" />
+              <text [attr.x]="bubble.x + 34" [attr.y]="bubble.y + 18" text-anchor="middle">
+                {{ formatKg(weekChart().last?.kg ?? null) }} кг
+              </text>
+            </g>
+          }
+        </svg>
       }
-    </p>
+    </article>
 
-    @if (weightDelta(); as delta) {
-      <span class="delta" [class.up]="delta.value >= 0">{{ formatDelta(delta.value, delta.label) }}</span>
-    }
+    <article class="card last-weight-card">
+      <h2 class="card-title">Последний вес</h2>
 
-    <a class="weight-button" routerLink="/weight">Внести текущий вес</a>
+      <p class="big-value">
+        {{ formatKg(currentKg()) }}<span class="unit">кг</span>
+      </p>
+
+      @if (weightDelta(); as delta) {
+        <p class="delta" [class.down]="delta.value < 0" [class.up]="delta.value >= 0">
+          <span class="arrow">{{ delta.value < 0 ? '↓' : '↑' }}</span>
+          {{ formatSigned(delta.value) }} кг
+          <span class="delta-label">{{ delta.label }}</span>
+        </p>
+      }
+
+      <a class="primary-button" routerLink="/weight">Зафиксировать вес</a>
+    </article>
+
+    <article class="card kcal-card">
+      <h2 class="card-title">КБЖУ за день</h2>
+
+      <div class="kcal-body">
+        <app-nutrition-ring
+          [kcal]="eaten().kcal"
+          [protein]="eaten().protein"
+          [fat]="eaten().fat"
+          [carbs]="eaten().carbs"
+        />
+
+        <ul class="macro-list">
+          @for (row of macros(); track row.key) {
+            <li>
+              <span class="dot" [class]="row.key"></span>
+              <span class="macro-name">{{ row.title }}</span>
+              <span class="macro-value">{{ row.grams | number: '1.0-0' }} г ({{ row.percent }}%)</span>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <a class="primary-button" routerLink="/diary">Заполнить рацион</a>
+    </article>
   </div>
 
-  <div class="weight-chart">
-    <span class="chart-caption">14 дней</span>
+  <div class="bottom-row">
+    <article class="card water-card">
+      <header class="card-head">
+        <span class="icon-badge water">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3c3.2 3.6 5.5 6.6 5.5 9.5A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.5C6.5 9.6 8.8 6.6 12 3z" />
+          </svg>
+        </span>
+        <h2 class="card-title">Вода</h2>
 
-    <svg class="sparkline" viewBox="0 0 396 148" aria-hidden="true">
-      <line x1="0" y1="37" x2="396" y2="37" class="grid" />
-      <line x1="0" y1="74" x2="396" y2="74" class="grid" />
-      <line x1="0" y1="111" x2="396" y2="111" class="grid" />
+        <button
+          type="button"
+          class="plus"
+          [disabled]="waterBusy()"
+          (click)="addWaterGlass()"
+          title="Добавить 250 мл"
+          aria-label="Добавить 250 мл"
+        >
+          +
+        </button>
+      </header>
 
-      @if (sparkline().area) {
-        <path [attr.d]="sparkline().area" class="area" />
+      <p class="water-value">
+        {{ formatLiters(water()?.drunkMl) }}
+        <span class="unit">/ {{ formatLiters(water()?.normMl) }} л</span>
+      </p>
+
+      <div class="water-track">
+        <span [style.width.%]="waterPercent()"></span>
+      </div>
+
+      @if (water()?.normHint) {
+        <p class="card-hint">{{ water()?.normHint }}</p>
+      } @else if ((water()?.remainingMl ?? 0) >= 0) {
+        <p class="card-hint">осталось {{ formatLiters(water()?.remainingMl) }} л</p>
+      } @else {
+        <p class="card-hint">норма перевыполнена</p>
       }
+    </article>
 
-      @if (sparkline().polyline) {
-        <polyline [attr.points]="sparkline().polyline" class="line" />
+    <article class="card activity-card">
+      <header class="card-head">
+        <span class="icon-badge activity">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3s4.5 4.2 4.5 8.2A4.5 4.5 0 0 1 12 15.5a4.5 4.5 0 0 1-4.5-4.3C7.5 7.2 12 3 12 3z" />
+            <path d="M10.5 12.2c.6 1.2 1.5 1.8 2.8 1.9M12 18v3" />
+          </svg>
+        </span>
+        <h2 class="card-title">Активность</h2>
+
+        <a class="chevron" routerLink="/stats" aria-label="Статистика активности">›</a>
+      </header>
+
+      <p class="big-value">
+        {{ activityMinutes() }}<span class="unit">мин</span>
+      </p>
+
+      <p class="card-hint">
+        @if (activityMinutes() > 0) {
+          примерно {{ formatNumber(activity()?.totalKcal) }} ккал за сегодня
+        } @else {
+          Пока нет записей за день
+        }
+      </p>
+
+      @if (activityItems().length > 0) {
+        <div class="activity-bars">
+          @for (item of activityItems(); track item.id) {
+            <span
+              [style.height.%]="barHeight(item.minutes)"
+              [title]="activityTitles[item.kind] + ' ' + item.minutes + ' мин'"
+            ></span>
+          }
+        </div>
       }
-
-      @for (point of sparkline().points; track point.id) {
-        <circle [attr.cx]="point.x" [attr.cy]="point.y" r="3" class="dot" />
-      }
-    </svg>
-
-    <span class="chart-today">сегодня {{ formatKg(currentKg()) }} кг</span>
+    </article>
   </div>
 </section>
-
-<section class="card nutrition-card">
-  <span class="card-label">Питание за день</span>
-
-  @if (plan()?.targetKcal; as target) {
-    <span class="nutrition-target">цель {{ formatNumber(target) }} ккал</span>
-  }
-
-  <div class="nutrition-body">
-    <div class="nutrition-summary">
-      <app-nutrition-ring
-        [kcal]="eaten().kcal"
-        [protein]="eaten().protein"
-        [fat]="eaten().fat"
-        [carbs]="eaten().carbs"
-      />
-
-      <ul class="legend">
-        <li>
-          <span class="dot protein"></span>
-          <span class="legend-label">Белки</span>
-          <span class="legend-value">{{ legendValue(eaten().protein, plan()?.macros?.proteinG) }}</span>
-        </li>
-        <li>
-          <span class="dot fat"></span>
-          <span class="legend-label">Жиры</span>
-          <span class="legend-value">{{ legendValue(eaten().fat, plan()?.macros?.fatG) }}</span>
-        </li>
-        <li>
-          <span class="dot carbs"></span>
-          <span class="legend-label">Углеводы</span>
-          <span class="legend-value">{{ legendValue(eaten().carbs, plan()?.macros?.carbsG) }}</span>
-        </li>
-      </ul>
-    </div>
-
-    <div class="nutrition-actions">
-      <a class="primary-button" routerLink="/diary">+ Добавить продукт</a>
-
-      @let remaining = remainingKcal();
-      @if (remaining !== null) {
-        <span class="remaining">
-          {{ remaining >= 0 ? 'осталось ' : 'перебор ' }}{{ formatNumber(abs(remaining)) }} ккал
-        </span>
-      }
-
-      @if (remainingMacros(); as macros) {
-        <span class="remaining-macros">
-          белки {{ macros.protein }} г · жиры {{ macros.fat }} г · углеводы {{ macros.carbs }} г
-        </span>
-      }
-    </div>
-  </div>
-</section>
-
-<div class="cards-row">
-  <section class="card water-card">
-    <div class="water-head">
-      <span class="card-label">Вода</span>
-
-      <button
-        type="button"
-        class="plus-button"
-        [disabled]="waterBusy()"
-        (click)="addWaterGlass()"
-        title="Добавить 250 мл"
-      >
-        <span></span>
-        <span></span>
-      </button>
-    </div>
-
-    <p class="water-value">
-      <span class="value">{{ formatNumber(water()?.drunkMl) }}</span>
-      @if (water()?.normMl; as norm) {
-        <span class="unit">из {{ formatNumber(norm) }} мл</span>
-      }
-    </p>
-
-    <div class="water-track">
-      <span [style.width.%]="waterPercent()"></span>
-    </div>
-
-    @if (water()?.normMl) {
-      <span class="water-remaining">
-        осталось {{ formatNumber(water()?.remainingMl ?? 0) }} мл
-      </span>
-    } @else {
-      <span class="water-remaining">{{ water()?.normHint }}</span>
-    }
-  </section>
-
-  <section class="card activity-card">
-    <span class="card-label">Активность</span>
-
-    <p class="activity-value">
-      <span class="value">{{ formatNumber(activity()?.totalKcal) }}</span>
-      <span class="unit">ккал примерно</span>
-    </p>
-
-    @if (firstActivity(); as record) {
-      <span class="activity-entry">
-        {{ activityTitles[record.kind] }} {{ record.minutes }} мин
-      </span>
-    } @else {
-      <span class="activity-entry muted">Пока нет записей за день</span>
-    }
-  </section>
-</div>
