@@ -2,7 +2,7 @@
   <div class="shell">
     <aside class="sidebar">
       <a class="sidebar-brand" routerLink="/" aria-label="На главную">
-        <app-logo [compact]="true" />
+        <app-logo size="sm" />
       </a>
 
       <nav class="sidebar-nav">
@@ -51,10 +51,6 @@
 
     <div class="content">
       <header class="shell-header">
-        <a class="header-brand" routerLink="/" aria-label="Главная">
-          <app-logo />
-        </a>
-
         <span class="header-date">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path [attr.d]="calendarIcon" />

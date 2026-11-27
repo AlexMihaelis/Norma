@@ -27,15 +27,16 @@ body {
  * на большом экране чуть шире, на маленьком - уже, на мобильном - во всю ширину.
  */
 .page {
-  width: min(1180px, 100%);
+  width: 100%;
+  max-width: 1560px;
   margin: 0 auto;
-  padding: clamp(var(--space-16), 1.7vw, var(--space-32));
+  padding: clamp(var(--space-20), 1.8vw, var(--space-32));
 }
 
 .card {
   background: var(--color-surface);
   border-radius: var(--radius-card);
-  padding: clamp(var(--space-16), 1.5vw, var(--space-24));
+  padding: clamp(20px, 1.6vw, 28px);
   box-shadow: var(--shadow-card);
 }
 

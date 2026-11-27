@@ -1,4 +1,4 @@
-<span class="lockup" [class.compact]="compact()">
+<span class="lockup" [class.compact]="compact()" [class.sm]="size() === 'sm'">
   <img class="mark" src="logo.png" [attr.alt]="compact() ? 'Norma' : ''" [attr.aria-hidden]="compact() ? null : 'true'" />
 
   @if (!compact()) {

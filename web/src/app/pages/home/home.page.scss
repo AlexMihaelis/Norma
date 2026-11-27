@@ -5,13 +5,13 @@
 /* ---------- Приветствие ---------- */
 
 .greeting {
-  margin: 0 0 var(--space-20);
+  margin: 0 0 clamp(var(--space-16), 1.6vw, var(--space-24));
 
   h1 {
     margin: 0;
-    font-size: clamp(23px, 2.1vw, 34px);
+    font-size: clamp(26px, 2.4vw, 40px);
     font-weight: 700;
-    line-height: 1.25;
+    line-height: 1.2;
     color: var(--color-text);
   }
 
@@ -22,7 +22,7 @@
 
 .greeting-sub {
   margin: var(--space-4) 0 0;
-  font-size: clamp(12px, 0.95vw, 15px);
+  font-size: clamp(13px, 1vw, 17px);
   color: var(--color-text-muted);
 }
 
@@ -34,39 +34,39 @@
 
 .dashboard {
   display: grid;
-  gap: var(--space-16);
+  gap: clamp(var(--space-16), 1.4vw, var(--space-24));
 }
 
 .top-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.9fr) minmax(0, 1.15fr);
-  gap: var(--space-16);
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.9fr) minmax(0, 1.15fr);
+  gap: clamp(var(--space-16), 1.4vw, var(--space-24));
   align-items: stretch;
 }
 
 .bottom-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-16);
+  gap: clamp(var(--space-16), 1.4vw, var(--space-24));
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-16);
   min-width: 0;
 }
 
 .card-title {
   margin: 0;
-  font-size: clamp(12px, 0.95vw, 15px);
+  font-size: clamp(14px, 1.05vw, 18px);
   font-weight: 700;
   color: var(--color-text);
 }
 
 .card-hint {
   margin: 0;
-  font-size: clamp(10px, 0.8vw, 13px);
+  font-size: clamp(11px, 0.85vw, 14px);
   color: var(--color-text-muted);
 }
 
@@ -75,6 +75,7 @@
 .week-chart {
   width: 100%;
   height: auto;
+  min-height: 200px;
   margin-top: auto;
 }
 
@@ -84,7 +85,7 @@
 }
 
 .axis {
-  font-size: 10px;
+  font-size: 11px;
   fill: var(--color-text-muted);
 }
 
@@ -95,7 +96,7 @@
 .line {
   fill: none;
   stroke: var(--color-violet);
-  stroke-width: 2.4;
+  stroke-width: 2.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -117,7 +118,7 @@
 }
 
 .bubble text {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   fill: var(--color-text);
 }
@@ -126,13 +127,13 @@
 
 .big-value {
   margin: 0;
-  font-size: clamp(28px, 2.6vw, 40px);
+  font-size: clamp(32px, 2.8vw, 46px);
   font-weight: 700;
   line-height: 1.1;
   color: var(--color-text);
 
   .unit {
-    margin-left: 6px;
+    margin-left: 8px;
     font-size: 0.42em;
     font-weight: 500;
     color: var(--color-text-muted);
@@ -144,7 +145,7 @@
   align-items: center;
   gap: 6px;
   margin: 0;
-  font-size: clamp(12px, 0.95vw, 15px);
+  font-size: clamp(13px, 1vw, 16px);
   font-weight: 600;
 
   &.down {
@@ -166,11 +167,11 @@
   align-items: center;
   justify-content: center;
   margin-top: auto;
-  padding: 11px 16px;
+  padding: 13px 18px;
   border-radius: var(--radius-button);
   background: var(--color-violet);
   color: #fff;
-  font-size: clamp(12px, 0.9vw, 15px);
+  font-size: clamp(13px, 1vw, 16px);
   font-weight: 600;
   text-decoration: none;
   box-shadow: 0 8px 18px rgb(108 92 231 / 24%);
@@ -185,14 +186,14 @@
 .kcal-body {
   display: flex;
   align-items: center;
-  gap: clamp(var(--space-12), 1.4vw, var(--space-20));
+  gap: clamp(var(--space-16), 1.6vw, var(--space-24));
   margin: auto 0;
 }
 
 /* В макете кольцо крупнее, чем в дневнике: здесь оно главный элемент карточки. */
 .kcal-body app-nutrition-ring {
-  width: clamp(116px, 10vw, 148px);
-  height: clamp(116px, 10vw, 148px);
+  width: clamp(132px, 11.5vw, 176px);
+  height: clamp(132px, 11.5vw, 176px);
 }
 
 .macro-list {
@@ -200,15 +201,15 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 
   li {
     display: grid;
-    grid-template-columns: 10px minmax(0, 1fr) auto;
+    grid-template-columns: 11px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--space-8);
-    font-size: clamp(11px, 0.85vw, 14px);
+    font-size: clamp(12px, 0.95vw, 15px);
   }
 }
 
@@ -222,8 +223,8 @@
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   display: inline-block;
 
@@ -245,20 +246,20 @@
 .card-head {
   display: flex;
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-12);
 }
 
 .icon-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 1.7;
@@ -278,15 +279,15 @@
 }
 
 .plus {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   margin-left: auto;
   padding: 0;
   border: none;
   border-radius: 50%;
   background: var(--color-violet-soft);
   color: var(--color-violet);
-  font-size: 20px;
+  font-size: 21px;
   line-height: 1;
 
   &:hover:not(:disabled) {
@@ -298,7 +299,7 @@
 .chevron {
   margin-left: auto;
   color: var(--color-text-muted);
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1;
   text-decoration: none;
 
@@ -309,7 +310,7 @@
 
 .water-value {
   margin: 0;
-  font-size: clamp(22px, 1.9vw, 30px);
+  font-size: clamp(24px, 2.2vw, 34px);
   font-weight: 700;
   color: var(--color-text);
 
@@ -321,7 +322,7 @@
 }
 
 .water-track {
-  height: 8px;
+  height: 9px;
   border-radius: 999px;
   background: var(--color-track);
   overflow: hidden;
@@ -338,13 +339,13 @@
 .activity-bars {
   display: flex;
   align-items: flex-end;
-  gap: 5px;
-  height: 44px;
+  gap: 6px;
+  height: 52px;
   margin-top: auto;
 
   span {
     flex: 1;
-    max-width: 18px;
+    max-width: 20px;
     border-radius: 5px 5px 2px 2px;
     background: linear-gradient(180deg, #7cc39a, #4f9d76);
   }

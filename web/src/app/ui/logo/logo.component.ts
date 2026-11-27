@@ -15,4 +15,7 @@ import { Component, input } from '@angular/core';
 export class LogoComponent {
   /** Только знак, без подписи. */
   readonly compact = input(false);
+
+  /** Размер: `md` - шапка и крупные места, `sm` - сайдбар. */
+  readonly size = input<'md' | 'sm'>('md');
 }
