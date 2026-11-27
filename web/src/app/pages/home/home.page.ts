@@ -194,13 +194,13 @@ export class HomePage implements OnInit {
     const ticks: ChartTick[] = [0, 1, 2, 3].map((index) => {
       const value = max - (span * index) / 3;
 
-      return { y: yFor(value), label: String(Math.round(value)) };
+      return { y: yFor(value), label: this.formatKg(value) };
     });
 
     const bubble = last
       ? {
-          x: Math.min(Math.max(last.x - 34, 4), PlotRight - 72),
-          y: Math.max(4, last.y - 36),
+          x: Math.min(Math.max(last.x - 36, PlotLeft - 24), PlotRight - 76),
+          y: Math.max(4, last.y - 42),
         }
       : null;
 

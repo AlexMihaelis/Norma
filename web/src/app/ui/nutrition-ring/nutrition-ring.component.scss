@@ -16,12 +16,12 @@ svg {
 .track {
   fill: none;
   stroke: var(--color-track);
-  stroke-width: 12;
+  stroke-width: 15;
 }
 
 .arc {
   fill: none;
-  stroke-width: 12;
+  stroke-width: 15;
 }
 
 .center {
@@ -33,14 +33,14 @@ svg {
   justify-content: center;
 
   strong {
-    font-size: clamp(16px, 1.3vw, 24px);
+    font-size: clamp(18px, 1.6vw, 30px);
     font-weight: 700;
     line-height: 1.2;
     color: var(--color-text);
   }
 
   span {
-    font-size: clamp(10px, 0.76vw, 13px);
+    font-size: clamp(11px, 0.85vw, 14px);
     color: var(--color-text-muted);
   }
 }
