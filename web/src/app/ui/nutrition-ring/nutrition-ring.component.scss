@@ -33,14 +33,14 @@ svg {
   justify-content: center;
 
   strong {
-    font-size: clamp(18px, 1.6vw, 30px);
+    font-size: clamp(20px, 1.85vw, 42px);
     font-weight: 700;
     line-height: 1.2;
     color: var(--color-text);
   }
 
   span {
-    font-size: clamp(11px, 0.85vw, 14px);
+    font-size: clamp(11px, 0.85vw, 17px);
     color: var(--color-text-muted);
   }
 }
