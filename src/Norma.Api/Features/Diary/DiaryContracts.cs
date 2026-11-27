@@ -2,10 +2,19 @@ using Norma.Api.Data.Entities;
 
 namespace Norma.Api.Features.Diary;
 
-/// <summary>Позиция дневника: продукт, количество и КБЖУ, посчитанные из продукта.</summary>
+/// <summary>Чем является позиция дневника: продуктом каталога или рецептом.</summary>
+public enum DiaryItemKind
+{
+    Food,
+    Recipe,
+}
+
+/// <summary>Позиция дневника: продукт или рецепт, количество и посчитанные КБЖУ.</summary>
 public sealed record DiaryEntryResponse(
     Guid Id,
-    Guid FoodId,
+    DiaryItemKind Kind,
+    Guid? FoodId,
+    Guid? RecipeId,
     string FoodName,
     double Quantity,
     FoodUnit Unit,
@@ -30,11 +39,14 @@ public sealed record DiaryDayResponse(
     DiaryTotalsResponse Totals);
 
 /// <summary>
-/// Тело записи позиции. Дата по умолчанию - сегодня, единица - базовая у продукта.
+/// Тело записи позиции. Нужно ровно одно из полей <c>foodId</c> и <c>recipeId</c>:
+/// продукт из каталога или рецепт пользователя. Дата по умолчанию - сегодня,
+/// единица - базовая у продукта, у рецепта всегда граммы.
 /// </summary>
 public sealed record AddDiaryEntryRequest(
     string? Meal,
     Guid? FoodId,
+    Guid? RecipeId,
     double? Quantity,
     string? Unit,
     DateOnly? Date);

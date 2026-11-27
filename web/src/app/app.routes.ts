@@ -7,6 +7,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then((module) => module.LoginPage),
   },
   {
+    path: 'recipes',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/recipes/recipes.page').then((module) => module.RecipesPage),
+  },
+  {
     path: 'diary',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/diary/diary.page').then((module) => module.DiaryPage),

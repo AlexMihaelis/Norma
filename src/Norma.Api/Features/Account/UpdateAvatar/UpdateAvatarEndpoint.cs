@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Norma.Api.Data;
 using Norma.Api.Features.Auth;
 using Norma.Api.Features.Auth.Me;
+using Norma.Api.Features.Images;
 
 namespace Norma.Api.Features.Account.UpdateAvatar;
 
@@ -36,7 +37,7 @@ public static class UpdateAvatarEndpoint
             return TypedResults.Unauthorized();
         }
 
-        if (!AvatarData.TryParse(request?.DataUrl, out var mime, out var bytes, out var error))
+        if (!PictureData.TryParse(request?.DataUrl, out var mime, out var bytes, out var error))
         {
             return TypedResults.ValidationProblem(new Dictionary<string, string[]>
             {

@@ -108,6 +108,7 @@ public static class RepeatDiaryDayEndpoint
                 Id = Guid.NewGuid(),
                 MealId = meals[source.Meal!.Kind].Id,
                 FoodId = source.FoodId,
+                RecipeId = source.RecipeId,
                 Quantity = source.Quantity,
                 Unit = source.Unit,
                 CreatedAt = now.AddTicks(tick++),

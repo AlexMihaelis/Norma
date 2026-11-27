@@ -54,5 +54,19 @@ internal sealed class MealItemConfiguration : IEntityTypeConfiguration<MealItem>
             .WithMany()
             .HasForeignKey(item => item.FoodId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Рецепт в дневнике ведет себя как продукт: удалить его нельзя, пока он
+        // записан в какой-то прием.
+        builder
+            .HasOne(item => item.Recipe)
+            .WithMany()
+            .HasForeignKey(item => item.RecipeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Позиция - либо продукт, либо рецепт, но не оба и не пусто. Проверка в
+        // базе страхует от ошибки в коде: без нее нулевая ссылка даст NRE при чтении.
+        builder.ToTable(table => table.HasCheckConstraint(
+            "CK_meal_items_food_or_recipe",
+            "(\"FoodId\" IS NULL) <> (\"RecipeId\" IS NULL)"));
     }
 }

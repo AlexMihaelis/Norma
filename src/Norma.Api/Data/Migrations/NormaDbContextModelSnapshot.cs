@@ -252,7 +252,7 @@ namespace Norma.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("FoodId")
+                    b.Property<Guid?>("FoodId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("MealId")
@@ -260,6 +260,9 @@ namespace Norma.Api.Data.Migrations
 
                     b.Property<double>("Quantity")
                         .HasColumnType("double precision");
+
+                    b.Property<Guid?>("RecipeId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Unit")
                         .IsRequired()
@@ -270,9 +273,113 @@ namespace Norma.Api.Data.Migrations
 
                     b.HasIndex("FoodId");
 
+                    b.HasIndex("RecipeId");
+
                     b.HasIndex("MealId", "CreatedAt");
 
-                    b.ToTable("meal_items", (string)null);
+                    b.ToTable("meal_items", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_meal_items_food_or_recipe", "(\"FoodId\" IS NULL) <> (\"RecipeId\" IS NULL)");
+                        });
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.Recipe", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Instructions")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsFavorite")
+                        .HasColumnType("boolean");
+
+                    b.Property<double?>("ManualCarbsPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ManualFatPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ManualKcalPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("ManualProteinPer100g")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<byte[]>("PhotoBytes")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("PhotoContentType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "IsFavorite");
+
+                    b.ToTable("recipes", (string)null);
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.RecipeIngredient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FoodId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double>("Grams")
+                        .HasColumnType("double precision");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FoodId");
+
+                    b.HasIndex("RecipeId", "FoodId")
+                        .IsUnique();
+
+                    b.ToTable("recipe_ingredients", (string)null);
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.RecipeTagLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Tag")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId", "Tag")
+                        .IsUnique();
+
+                    b.ToTable("recipe_tags", (string)null);
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.User", b =>
@@ -533,8 +640,7 @@ namespace Norma.Api.Data.Migrations
                     b.HasOne("Norma.Api.Data.Entities.Food", "Food")
                         .WithMany()
                         .HasForeignKey("FoodId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Norma.Api.Data.Entities.Meal", "Meal")
                         .WithMany("Items")
@@ -542,9 +648,57 @@ namespace Norma.Api.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Norma.Api.Data.Entities.Recipe", "Recipe")
+                        .WithMany()
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Food");
 
                     b.Navigation("Meal");
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.Recipe", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.RecipeIngredient", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.Food", "Food")
+                        .WithMany()
+                        .HasForeignKey("FoodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Norma.Api.Data.Entities.Recipe", "Recipe")
+                        .WithMany("Ingredients")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Food");
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.RecipeTagLink", b =>
+                {
+                    b.HasOne("Norma.Api.Data.Entities.Recipe", "Recipe")
+                        .WithMany("Tags")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
                 });
 
             modelBuilder.Entity("Norma.Api.Data.Entities.UserProfile", b =>
@@ -601,6 +755,13 @@ namespace Norma.Api.Data.Migrations
             modelBuilder.Entity("Norma.Api.Data.Entities.Meal", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Norma.Api.Data.Entities.Recipe", b =>
+                {
+                    b.Navigation("Ingredients");
+
+                    b.Navigation("Tags");
                 });
 #pragma warning restore 612, 618
         }

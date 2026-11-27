@@ -1,0 +1,136 @@
+<header class="page-head">
+  <div class="head-left">
+    <h1>Рецепты</h1>
+    <p class="subtitle">Свои блюда с посчитанным КБЖУ - цифры примерные, считаются из состава.</p>
+  </div>
+
+  <div class="head-actions">
+    <button
+      type="button"
+      class="favorites"
+      [class.active]="favoritesOnly()"
+      (click)="toggleFavorites()"
+    >
+      <span class="star-glyph">{{ favoritesOnly() ? '★' : '☆' }}</span>
+      Избранные
+    </button>
+
+    <button type="button" class="primary" (click)="openCreate()">Создать рецепт</button>
+  </div>
+</header>
+
+<div class="search-row">
+  <input
+    type="search"
+    [value]="query()"
+    placeholder="Найти рецепт по названию"
+    (input)="onQuery($any($event.target).value)"
+  />
+</div>
+
+<div class="filters">
+  @for (tag of catalog(); track tag.code) {
+    <button
+      type="button"
+      class="chip"
+      [class.active]="activeFilter()?.code === tag.code"
+      (click)="toggleFilter(tag)"
+    >
+      {{ tag.title }}
+    </button>
+  }
+</div>
+
+@if (error(); as message) {
+  <p class="error">{{ message }}</p>
+}
+
+@if (notice(); as message) {
+  <p class="notice">{{ message }}</p>
+}
+
+@if (detailBusy()) {
+  <p class="muted">Открываю рецепт…</p>
+}
+
+@if (loading()) {
+  <p class="muted">Загружаю рецепты…</p>
+} @else if (items().length === 0) {
+  <div class="empty">
+    <p class="empty-title">Пока пусто</p>
+    <p class="muted">
+      @if (query() || activeFilter() || favoritesOnly()) {
+        По этому запросу ничего не нашлось. Попробуй снять фильтр.
+      } @else {
+        Создай первый рецепт: состав с граммовками, и КБЖУ посчитается сам.
+      }
+    </p>
+    @if (!query() && !activeFilter() && !favoritesOnly()) {
+      <button type="button" class="primary" (click)="openCreate()">Создать рецепт</button>
+    }
+  </div>
+} @else {
+  <div class="grid">
+    @for (item of items(); track item.id) {
+      <article
+        class="recipe-card"
+        tabindex="0"
+        role="button"
+        (click)="openDetail(item)"
+        (keydown.enter)="openDetail(item)"
+      >
+        <div class="card-photo">
+          <app-recipe-photo [photo]="item.photoDataUrl" [name]="item.name" />
+
+          <button
+            type="button"
+            class="star"
+            [class.on]="item.isFavorite"
+            [attr.aria-label]="item.isFavorite ? 'Убрать из избранного' : 'В избранное'"
+            (click)="toggleFavorite(item, $event)"
+          >
+            {{ item.isFavorite ? '★' : '☆' }}
+          </button>
+        </div>
+
+        <div class="card-body">
+          <h2>{{ item.name }}</h2>
+
+          <p class="macros">
+            <span class="kcal">{{ item.kcalPer100g | number: '1.0-0' }} ккал</span>
+            <span class="macro">Б {{ item.proteinPer100g | number: '1.0-0' }}</span>
+            <span class="macro">Ж {{ item.fatPer100g | number: '1.0-0' }}</span>
+            <span class="macro">У {{ item.carbsPer100g | number: '1.0-0' }}</span>
+            <span class="per">на 100 г</span>
+          </p>
+
+          @if (tagTitles(item); as tags) {
+            <p class="tags">{{ tags }}</p>
+          }
+
+          <p class="weight">{{ item.grams | number: '1.0-0' }} г · {{ item.ingredientCount }} прод.</p>
+        </div>
+      </article>
+    }
+  </div>
+}
+
+@if (detailOpen() && detail(); as recipe) {
+  <app-recipe-detail
+    [recipe]="recipe"
+    [titles]="titles()"
+    (changed)="onDetailChanged()"
+    (edited)="openEdit($event)"
+    (added)="onRecipeAdded()"
+    (closed)="closeDetail()"
+  />
+}
+
+@if (formOpen()) {
+  <app-recipe-form
+    [recipe]="editing()"
+    [catalog]="catalog()"
+    (saved)="onSaved($event)"
+    (closed)="closeForm()"
+  />
+}

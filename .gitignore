@@ -491,3 +491,5 @@ web/dist/
 web/.angular/
 npm-debug.log*
 
+
+design-local-locked/

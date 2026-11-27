@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Norma.Api.Data;
 using Norma.Api.Data.Entities;
 using Norma.Api.Features.Auth;
+using Norma.Api.Features.Diary;
 using Norma.Core.Energy;
 using Norma.Core.Stats;
 
@@ -76,20 +77,34 @@ public static class GetStatsEndpoint
             return TypedResults.ValidationProblem(errors);
         }
 
-        // Агрегат считается в базе: КБЖУ позиции = количество × значение / 100.
-        var intakeByDay = await db.MealItems
+        // КБЖУ позиции считается из продукта или состава рецепта, а состав в SQL
+        // не выразить: грузим позиции периода и складываем в памяти.
+        var items = await db.MealItems
             .Where(item => item.Meal!.UserId == userId && item.Meal.Date >= start && item.Meal.Date <= end)
-            .GroupBy(item => item.Meal!.Date)
-            .Select(group => new
-            {
-                Date = group.Key,
-                Kcal = group.Sum(item => item.Quantity * item.Food!.KcalPer100g) / 100.0,
-                Protein = group.Sum(item => item.Quantity * item.Food!.ProteinPer100g) / 100.0,
-                Fat = group.Sum(item => item.Quantity * item.Food!.FatPer100g) / 100.0,
-                Carbs = group.Sum(item => item.Quantity * item.Food!.CarbsPer100g) / 100.0,
-                Entries = group.Count(),
-            })
+            .Include(item => item.Meal)
+            .Include(item => item.Food)
+            .Include(item => item.Recipe)
+            .ThenInclude(recipe => recipe!.Ingredients)
+            .ThenInclude(ingredient => ingredient.Food)
+            .AsSplitQuery()
             .ToListAsync(cancellationToken);
+
+        var intakeByDay = items
+            .GroupBy(item => item.Meal!.Date)
+            .Select(group =>
+            {
+                var values = group.Select(MealItemNutrition.Values).ToList();
+
+                return new DayIntakeRaw(
+                    group.Key,
+                    values.Sum(value => value.Kcal),
+                    values.Sum(value => value.Protein),
+                    values.Sum(value => value.Fat),
+                    values.Sum(value => value.Carbs),
+                    values.Count);
+            })
+            .OrderBy(day => day.Date)
+            .ToList();
 
         var activityByDay = await db.ActivityRecords
             .Where(record => record.UserId == userId && record.Date >= start && record.Date <= end)
@@ -240,6 +255,15 @@ public static class GetStatsEndpoint
 
     /// <summary>Замер веса, уже спроецированный из базы.</summary>
     private sealed record WeightPoint(DateOnly Date, double Kg);
+
+    /// <summary>Съеденное за день: сумма по позициям, посчитанная в памяти.</summary>
+    private sealed record DayIntakeRaw(
+        DateOnly Date,
+        double Kcal,
+        double Protein,
+        double Fat,
+        double Carbs,
+        int Entries);
 
     /// <summary>Поля профиля, нужные для плана; одинаково читаются из профиля и снимка.</summary>
     private sealed record ProfileState(

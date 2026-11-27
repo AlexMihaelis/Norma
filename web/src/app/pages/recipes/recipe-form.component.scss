@@ -1,0 +1,438 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: var(--space-16);
+  background: rgb(15 23 42 / 45%);
+  overflow-y: auto;
+}
+
+.dialog {
+  width: min(820px, 100%);
+  max-height: calc(100vh - 2 * var(--space-16));
+  overflow-y: auto;
+  padding: clamp(var(--space-16), 1.6vw, var(--space-24));
+  border-radius: var(--radius-modal);
+  background: var(--color-surface);
+  box-shadow: 0 24px 60px rgb(15 23 42 / 28%);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-16);
+
+  h2 {
+    margin: 0;
+    font-size: clamp(16px, 1.3vw, 22px);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.icon-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-track);
+  color: var(--color-text);
+  font-size: 18px;
+  line-height: 1;
+
+  &:hover {
+    background: var(--color-border);
+  }
+
+  &.small {
+    width: 24px;
+    height: 24px;
+    font-size: 15px;
+  }
+}
+
+/* Слева фото, справа все поля - как в макете пользователя. */
+.layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  gap: var(--space-16);
+  align-items: start;
+}
+
+.photo-field {
+  display: block;
+  cursor: pointer;
+
+  .photo {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-card);
+  }
+
+  .photo-hint {
+    display: block;
+    margin-top: var(--space-8);
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-accent);
+    text-align: center;
+  }
+}
+
+.fields {
+  display: grid;
+  gap: var(--space-12);
+  min-width: 0;
+}
+
+.field,
+.field-label {
+  display: block;
+  font-size: clamp(11px, 0.83vw, 14px);
+  color: var(--color-text-muted);
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  margin-top: var(--space-4);
+  padding: clamp(var(--space-8), 0.7vw, var(--space-12));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: clamp(12px, 0.9vw, 15px);
+
+  &:focus {
+    outline: 2px solid var(--color-accent-border);
+    border-color: var(--color-accent);
+  }
+}
+
+textarea {
+  resize: vertical;
+}
+
+.field-hint {
+  margin: var(--space-4) 0 0;
+  font-size: clamp(9px, 0.72vw, 12px);
+  color: var(--color-text-muted);
+}
+
+/* Состав: нумерованный список добавленного над строкой ввода. */
+.rows {
+  list-style: none;
+  margin: var(--space-8) 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+  counter-reset: ingredient;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 96px 72px 24px;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-field);
+  background: var(--color-track);
+}
+
+.row-number {
+  font-size: clamp(11px, 0.83vw, 14px);
+  color: var(--color-text-muted);
+}
+
+.row-name {
+  font-size: clamp(12px, 0.9vw, 15px);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-grams {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  input {
+    margin-top: 0;
+    padding: 6px 8px;
+    text-align: right;
+  }
+
+  .unit {
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-text-muted);
+  }
+}
+
+.row-kcal {
+  font-size: clamp(10px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 40px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.search {
+  position: relative;
+  min-width: 0;
+}
+
+.found {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  box-shadow: 0 12px 28px rgb(15 23 42 / 16%);
+}
+
+.found-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-8) var(--space-12);
+  border: none;
+  border-bottom: 1px solid var(--color-track);
+  border-radius: 0;
+  background: none;
+  color: var(--color-text);
+  text-align: left;
+
+  &:hover {
+    background: var(--color-track);
+  }
+}
+
+.found-name {
+  font-size: clamp(12px, 0.9vw, 15px);
+  font-weight: 600;
+}
+
+.found-meta {
+  font-size: clamp(10px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+}
+
+.grams-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  input {
+    margin-top: 0;
+    padding: 9px 8px;
+    text-align: right;
+  }
+
+  .unit {
+    font-size: clamp(10px, 0.76vw, 13px);
+    color: var(--color-text-muted);
+  }
+}
+
+.plus {
+  height: 38px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Быстрая форма продукта, которого нет в каталоге. */
+.quick {
+  margin-top: var(--space-8);
+  padding: var(--space-12);
+  border: 1px dashed var(--color-accent-border);
+  border-radius: var(--radius-card);
+  background: var(--color-accent-soft);
+}
+
+.quick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  font-size: clamp(11px, 0.83vw, 14px);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-8);
+}
+
+.quick-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-8);
+  margin-top: var(--space-12);
+}
+
+.block {
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-track);
+
+  h3 {
+    margin: 0 0 var(--space-8);
+    font-size: clamp(12px, 0.97vw, 16px);
+    font-weight: 700;
+    color: var(--color-text);
+  }
+}
+
+.tag-group {
+  margin-bottom: var(--space-8);
+}
+
+.tag-group-title {
+  display: block;
+  margin-bottom: var(--space-4);
+  font-size: clamp(10px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.chip {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-chip);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: clamp(11px, 0.83vw, 14px);
+
+  &.active {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+}
+
+.manual-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-8);
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-12);
+  margin-top: var(--space-16);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-card);
+  background: var(--color-accent-soft);
+}
+
+.total-label {
+  display: block;
+  font-size: clamp(10px, 0.76vw, 13px);
+  color: var(--color-text-muted);
+}
+
+.total-value {
+  display: block;
+  font-size: clamp(13px, 1vw, 17px);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  margin-top: var(--space-16);
+}
+
+.ghost-dark {
+  padding: 10px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-button);
+  background: var(--color-surface);
+  color: var(--color-text);
+
+  &:hover {
+    background: var(--color-track);
+  }
+}
+
+.primary {
+  padding: 10px 18px;
+  border: none;
+  border-radius: var(--radius-button);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+}
+
+.link {
+  margin-top: var(--space-8);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: clamp(11px, 0.83vw, 14px);
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .photo-field .photo {
+    aspect-ratio: 16 / 9;
+  }
+
+  .manual-grid,
+  .quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .row {
+    grid-template-columns: auto minmax(0, 1fr) 88px 24px;
+
+    .row-kcal {
+      display: none;
+    }
+  }
+}

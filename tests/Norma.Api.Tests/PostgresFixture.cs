@@ -39,7 +39,8 @@ public sealed class PostgresFixture : IAsyncLifetime
 
         await db.Database.ExecuteSqlRawAsync(
             "TRUNCATE TABLE users, user_profiles, weight_measurements, water_intakes, "
-            + "activity_records, meals, meal_items, favorite_foods, foods, food_names, food_aliases "
+            + "activity_records, meals, meal_items, favorite_foods, recipes, recipe_ingredients, "
+            + "foods, food_names, food_aliases "
             + "CASCADE");
     }
 
